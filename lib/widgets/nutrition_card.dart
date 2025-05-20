@@ -5,7 +5,7 @@ class NutritionCard extends StatelessWidget {
   final double value;
   final String left;
   final IconData icon;
-  const NutritionCard({
+  const NutritionCard({super.key, 
     required this.label,
     required this.value,
     required this.left,
