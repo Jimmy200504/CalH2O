@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../widgets/main_progress_bar.dart';
 import '../widgets/nutrition_card.dart';
+import 'upload_img.dart';  
+
 
 class MainPage extends StatelessWidget {
   const MainPage({super.key});
@@ -113,7 +115,14 @@ class MainPage extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Icon(Icons.note_alt, size: 40),
+                  IconButton( //跳到 upload page
+                    icon: const Icon(Icons.note_alt, size: 40),
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => const UploadPage()),
+                      );
+                    },
+                  ),
                   Icon(Icons.access_time, size: 40),
                 ],
               ),
