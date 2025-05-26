@@ -4,8 +4,60 @@ import '../widgets/nutrition_card.dart';
 import 'upload_img.dart';  
 
 
-class MainPage extends StatelessWidget {
+class MainPage extends StatefulWidget {
   const MainPage({super.key});
+
+  @override
+  State<MainPage> createState() => _MainPageState();
+}
+
+class _MainPageState extends State<MainPage> {
+  double _caloriesProgress = 0.0;
+  double _waterProgress = 0.0;
+
+  // Nutrition variables
+  int _water = 0;
+  int _calories = 0;
+  int _protein = 0;
+  int _carbs = 0;
+  int _fats = 0;
+
+  // Nutrition targets
+  final int _waterTarget = 2500; // 2500ml water target
+  final int _caloriesTarget = 2000; // 2000kcal calories target
+  final int _proteinTarget = 50; // 50g protein target
+  final int _carbsTarget = 250; // 250g carbs target
+  final int _fatsTarget = 65; // 65g fats target
+
+  String _getLabel(int current, int target, String unit) {
+    if (current >= target) {
+      return 'Completed';
+    }
+    return '${target - current}$unit Left';
+  }
+
+  void _incrementCalories() {
+    setState(() {
+      if (_calories >= _caloriesTarget) return;
+
+      _calories += 200;
+      _caloriesProgress = (_calories / _caloriesTarget).clamp(0.0, 1.0);
+
+      // Update nutrition values proportionally
+      _protein += 10; // 10g protein per increment
+      _carbs += 25; // 25g carbs per increment
+      _fats += 7; // 7g fats per increment
+    });
+  }
+
+  void _incrementWater() {
+    setState(() {
+      if (_water >= _waterTarget) return;
+
+      _water += 250;
+      _waterProgress = (_water / _waterTarget).clamp(0.0, 1.0);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -34,16 +86,19 @@ class MainPage extends StatelessWidget {
             ),
             MainProgressBar(
               color: Colors.orange,
-              label: '729 Calories Left',
-              value: 0.7,
+              label: _getLabel(_calories, _caloriesTarget, ' kcal Calories'),
+              value: _caloriesProgress,
+              onIncrement: _incrementCalories,
+              additionalInfo: 'Total Calories: $_calories kcal',
             ),
-            SizedBox(height: 16),
             MainProgressBar(
               color: Colors.blue,
-              label: '2500 ml Water Left',
-              value: 0.3,
+              label: _getLabel(_water, _waterTarget, ' ml Water'),
+              value: _waterProgress,
+              onIncrement: _incrementWater,
+              additionalInfo: 'Total Water: $_water ml',
             ),
-            SizedBox(height: 24),
+            // SizedBox(height: 24),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8.0),
               child: Row(
@@ -51,20 +106,20 @@ class MainPage extends StatelessWidget {
                 children: [
                   NutritionCard(
                     label: 'Protein',
-                    value: 0.8,
-                    left: '15g Left',
+                    value: _protein / _proteinTarget,
+                    left: _getLabel(_protein, _proteinTarget, 'g'),
                     icon: Icons.fitness_center,
                   ),
                   NutritionCard(
                     label: 'Carbs',
-                    value: 0.6,
-                    left: '62g Left',
+                    value: _carbs / _carbsTarget,
+                    left: _getLabel(_carbs, _carbsTarget, 'g'),
                     icon: Icons.rice_bowl,
                   ),
                   NutritionCard(
                     label: 'Fats',
-                    value: 0.4,
-                    left: '3g Left',
+                    value: _fats / _fatsTarget,
+                    left: _getLabel(_fats, _fatsTarget, 'g'),
                     icon: Icons.emoji_food_beverage,
                   ),
                 ],

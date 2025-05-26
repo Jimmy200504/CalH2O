@@ -5,7 +5,8 @@ class NutritionCard extends StatelessWidget {
   final double value;
   final String left;
   final IconData icon;
-  const NutritionCard({super.key, 
+  const NutritionCard({
+    super.key,
     required this.label,
     required this.value,
     required this.left,
@@ -32,10 +33,12 @@ class NutritionCard extends StatelessWidget {
               alignment: Alignment.center,
               children: [
                 CircularProgressIndicator(
-                  value: value,
+                  value: value.clamp(0.0, 1.0),
                   strokeWidth: 6,
                   backgroundColor: Colors.grey[300],
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    value >= 1.0 ? Colors.red : Colors.green,
+                  ),
                 ),
                 Icon(icon, size: 32, color: Colors.orange),
               ],
@@ -46,7 +49,13 @@ class NutritionCard extends StatelessWidget {
             label,
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
           ),
-          Text(left, style: TextStyle(fontSize: 14, color: Colors.black54)),
+          Text(
+            left,
+            style: TextStyle(
+              fontSize: 14,
+              color: value >= 1.0 ? Colors.red : Colors.black54,
+            ),
+          ),
         ],
       ),
     );
