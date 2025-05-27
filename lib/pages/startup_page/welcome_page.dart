@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'profile_setup_page.dart';
+import 'package:calh2o/pages/startup_page/profile_setup_page.dart';
 
 class WelcomePage extends StatelessWidget {
   const WelcomePage({super.key});
@@ -17,7 +17,7 @@ class WelcomePage extends StatelessWidget {
             children: [
               const Spacer(),
               const Text(
-                'Welcome\nto H2O Cal.',
+                'Welcome to H2O Cal.',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 36, fontWeight: FontWeight.bold),
               ),
