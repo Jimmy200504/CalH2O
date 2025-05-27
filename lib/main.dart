@@ -1,3 +1,5 @@
+import 'package:calh2o/pages/profile_setup_page.dart';
+import 'package:calh2o/pages/welcome_page.dart';
 import 'package:flutter/material.dart';
 import 'pages/main_page.dart';
 
@@ -14,8 +16,8 @@ class MyApp extends StatelessWidget {
       title: 'Flutter Demo',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-      ),  
-      home: const MainPage(),
+      ),
+      home: const WelcomePage(),
     );
   }
 }
