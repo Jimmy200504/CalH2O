@@ -1,21 +1,27 @@
+import 'package:calh2o/pages/startup_page/welcome_page.dart';
 import 'package:flutter/material.dart';
 import 'pages/main_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-void main() {
-  runApp(const MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  final prefs = await SharedPreferences.getInstance();
+  final hasProfile = prefs.containsKey('name');
+
+  runApp(MyApp(startFromMainPage: hasProfile));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final bool startFromMainPage;
+
+  const MyApp({super.key, required this.startFromMainPage});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-      ),  
-      home: const MainPage(),
+      title: 'CalH2O',
+      home: startFromMainPage ? const MainPage() : const WelcomePage(),
     );
   }
 }
