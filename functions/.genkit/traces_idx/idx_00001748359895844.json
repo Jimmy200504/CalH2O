@@ -1,0 +1,15 @@
+{"id":"88d4c13e2646a664a121341ffe22e8f2","type":"flow","start":1748414584664,"name":"recognizeFoodFlow","end":1748414596828.3298,"status":0}
+{"id":"74d28bbc8c246ad1d6f63e5c8b8d71a2","type":"flow","start":1748415036273,"name":"recognizeFoodFlow","end":1748415047018.203,"status":0}
+{"id":"aac7abb7bf32e8c42caa9a726ff90bf8","type":"util","start":1748415102777,"name":"generate","end":1748415103702.6064,"status":2}
+{"id":"3e007ab66ea389a38502c7ab2acad182","type":"util","start":1748415285988,"name":"generate","end":1748415315995.9988,"status":0}
+{"id":"7a06d23c3fd2c466b6b395e6cbd1ee85","type":"util","start":1748415431727,"name":"generate","end":1748415461752.12,"status":0}
+{"id":"0802f822a51162abe6777696ba5e37f2","type":"flow","start":1748415707561,"name":"foodPhotoNutritionFlow","end":1748415782365.274,"status":0}
+{"id":"5e9b8dfdf9acbd4f3ca0e337681f935a","type":"util","start":1748417457422,"name":"generate","end":1748417458862.6165,"status":2}
+{"id":"e7d17b5e9e540e274eec546e67c0396e","type":"util","start":1748417469256,"name":"generate","end":1748417491755.1572,"status":0}
+{"id":"767a8c1489c6785dcf817e60a398afcb","type":"flow","start":1748417538477,"name":"foodPhotoNutritionFlow","end":1748417577173.6394,"status":0}
+{"id":"4cf4f2f887b4def466ad3f5b6c41c50b","type":"util","start":1748417786015,"name":"generate","end":1748417819545.6729,"status":0}
+{"id":"3dcceccd6690c16fb25cf3d2387ad7d9","type":"util","start":1748418537006,"name":"generate","end":1748418538889.132,"status":2}
+{"id":"dea5b3c912827fe076263d740ec6d8d4","type":"util","start":1748418545824,"name":"generate","end":1748418573584.8162,"status":0}
+{"id":"ee311bc5c5ddd70b44f0ecde49f5eb91","type":"flow","start":1748418679816,"name":"foodPhotoNutritionFlow","end":1748418804107.2883,"status":0}
+{"id":"144330f8d8f233e966721355466407f1","type":"flow","start":1748418922819,"name":"nutritionAnalysisFlow","end":1748418942688.8647,"status":0}
+{"id":"7aabb492771db2227ae0eaeeebea8bcc","type":"flow","start":1748419885385,"name":"foodPhotoNutritionFlow","end":1748420020521.8313,"status":0}
