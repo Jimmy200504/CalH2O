@@ -165,16 +165,16 @@ class _MainPageState extends State<MainPage> {
                     ),
                     // TODO: remove this after testing
                     // ================ FOR TESTING ================
-                    ElevatedButton(
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const NutritionTestPage(),
-                          ),
-                        );
-                      },
-                      child: const Text('Go to Nutrition Test Page'),
-                    ),
+                    // ElevatedButton(
+                    //   onPressed: () {
+                    //     Navigator.of(context).push(
+                    //       MaterialPageRoute(
+                    //         builder: (_) => const NutritionTestPage(),
+                    //       ),
+                    //     );
+                    //   },
+                    //   child: const Text('Go to Nutrition Test Page'),
+                    // ),
                     // ================ FOR TESTING ================
                   ],
                 ),
