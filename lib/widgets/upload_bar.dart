@@ -7,11 +7,11 @@ class NutrientBar extends StatelessWidget {
   final String leftText;
 
   const NutrientBar({
-    Key? key,
+    super.key,
     required this.label,
     required this.value,
     required this.leftText,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

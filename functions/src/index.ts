@@ -1,19 +1,29 @@
-/**
- * Import function triggers from their respective submodules:
- *
- * import {onCall} from "firebase-functions/v2/https";
- * import {onDocumentWritten} from "firebase-functions/v2/firestore";
- *
- * See a full list of supported triggers at https://firebase.google.com/docs/functions
- */
+import * as functionsV1 from "firebase-functions/v1";
+import { foodPhotoNutritionFlow } from "./flow/foodPhotoToNutritionFlow";
+import { Request, Response } from "express";
 
-import {onRequest} from "firebase-functions/v2/https";
-import * as logger from "firebase-functions/logger";
-
-// Start writing functions
-// https://firebase.google.com/docs/functions/typescript
-
-// export const helloWorld = onRequest((request, response) => {
-//   logger.info("Hello logs!", {structuredData: true});
-//   response.send("Hello from Firebase!");
-// });
+export const foodPhotoNutrition = functionsV1
+  .runWith({ timeoutSeconds: 540})
+  .https.onRequest(async (req: Request, res: Response) => {
+    // 只接受 POST 並且 Content-Type: application/json
+    if (req.method !== "POST") {
+      res.status(405).json({ error: "Method Not Allowed too " });
+      return;
+    }
+    if (!req.is("application/json")) {
+      res.status(415).json({ error: "Content-Type must be application/json" });
+      return;
+    }
+    try {
+      const { image } = req.body;
+      if (!image || typeof image !== "string") {
+        res.status(400).json({ error: "Missing or invalid 'image' field" });
+        return;
+      }
+      const result = await foodPhotoNutritionFlow({ image });
+      res.status(200).json(result);
+    } catch (error) {
+      console.error("foodPhotoNutrition error:", error);
+      res.status(500).json({ error: (error instanceof Error && error.message) ? error.message : String(error) });
+    }
+  });
