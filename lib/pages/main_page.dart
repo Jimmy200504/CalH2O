@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import '../widgets/main_progress_bar.dart';
 import '../widgets/nutrition_card.dart';
-import 'upload_img.dart';  
-
+import './upload_page.dart';
+import './nutrition_test_page.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -146,19 +146,37 @@ class _MainPageState extends State<MainPage> {
             SizedBox(height: 8),
             Expanded(
               child: Center(
-                child: Container(
-                  width: 160,
-                  height: 180,
-                  color: Colors.amber,
-                  child: Center(
-                    child: Text(
-                      'minion',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 160,
+                      height: 180,
+                      color: Colors.amber,
+                      child: Center(
+                        child: Text(
+                          'minion',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
                     ),
-                  ),
+                    // TODO: remove this after testing
+                    // ================ FOR TESTING ================
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const NutritionTestPage(),
+                          ),
+                        );
+                      },
+                      child: const Text('Go to Nutrition Test Page'),
+                    ),
+                    // ================ FOR TESTING ================
+                  ],
                 ),
               ),
             ),
@@ -170,7 +188,8 @@ class _MainPageState extends State<MainPage> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  IconButton( //跳到 upload page
+                  IconButton(
+                    //跳到 upload page
                     icon: const Icon(Icons.note_alt, size: 40),
                     onPressed: () {
                       Navigator.of(context).push(
