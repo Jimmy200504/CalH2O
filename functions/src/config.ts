@@ -20,7 +20,6 @@ export const ai = genkit({
       location: "us-central1",
     }),
   ],
-  model: vertexAI.model("gemini-2.5-pro-preview-05-06"),
 });
 
 

@@ -1,5 +1,6 @@
 import * as functionsV1 from "firebase-functions/v1";
 import { foodPhotoNutritionFlow } from "./flow/foodPhotoToNutritionFlow";
+import { textToNutritionFlow } from "./flow/textToNutritionFlow";
 import { Request, Response } from "express";
 
 export const foodPhotoNutrition = functionsV1
@@ -27,3 +28,35 @@ export const foodPhotoNutrition = functionsV1
       res.status(500).json({ error: (error instanceof Error && error.message) ? error.message : String(error) });
     }
   });
+
+export const textToNutrition = functionsV1
+  .runWith({ timeoutSeconds: 540 })
+  .https.onRequest(async (req: Request, res: Response) => {
+    // 只接受 POST 並且 Content-Type: application/json
+    if (req.method !== "POST") {
+      res.status(405).json({ error: "Method Not Allowed" });
+      return;
+    }
+    if (!req.is("application/json")) {
+      res.status(415).json({ error: "Content-Type must be application/json" });
+      return;
+    }
+    try {
+      const { chatHistory, prevNutrition, text } = req.body;
+      if (
+        typeof chatHistory !== "string" ||
+        !prevNutrition || typeof prevNutrition !== "object" ||
+        typeof text !== "string"
+      ) {
+        res.status(400).json({ error: "Missing or invalid fields: chatHistory, prevNutrition, text" });
+        return;
+      } 
+      const result = await textToNutritionFlow({ chatHistory, prevNutrition, text });
+      res.status(200).json(result);
+    } catch (error) {
+      console.error("textToNutrition error:", error);
+    res.status(500).json({
+      error: error instanceof Error && error.message ? error.message : String(error),
+    });
+  }
+});

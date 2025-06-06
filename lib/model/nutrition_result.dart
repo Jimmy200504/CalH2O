@@ -22,4 +22,14 @@ class NutritionResult {
       fat: json['fat'] ?? 0,
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'foods': foods,
+      'calories': calories,
+      'carbohydrate': carbohydrate,
+      'protein': protein,
+      'fat': fat,
+    };
+  }
 }

@@ -13,10 +13,10 @@ void main() async {
   final prefs = await SharedPreferences.getInstance();
   final hasProfile = prefs.containsKey('name');
 
-//   FirebaseFunctions.instanceFor(
-//     region: 'us-central1',
-//   ).useFunctionsEmulator('127.0.0.1', 5001);
-//   debugPrint('🔧 Connected to Firebase Functions Emulator');
+  FirebaseFunctions.instanceFor(
+    region: 'us-central1',
+  ).useFunctionsEmulator('127.0.0.1', 5001);
+  debugPrint('🔧 Connected to Firebase Functions Emulator');
 
   runApp(MyApp(startFromMainPage: hasProfile));
 }
