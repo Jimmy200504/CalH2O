@@ -19,6 +19,7 @@ export type Nutrition = z.infer<typeof NutritionSchema>;
 // --- 單一 prompt ---
 const foodAndNutritionPrompt = ai.definePrompt({
   name: "foodAndNutritionPrompt",
+  model: "vertexai/gemini-2.5-pro-preview-05-06",
   messages: `You are a professional nutritionist. Given the following food photo, do the following in one step:\n\n1. List all foods in the image and estimate their amount as precisely as possible (use specific units, e.g., grams, ml, pieces).\n2. For the recognized foods and their amounts, estimate the total nutrition facts: calories (kcal), carbohydrate (g), protein (g), and fat (g).\n\nReturn a valid JSON object with two fields:\n- \"foods\": an array of objects, each with \"name\" and \"amount\"\n- \"nutrition\": an object with fields \"calories\", \"carbohydrate\", \"protein\", \"fat\" (all numbers)\n\nDo not include any extra commentary or explanation. Only output valid JSON.\n\n{{media url=image}}`,
   input: {
     schema: z.object({

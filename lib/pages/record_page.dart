@@ -7,23 +7,26 @@ import '../model/message.dart';
 import '../model/nutrition_result.dart';
 import '../widgets/message_list.dart';
 import '../widgets/upload_bar.dart';
+import '../services/message_sent.dart';
 
-class UploadPage extends StatefulWidget {
-  const UploadPage({super.key});
+class RecordPage extends StatefulWidget {
+  const RecordPage({super.key});
 
   @override
-  _UploadPageState createState() => _UploadPageState();
+  _RecordPageState createState() => _RecordPageState();
 }
 
-class _UploadPageState extends State<UploadPage> {
+class _RecordPageState extends State<RecordPage> {
   File? _localImage;
   NutritionResult? _nutritionResult;
   bool _loadingNutrition = false;
+  bool _sendingMessage = false;
   final List<Message> _messages = [
-    Message(text: '您好！我可以協助您追蹤每天的水分和營養攝取。', isUser: false),
-    Message(text: '今天我已經喝了 1.5 公升的水，還有蛋白質 30g。', isUser: true),
-    Message(text: '很棒！水分攝取量已達成 60%。建議再補充一些蔬菜中的纖維素。', isUser: false),
-    Message(text: '好的，謝謝！', isUser: true),
+    Message(
+      text:
+          'Hello. I can help you track your daily water and nutrition intake. You can tell me what you ate or drank today.',
+      isUser: false,
+    ),
   ];
   final TextEditingController _textController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
@@ -53,7 +56,7 @@ class _UploadPageState extends State<UploadPage> {
     try {
       final bytes = await file.readAsBytes();
       String base64Image = "data:image/jpeg;base64,${base64Encode(bytes)}";
-      debugPrint("img_path : $base64Image");
+      // debugPrint("img_path : $base64Image");
       final nutrition = await getNutritionFromPhoto(base64Image);
       debugPrint("Analyzed food and nutrition finished");
       setState(() {
@@ -72,20 +75,65 @@ class _UploadPageState extends State<UploadPage> {
     }
   }
 
-  void _sendMessage() {
+  Future<void> _sendMessage() async {
     final text = _textController.text.trim();
-    if (text.isEmpty) return;
+    if (text.isEmpty || _sendingMessage) return;
     setState(() {
+      _sendingMessage = true;
       _messages.add(Message(text: text, isUser: true));
-      _messages.add(Message(text: '已收到：$text', isUser: false));
     });
     _textController.clear();
-    Future.delayed(const Duration(milliseconds: 100), () {
-      _scrollController.animateTo(
-        _scrollController.position.maxScrollExtent,
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeOut,
+    await Future.delayed(const Duration(milliseconds: 100));
+    _scrollController.animateTo(
+      _scrollController.position.maxScrollExtent,
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeOut,
+    );
+    try {
+      final messageWithNutrition = await messageSent(
+        text,
+        _nutritionResult ??
+            NutritionResult(
+              foods: [],
+              calories: 0,
+              carbohydrate: 0,
+              protein: 0,
+              fat: 0,
+            ),
+        _messages
+            .map((e) => e.isUser ? 'User: ${e.text}' : 'AI: ${e.text}')
+            .toList()
+            .sublist(0, _messages.length - 1),
       );
+      setState(() {
+        _messages.add(Message(text: messageWithNutrition.text, isUser: false));
+        _nutritionResult = messageWithNutrition.nutrition;
+      });
+    } catch (e) {
+      debugPrint('[ERROR] Failed to send message: \\${e.toString()}');
+      setState(() {
+        _messages.add(Message(text: '[AI 回應失敗]', isUser: false));
+      });
+    } finally {
+      setState(() {
+        _sendingMessage = false;
+      });
+    }
+  }
+
+  void _resetChatAndNutrition() {
+    setState(() {
+      _messages.clear();
+      _messages.add(
+        Message(
+          text:
+              'Hello. I can help you track your daily water and nutrition intake. You can tell me what you ate or drank today.',
+          isUser: false,
+        ),
+      );
+      _textController.clear();
+      _nutritionResult = null;
+      _localImage = null;
     });
   }
 
@@ -102,6 +150,13 @@ class _UploadPageState extends State<UploadPage> {
         backgroundColor: Colors.white,
         elevation: 0,
         foregroundColor: Colors.black,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            tooltip: '刷新聊天室與營養資訊',
+            onPressed: _resetChatAndNutrition,
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -246,11 +301,20 @@ class _UploadPageState extends State<UploadPage> {
                             ),
                           ),
                           IconButton(
-                            icon: const Icon(
-                              Icons.send,
-                              color: Colors.blueAccent,
-                            ),
-                            onPressed: _sendMessage,
+                            icon:
+                                _sendingMessage
+                                    ? const SizedBox(
+                                      width: 24,
+                                      height: 24,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                    : const Icon(
+                                      Icons.send,
+                                      color: Colors.blueAccent,
+                                    ),
+                            onPressed: _sendingMessage ? null : _sendMessage,
                           ),
                         ],
                       ),
