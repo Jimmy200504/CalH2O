@@ -29,10 +29,10 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'CalH2O',
-      initialRoute: '/main' ,
+      initialRoute: '/welcome',
       routes: {
         '/welcome': (_) => const WelcomePage(),
-        '/main': (_)    => const MainPage(),
+        '/main': (_) => const MainPage(),
         '/choose': (_) => const ChooseInputPage(),
         '/choose/image': (_)  => const ImageRecordPage(),
         '/choose/text': (_)   => const TextRecordPage_2(),

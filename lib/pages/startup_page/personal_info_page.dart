@@ -12,8 +12,8 @@ class PersonalInfoPage extends StatefulWidget {
 
 class _PersonalInfoPageState extends State<PersonalInfoPage> {
   final _formKey = GlobalKey<FormState>();
-  String _height = '';
-  String _weight = '';
+  int _height = 0;
+  int _weight = 0;
   String _activityLevel = 'active'; // 預設值
   final List<String> _activityOptions = [
     'sedentary',
@@ -83,7 +83,7 @@ class _PersonalInfoPageState extends State<PersonalInfoPage> {
                                     value == null || value.isEmpty
                                         ? 'Enter your height'
                                         : null,
-                            onSaved: (value) => _height = value!,
+                            onSaved: (value) => _height = int.parse(value!),
                           ),
                           const SizedBox(height: 16),
                           const Text(
@@ -102,7 +102,7 @@ class _PersonalInfoPageState extends State<PersonalInfoPage> {
                                     value == null || value.isEmpty
                                         ? 'Enter your weight'
                                         : null,
-                            onSaved: (value) => _weight = value!,
+                            onSaved: (value) => _weight = int.parse(value!),
                           ),
                           const SizedBox(height: 16),
                           const Text(
@@ -151,8 +151,8 @@ class _PersonalInfoPageState extends State<PersonalInfoPage> {
 
                                   final prefs =
                                       await SharedPreferences.getInstance();
-                                  await prefs.setString('height', _height);
-                                  await prefs.setString('weight', _weight);
+                                  await prefs.setInt('height', _height);
+                                  await prefs.setInt('weight', _weight);
                                   await prefs.setString(
                                     'activityLevel',
                                     _activityLevel,
