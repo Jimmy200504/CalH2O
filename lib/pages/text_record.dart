@@ -29,7 +29,7 @@ class _TextRecordPageState extends State<TextRecordPage> {
   // 營養狀態
   NutritionResult _nutritionResult = NutritionResult(
     foods: [],
-    imageName: '',
+    FoodName: '',
     calories: 0,
     carbohydrate: 0,
     protein: 0,
@@ -72,6 +72,7 @@ class _TextRecordPageState extends State<TextRecordPage> {
       // Save nutrition data to Firestore
       await FirebaseFirestore.instance.collection('nutrition_records').add({
         'timestamp': FieldValue.serverTimestamp(),
+        'FoodName': result.nutrition.FoodName, 
         'calories': result.nutrition.calories,
         'protein': result.nutrition.protein,
         'carbohydrate': result.nutrition.carbohydrate,
@@ -105,7 +106,7 @@ class _TextRecordPageState extends State<TextRecordPage> {
       _textController.clear();
       _nutritionResult = NutritionResult(
         foods: [],
-        imageName: '',
+        FoodName: '',
         calories: 0,
         carbohydrate: 0,
         protein: 0,

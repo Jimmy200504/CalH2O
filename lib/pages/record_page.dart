@@ -85,6 +85,7 @@ class _RecordPageState extends State<RecordPage> {
       // Save results to Firestore
       await ImageUploadService.saveNutritionResult(
         // imageUrl: imageUrl,
+        base64Image: base64Image,
         nutritionResult: nutrition,
       );
 
@@ -125,7 +126,7 @@ class _RecordPageState extends State<RecordPage> {
         _nutritionResult ??
             NutritionResult(
               foods: [],
-              imageName: '',
+              FoodName: '',
               calories: 0,
               carbohydrate: 0,
               protein: 0,
