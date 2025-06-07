@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-import '../../services/get_nutrition_from_photo.dart';
+import '../../services/cloud_function_fetch/get_nutrition_from_photo.dart';
 import '../../model/message.dart';
 import '../../model/nutrition_result.dart';
 import '../../widgets/record_page/text_container.dart';
@@ -40,9 +41,8 @@ class _TextRecordPageState extends State<TextRecordPage_2> {
   );
 
   // 紀錄備註
-  String _comment = ''; 
+  String _comment = '';
   Timestamp? _timestamp;
-
 
   void _resetAll() {
     setState(() {
@@ -174,8 +174,13 @@ class _TextRecordPageState extends State<TextRecordPage_2> {
                   );
                 });
               },
-            )
-
+              onImageCaptured: (base64Image) {
+                // 只更新照片，不進行營養分析
+                setState(() {
+                  // 保持原有的營養數據不變
+                });
+              },
+            ),
           ),
           // 第三部(flex : 4)：營養數據
           Expanded(

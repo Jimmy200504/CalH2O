@@ -6,7 +6,7 @@ import '../widgets/main_page/main_progress_bar.dart';
 import '../widgets/main_page/nutrition_card.dart';
 import '../widgets/main_page/loading_overlay.dart';
 import '../widgets/animation.dart';
-import '../services/get_nutrition_from_photo.dart';
+import '../services/cloud_function_fetch/get_nutrition_from_photo.dart';
 import '../services/image_upload_service.dart';
 
 import '../pages/setting_page.dart';
