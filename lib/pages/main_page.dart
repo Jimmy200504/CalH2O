@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../widgets/main_progress_bar.dart';
 import '../widgets/nutrition_card.dart';
+import '../model/nutrition_result.dart';
 import 'record_page.dart';
 import '../widgets/animation.dart';
 
@@ -32,6 +34,50 @@ class _MainPageState extends State<MainPage> {
   final int _carbsTarget = 250; // 250g carbs target
   final int _fatsTarget = 65; // 65g fats target
 
+  @override
+  void initState() {
+    super.initState();
+    _setupNutritionListener();
+  }
+
+  void _setupNutritionListener() {
+    // Get today's start and end timestamps
+    final now = DateTime.now();
+    final startOfDay = DateTime(now.year, now.month, now.day);
+    final endOfDay = startOfDay.add(const Duration(days: 1));
+
+    // Listen to Firestore for real-time updates
+    FirebaseFirestore.instance
+        .collection('nutrition_records')
+        .where('timestamp', isGreaterThanOrEqualTo: startOfDay)
+        .where('timestamp', isLessThan: endOfDay)
+        .snapshots()
+        .listen((snapshot) {
+          // Reset values
+          setState(() {
+            _calories = 0;
+            _protein = 0;
+            _carbs = 0;
+            _fats = 0;
+          });
+
+          // Sum up all nutrition values
+          for (var doc in snapshot.docs) {
+            setState(() {
+              _calories += (doc['calories'] as num).toInt();
+              _protein += (doc['protein'] as num).toInt();
+              _carbs += (doc['carbohydrate'] as num).toInt();
+              _fats += (doc['fat'] as num).toInt();
+            });
+          }
+
+          // Update progress values
+          setState(() {
+            _caloriesProgress = (_calories / _caloriesTarget).clamp(0.0, 1.0);
+          });
+        });
+  }
+
   String _getLabel(int current, int target, String unit) {
     if (current >= target) {
       return 'Completed';
@@ -52,6 +98,18 @@ class _MainPageState extends State<MainPage> {
       _fats += 7; // 7g fats per increment
     });
   }
+
+  // void _updateNutrition(NutritionResult nutrition) {
+  //   setState(() {
+  //     _calories += nutrition.calories.round();
+  //     _protein += nutrition.protein.round();
+  //     _carbs += nutrition.carbohydrate.round();
+  //     _fats += nutrition.fat.round();
+
+  //     // Update progress values
+  //     _caloriesProgress = (_calories / _caloriesTarget).clamp(0.0, 1.0);
+  //   });
+  // }
 
   void _incrementWater() {
     setState(() {

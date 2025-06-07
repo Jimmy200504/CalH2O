@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../model/message.dart';
 import '../model/nutrition_result.dart';
 import '../services/message_sent.dart';
@@ -67,6 +68,17 @@ class _TextRecordPageState extends State<TextRecordPage> {
             .toList()
             .sublist(0, _messages.length - 1),
       );
+
+      // Save nutrition data to Firestore
+      await FirebaseFirestore.instance.collection('nutrition_records').add({
+        'timestamp': FieldValue.serverTimestamp(),
+        'calories': result.nutrition.calories,
+        'protein': result.nutrition.protein,
+        'carbohydrate': result.nutrition.carbohydrate,
+        'fat': result.nutrition.fat,
+        'source': 'text_input', // 標記來源是文字輸入
+      });
+
       setState(() {
         _messages.add(Message(text: result.text, isUser: false));
         _nutritionResult = result.nutrition;
