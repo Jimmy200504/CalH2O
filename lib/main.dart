@@ -5,6 +5,12 @@ import 'firebase_options.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'pages/main_page.dart';
+import 'pages/choose_input_page.dart';
+import 'pages/image_record.dart';
+import 'pages/text_record.dart';
+
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
@@ -27,6 +33,17 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(title: 'CalH2O', home: const WelcomePage());
+    return MaterialApp(
+      title: 'CalH2O',
+      initialRoute: '/main' ,
+      routes: {
+        '/welcome': (_) => const WelcomePage(),
+        '/main': (_)    => const MainPage(),
+        '/choose': (_) => const ChooseInputPage(),
+        '/choose/image': (_)  => const ImageRecordPage(),
+        '/choose/text': (_)   => const TextRecordPage(),
+      },
+      home: startFromMainPage ? const MainPage() : const WelcomePage(),
+    );
   }
 }
