@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import '../widgets/main_progress_bar.dart';
 import '../widgets/nutrition_card.dart';
+import 'record_page.dart';
+import '../widgets/animation.dart';
+
 import '../pages/setting_page.dart';
+
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -156,18 +160,9 @@ class _MainPageState extends State<MainPage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Container(
-                      width: 160,
-                      height: 180,
-                      color: Colors.amber,
-                      child: Center(
-                        child: Text(
-                          'minion',
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
+                      width: 200,
+                      height: 200,
+                      child: FrameAnimationWidget(size: 200),
                     ),
                   ],
                 ),
