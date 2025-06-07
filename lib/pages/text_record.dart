@@ -73,6 +73,7 @@ class _TextRecordPageState extends State<TextRecordPage> {
       // Save nutrition data using ImageUploadService
       await ImageUploadService.saveNutritionResult(
         base64Image: '', // Empty base64 string for text input
+        comment: '',
         nutritionResult: result.nutrition,
       );
 

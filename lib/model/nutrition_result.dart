@@ -15,6 +15,25 @@ class NutritionResult {
     required this.fat,
   });
 
+  // 可複製營養資料
+  NutritionResult copyWith({
+    List<Map<String, dynamic>>? foods,
+    String? imageName,
+    num? calories,
+    num? carbohydrate,
+    num? protein,
+    num? fat,
+  }) {
+    return NutritionResult(
+      foods: foods ?? this.foods,
+      imageName: imageName ?? this.imageName,
+      calories: calories ?? this.calories,
+      carbohydrate: carbohydrate ?? this.carbohydrate,
+      protein: protein ?? this.protein,
+      fat: fat ?? this.fat,
+    );
+  }
+
   factory NutritionResult.fromJson(Map<String, dynamic> json) {
     return NutritionResult(
       foods: List<Map<String, dynamic>>.from(json['foods'] ?? []),

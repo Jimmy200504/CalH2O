@@ -1,6 +1,9 @@
 import 'dart:io';
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+
 import '../services/image_picker.dart';
 import '../services/get_nutrition_from_photo.dart';
 import '../services/image_upload_service.dart';
@@ -45,7 +48,9 @@ class _ImageRecordPageState extends State<ImageRecordPage> {
       // Save results to Firestore
       await ImageUploadService.saveNutritionResult(
         // imageUrl: imageUrl,
+        time: null,
         base64Image: base64Image,
+        comment: '',
         nutritionResult: nutrition,
       );
       setState(() => _nutritionResult = nutrition);
