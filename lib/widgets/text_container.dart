@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import '../services/camera_service.dart';
+import '../pages/record_page/image_record.dart';
+import 'dart:convert';
 
 /// 名字和日期時間列
 /// 允許使用者輸入名字並回傳給父元件，
@@ -6,13 +9,18 @@ import 'package:flutter/material.dart';
 class NameDateRow extends StatefulWidget {
   /// 初始顯示的名字
   final String initialName;
+
   /// 當使用者輸入/提交名字時回傳
   final ValueChanged<String> onNameChanged;
+
+  /// 當使用者拍照時回傳
+  final ValueChanged<String>? onImageCaptured;
 
   const NameDateRow({
     Key? key,
     required this.initialName,
     required this.onNameChanged,
+    this.onImageCaptured,
   }) : super(key: key);
 
   @override
@@ -23,6 +31,7 @@ class _NameDateRowState extends State<NameDateRow> {
   late TextEditingController _nameController;
   DateTime _selectedDate = DateTime.now();
   TimeOfDay _selectedTime = TimeOfDay.now();
+  String? _capturedImageBase64;
 
   @override
   void initState() {
@@ -64,6 +73,22 @@ class _NameDateRowState extends State<NameDateRow> {
     if (picked != null) setState(() => _selectedTime = picked);
   }
 
+  Future<void> _openCamera() async {
+    if (widget.onImageCaptured == null) return;
+
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const ImageRecordPage()),
+    );
+
+    if (result != null && result is String) {
+      setState(() {
+        _capturedImageBase64 = result;
+      });
+      widget.onImageCaptured!(result);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -71,14 +96,67 @@ class _NameDateRowState extends State<NameDateRow> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // 左：相機 icon
+          // 左：相機 icon 或拍攝的照片
           Expanded(
             flex: 1,
             child: Center(
-              child: Icon(
-                Icons.camera_alt,
-                size: 50,
-                color: Colors.grey[700],
+              child: GestureDetector(
+                onTap: _openCamera,
+                child: Container(
+                  width: 150,
+                  height: 150,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.grey[400]!, width: 2),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        spreadRadius: 1,
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Stack(
+                    children: [
+                      _capturedImageBase64 != null
+                          ? ClipRRect(
+                            borderRadius: BorderRadius.circular(14),
+                            child: Image.memory(
+                              base64Decode(_capturedImageBase64!.split(',')[1]),
+                              fit: BoxFit.cover,
+                              width: double.infinity,
+                              height: double.infinity,
+                            ),
+                          )
+                          : Center(
+                            child: Icon(
+                              Icons.camera_alt,
+                              size: 70,
+                              color: Colors.grey[700],
+                            ),
+                          ),
+                      if (_capturedImageBase64 != null)
+                        Positioned(
+                          right: 6,
+                          top: 6,
+                          child: Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withOpacity(0.5),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.camera_alt,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
               ),
             ),
           ),
@@ -119,7 +197,10 @@ class _NameDateRowState extends State<NameDateRow> {
                         ),
                         style: TextButton.styleFrom(
                           minimumSize: Size.zero,
-                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 4,
+                            vertical: 2,
+                          ),
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         ),
                       ),
@@ -135,7 +216,10 @@ class _NameDateRowState extends State<NameDateRow> {
                         ),
                         style: TextButton.styleFrom(
                           minimumSize: Size.zero,
-                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 4,
+                            vertical: 2,
+                          ),
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         ),
                       ),

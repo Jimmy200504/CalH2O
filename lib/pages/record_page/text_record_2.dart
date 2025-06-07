@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-
+import '../../services/get_nutrition_from_photo.dart';
 
 import '../../model/message.dart';
 import '../../model/nutrition_result.dart';
@@ -40,7 +40,7 @@ class _TextRecordPageState extends State<TextRecordPage_2> {
   );
 
   // 紀錄備註
-  String _comment = ''; 
+  String _comment = '';
 
   void _resetAll() {
     setState(() {
@@ -66,15 +66,14 @@ class _TextRecordPageState extends State<TextRecordPage_2> {
 
   @override
   Widget build(BuildContext context) {
-
     // 標籤資料：icon 與文字
     final List<Map<String, dynamic>> _mealTags = [
       {'icon': Icons.breakfast_dining, 'label': 'Breakfast'},
-      {'icon': Icons.lunch_dining,    'label': 'Lunch'},
-      {'icon': Icons.dinner_dining,   'label': 'Dinner'},
-      {'icon': Icons.icecream,        'label': 'Dessert'},
-      {'icon': Icons.local_cafe,      'label': 'Snack'},
-      {'icon': FontAwesomeIcons.ghost, 'label':'Midnight'},
+      {'icon': Icons.lunch_dining, 'label': 'Lunch'},
+      {'icon': Icons.dinner_dining, 'label': 'Dinner'},
+      {'icon': Icons.icecream, 'label': 'Dessert'},
+      {'icon': Icons.local_cafe, 'label': 'Snack'},
+      {'icon': FontAwesomeIcons.ghost, 'label': 'Midnight'},
     ];
 
     return Scaffold(
@@ -127,19 +126,17 @@ class _TextRecordPageState extends State<TextRecordPage_2> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(tag['icon'],
-                            size: 32,
-                            color: isSelected
-                                ? Colors.white
-                                : Colors.grey[700]),
+                        Icon(
+                          tag['icon'],
+                          size: 32,
+                          color: isSelected ? Colors.white : Colors.grey[700],
+                        ),
                         const SizedBox(height: 6),
                         Text(
                           tag['label'],
                           style: TextStyle(
                             fontSize: 14,
-                            color: isSelected
-                                ? Colors.white
-                                : Colors.grey[700],
+                            color: isSelected ? Colors.white : Colors.grey[700],
                           ),
                         ),
                       ],
@@ -159,6 +156,12 @@ class _TextRecordPageState extends State<TextRecordPage_2> {
                   _nutritionResult = _nutritionResult.copyWith(imageName: name);
                 });
               },
+              onImageCaptured: (base64Image) {
+                // 只更新照片，不進行營養分析
+                setState(() {
+                  // 保持原有的營養數據不變
+                });
+              },
             ),
           ),
           // 第三部(flex : 4)：營養數據
@@ -176,7 +179,7 @@ class _TextRecordPageState extends State<TextRecordPage_2> {
               },
             ),
           ),
-          
+
           // 第四部(flex : 1)Space bar
           //左邊要可以save
           //右邊可能要有一個按鈕導入到與AI聊天的畫面
@@ -192,7 +195,10 @@ class _TextRecordPageState extends State<TextRecordPage_2> {
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.amberAccent,
-                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 12,
+                          horizontal: 24,
+                        ),
                       ),
                       onPressed: () async {
                         await ImageUploadService.saveNutritionResult(
@@ -212,9 +218,9 @@ class _TextRecordPageState extends State<TextRecordPage_2> {
                         //   'source': 'text_input',
                         // });
                         // 可顯示提示訊息或返回上一頁
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('資料已儲存')),
-                        );
+                        ScaffoldMessenger.of(
+                          context,
+                        ).showSnackBar(const SnackBar(content: Text('資料已儲存')));
                       },
                       child: const Text('Save'),
                     ),
@@ -228,12 +234,18 @@ class _TextRecordPageState extends State<TextRecordPage_2> {
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.amberAccent,
-                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 12,
+                          horizontal: 24,
+                        ),
                       ),
                       onPressed: () async {
                         final updated = await Navigator.of(context).push(
                           MaterialPageRoute(
-                            builder: (_) => NutritionChatPage(initial: _nutritionResult),
+                            builder:
+                                (_) => NutritionChatPage(
+                                  initial: _nutritionResult,
+                                ),
                           ),
                         );
                         if (updated != null) {
