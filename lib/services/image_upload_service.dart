@@ -14,7 +14,7 @@ class ImageUploadService {
       await _firestore.collection('nutrition_records').add({
         'timestamp': FieldValue.serverTimestamp(),
         'base64Image': base64Image, // Store base64 image data
-        'FoodName': nutritionResult.FoodName,
+        'imageName': nutritionResult.imageName,
         'calories': nutritionResult.calories,
         'protein': nutritionResult.protein,
         'carbohydrate': nutritionResult.carbohydrate,

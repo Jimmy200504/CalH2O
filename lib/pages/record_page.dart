@@ -126,7 +126,7 @@ class _RecordPageState extends State<RecordPage> {
         _nutritionResult ??
             NutritionResult(
               foods: [],
-              FoodName: '',
+              imageName: '',
               calories: 0,
               carbohydrate: 0,
               protein: 0,

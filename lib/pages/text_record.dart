@@ -30,7 +30,7 @@ class _TextRecordPageState extends State<TextRecordPage> {
   // 營養狀態
   NutritionResult _nutritionResult = NutritionResult(
     foods: [],
-    FoodName: '',
+    imageName: '',
     calories: 0,
     carbohydrate: 0,
     protein: 0,
@@ -102,7 +102,7 @@ class _TextRecordPageState extends State<TextRecordPage> {
       _textController.clear();
       _nutritionResult = NutritionResult(
         foods: [],
-        FoodName: '',
+        imageName: '',
         calories: 0,
         carbohydrate: 0,
         protein: 0,

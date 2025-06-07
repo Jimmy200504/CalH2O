@@ -8,7 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'pages/choose_input_page.dart';
 import 'pages/image_record.dart';
 import 'pages/text_record.dart';
-
+import 'pages/history_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -29,13 +29,14 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'CalH2O',
-      initialRoute: '/main' ,
+      initialRoute: '/main',
       routes: {
         '/welcome': (_) => const WelcomePage(),
-        '/main': (_)    => const MainPage(),
+        '/main': (_) => const MainPage(),
         '/choose': (_) => const ChooseInputPage(),
-        '/choose/image': (_)  => const ImageRecordPage(),
-        '/choose/text': (_)   => const TextRecordPage(),
+        '/choose/image': (_) => const ImageRecordPage(),
+        '/choose/text': (_) => const TextRecordPage(),
+        '/history': (_) => const HistoryPage(),
       },
       home: startFromMainPage ? const MainPage() : const WelcomePage(),
     );
