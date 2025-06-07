@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
-import '../services/camera_service.dart';
+import '../../services/camera_service.dart';
 
 class CameraPreviewWidget extends StatelessWidget {
   final CameraService cameraService;

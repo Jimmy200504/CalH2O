@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../services/camera_service.dart';
+import '../../services/camera_service.dart';
 
 class CameraControlsWidget extends StatelessWidget {
   final VoidCallback onPickImage;

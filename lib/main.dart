@@ -16,11 +16,31 @@ Future<void> initializeCameras() async {
   try {
     cameras = await availableCameras();
     if (cameras.isEmpty) {
-      debugPrint('No cameras available');
+      debugPrint('No cameras available on this device');
     } else {
-      debugPrint('Found ${cameras.length} cameras');
+      debugPrint('Found ${cameras.length} cameras:');
+      for (var camera in cameras) {
+        debugPrint(
+          'Camera: ${camera.name}, lensDirection: ${camera.lensDirection}',
+        );
+      }
     }
   } on CameraException catch (e) {
+    switch (e.code) {
+      case 'CameraAccessDenied':
+        debugPrint('Camera access was denied');
+        break;
+      case 'CameraAccessDeniedWithoutPrompt':
+        debugPrint('Camera access was denied without prompt');
+        break;
+      case 'CameraAccessRestricted':
+        debugPrint('Camera access is restricted');
+        break;
+      default:
+        debugPrint('Error getting cameras: ${e.description}');
+    }
+    cameras = [];
+  } catch (e) {
     debugPrint('Error getting cameras: $e');
     cameras = [];
   }
@@ -28,9 +48,14 @@ Future<void> initializeCameras() async {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Firebase
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // Initialize cameras
   await initializeCameras();
 
+  // Check user profile
   final prefs = await SharedPreferences.getInstance();
   final hasProfile = prefs.containsKey('name');
 

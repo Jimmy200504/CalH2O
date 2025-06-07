@@ -4,82 +4,209 @@ import '../main.dart' show cameras;
 
 class CameraService {
   CameraController? _controller;
-  final ValueNotifier<bool> isInitialized = ValueNotifier<bool>(false);
-  final ValueNotifier<String?> error = ValueNotifier<String?>(null);
+  late final ValueNotifier<bool> isInitialized;
+  late final ValueNotifier<String?> error;
   bool _isRearCameraSelected = true;
+  bool _isDisposed = false;
+  bool _isInitializing = false;
+
+  CameraService() {
+    debugPrint("Creating new CameraService instance");
+    isInitialized = ValueNotifier<bool>(false);
+    error = ValueNotifier<String?>(null);
+  }
 
   bool get isCameraInitialized => isInitialized.value;
   bool get isRearCameraSelected => _isRearCameraSelected;
   CameraController? get controller => _controller;
 
+  void _setError(String? message) {
+    if (!_isDisposed) {
+      error.value = message;
+    }
+  }
+
+  void _setInitialized(bool value) {
+    if (!_isDisposed) {
+      isInitialized.value = value;
+    }
+  }
+
   Future<void> initializeCamera() async {
+    if (_isDisposed) {
+      debugPrint("CameraService is disposed, cannot initialize");
+      return;
+    }
+    if (_isInitializing) {
+      debugPrint("Camera is already initializing");
+      return;
+    }
+
+    _isInitializing = true;
+    debugPrint("Starting camera initialization");
+
     try {
       if (cameras.isEmpty) {
-        error.value = 'No cameras available on this device';
-        isInitialized.value = false;
+        _setError('No cameras available on this device');
+        _setInitialized(false);
         return;
       }
 
-      // 確保相機索引有效
       final cameraIndex = _isRearCameraSelected ? 0 : 1;
       if (cameraIndex >= cameras.length) {
-        error.value = 'Selected camera is not available';
-        isInitialized.value = false;
+        _setError('Selected camera is not available');
+        _setInitialized(false);
         return;
       }
 
       final camera = cameras[cameraIndex];
+      debugPrint("Initializing camera: ${camera.name}");
+
+      // Dispose existing controller if any
+      if (_controller != null) {
+        debugPrint("Disposing existing controller");
+        await _controller!.dispose();
+        _controller = null;
+      }
+
       _controller = CameraController(
         camera,
-        ResolutionPreset.high,
+        ResolutionPreset.max,
         enableAudio: false,
         imageFormatGroup: ImageFormatGroup.jpeg,
       );
 
       await _controller!.initialize();
+      if (_isDisposed) {
+        debugPrint("CameraService was disposed during initialization");
+        await _controller?.dispose();
+        return;
+      }
+
       if (_controller!.value.isInitialized) {
-        isInitialized.value = true;
-        error.value = null;
+        debugPrint("Camera initialized successfully");
+        _setInitialized(true);
+        _setError(null);
       } else {
-        error.value = 'Failed to initialize camera';
-        isInitialized.value = false;
+        debugPrint("Camera failed to initialize");
+        _setError('Failed to initialize camera');
+        _setInitialized(false);
+      }
+    } on CameraException catch (e) {
+      debugPrint("CameraException during initialization: ${e.description}");
+      if (!_isDisposed) {
+        switch (e.code) {
+          case 'CameraAccessDenied':
+            _setError('Camera access was denied');
+            break;
+          case 'CameraAccessDeniedWithoutPrompt':
+            _setError('Camera access was denied without prompt');
+            break;
+          case 'CameraAccessRestricted':
+            _setError('Camera access is restricted');
+            break;
+          default:
+            _setError('Error initializing camera: ${e.description}');
+        }
+        _setInitialized(false);
       }
     } catch (e) {
-      error.value = 'Error initializing camera: $e';
-      isInitialized.value = false;
+      debugPrint("Error during camera initialization: $e");
+      if (!_isDisposed) {
+        _setError('Error initializing camera: $e');
+        _setInitialized(false);
+      }
+    } finally {
+      _isInitializing = false;
     }
   }
 
   Future<XFile?> takePicture() async {
+    if (_isDisposed) {
+      debugPrint("Cannot take picture: CameraService is disposed");
+      return null;
+    }
     if (_controller == null || !_controller!.value.isInitialized) {
-      error.value = 'Camera not initialized';
+      debugPrint("Cannot take picture: Camera not initialized");
+      _setError('Camera not initialized');
       return null;
     }
 
     try {
+      debugPrint("Taking picture...");
       final XFile photo = await _controller!.takePicture();
+      debugPrint("Picture taken successfully");
       return photo;
-    } catch (e) {
-      error.value = 'Error taking picture: $e';
+    } on CameraException catch (e) {
+      debugPrint("Error taking picture: ${e.description}");
+      if (!_isDisposed) {
+        _setError('Error taking picture: ${e.description}');
+      }
       return null;
     }
   }
 
   Future<void> switchCamera() async {
+    if (_isDisposed) {
+      debugPrint("Cannot switch camera: CameraService is disposed");
+      return;
+    }
     if (cameras.length < 2) {
-      error.value = 'No other camera available';
+      debugPrint("Cannot switch camera: No other camera available");
+      _setError('No other camera available');
       return;
     }
 
+    debugPrint("Switching camera...");
     _isRearCameraSelected = !_isRearCameraSelected;
-    isInitialized.value = false;
+    _setInitialized(false);
     await _controller?.dispose();
     await initializeCamera();
   }
 
-  void dispose() {
-    _controller?.dispose();
+  Future<void> pause() async {
+    if (_isDisposed) return;
+    if (_controller != null && _controller!.value.isInitialized) {
+      debugPrint("Pausing camera preview");
+      await _controller!.pausePreview();
+      _setInitialized(false);
+    }
+  }
+
+  Future<void> resume() async {
+    if (_isDisposed) return;
+    if (_controller != null && _controller!.value.isInitialized) {
+      debugPrint("Resuming camera preview");
+      await _controller!.resumePreview();
+      _setInitialized(true);
+    }
+  }
+
+  Future<void> dispose() async {
+    if (_isDisposed) {
+      debugPrint("CameraService already disposed");
+      return;
+    }
+
+    debugPrint("Starting CameraService disposal");
+    _isDisposed = true;
+
+    // Clear any existing values
+    isInitialized.value = false;
+    error.value = null;
+
+    // Dispose the controller first
+    if (_controller != null) {
+      debugPrint("Disposing camera controller");
+      await _controller!.dispose();
+      _controller = null;
+    }
+
+    // Finally dispose the ValueNotifiers
+    debugPrint("Disposing ValueNotifiers");
     isInitialized.dispose();
     error.dispose();
+
+    debugPrint("CameraService disposed");
   }
 }

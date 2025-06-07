@@ -103,6 +103,3 @@ class MainProgressBar extends StatelessWidget {
     );
   }
 }
-
-
-
