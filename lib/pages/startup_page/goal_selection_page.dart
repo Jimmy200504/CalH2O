@@ -1,6 +1,7 @@
 import 'package:calh2o/pages/main_page.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class GoalSelectionPage extends StatefulWidget {
   const GoalSelectionPage({super.key});
@@ -10,12 +11,32 @@ class GoalSelectionPage extends StatefulWidget {
 }
 
 class _GoalSelectionPageState extends State<GoalSelectionPage> {
-  final List<String> _goals = ['Eat healthier', 'Drink more water'];
-  String _selectedGoal = 'Eat healthier';
+  final List<String> _goals = [
+    'Maintain weight',
+    'Drink more water',
+    'Lose weight',
+    'Gain weight',
+  ];
+  String _selectedGoal = 'Maintain weight';
 
   Future<void> _saveGoalAndStart() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('goal', _selectedGoal);
+
+    final name = prefs.getString('name');
+
+    if (name != null && name.isNotEmpty) {
+      try {
+        await FirebaseFirestore.instance.collection('users').doc(name).set({
+          'goal': _selectedGoal,
+        }, SetOptions(merge: true));
+      } catch (e) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('儲存goal失敗:$e')));
+        return;
+      }
+    }
 
     Navigator.pushReplacement(
       context,
