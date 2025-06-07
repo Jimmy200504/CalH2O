@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'pages/choose_input_page.dart';
 import 'pages/image_record.dart';
 import 'pages/text_record.dart';
+import 'pages/text_record_2.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -33,8 +34,8 @@ class MyApp extends StatelessWidget {
         '/welcome': (_) => const WelcomePage(),
         '/main': (_) => const MainPage(),
         '/choose': (_) => const ChooseInputPage(),
-        '/choose/image': (_) => const ImageRecordPage(),
-        '/choose/text': (_) => const TextRecordPage(),
+        '/choose/image': (_)  => const ImageRecordPage(),
+        '/choose/text': (_)   => const TextRecordPage_2(),
       },
       home: startFromMainPage ? const MainPage() : const WelcomePage(),
     );
