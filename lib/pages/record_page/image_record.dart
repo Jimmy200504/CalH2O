@@ -22,7 +22,6 @@ class _ImageRecordPageState extends State<ImageRecordPage>
   @override
   void initState() {
     super.initState();
-    debugPrint("ImageRecordPage initState");
     WidgetsBinding.instance.addObserver(this);
     _cameraService = CameraService();
     _initializeCamera();
@@ -35,7 +34,6 @@ class _ImageRecordPageState extends State<ImageRecordPage>
 
   @override
   void dispose() {
-    debugPrint("ImageRecordPage dispose");
     _isDisposed = true;
     WidgetsBinding.instance.removeObserver(this);
     _cameraService.dispose();
@@ -44,32 +42,23 @@ class _ImageRecordPageState extends State<ImageRecordPage>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) async {
-    debugPrint("ImageRecordPage lifecycle state changed: $state");
     if (_isDisposed) {
-      debugPrint("ImageRecordPage is disposed, ignoring lifecycle change");
       return;
     }
     if (_cameraService.controller == null ||
         !_cameraService.controller!.value.isInitialized) {
-      debugPrint("Camera not initialized, ignoring lifecycle change");
       return;
     }
 
     if (state == AppLifecycleState.inactive) {
-      debugPrint("App inactive, pausing camera");
       await _cameraService.pause();
     } else if (state == AppLifecycleState.resumed) {
-      debugPrint("App resumed, resuming camera");
       await _cameraService.resume();
     }
   }
 
   Future<void> _handleNavigation(String? result) async {
-    debugPrint("ImageRecordPage handling navigation");
     if (!mounted || _isDisposed) {
-      debugPrint(
-        "ImageRecordPage not mounted or disposed, skipping navigation",
-      );
       return;
     }
 
@@ -77,7 +66,6 @@ class _ImageRecordPageState extends State<ImageRecordPage>
       setState(() => _isProcessing = true);
       await _cameraService.pause();
       if (mounted && !_isDisposed) {
-        debugPrint("ImageRecordPage navigating back with result");
         Navigator.of(context).pop(result);
       }
     } catch (e) {
@@ -91,11 +79,9 @@ class _ImageRecordPageState extends State<ImageRecordPage>
 
   Future<void> _takePicture() async {
     if (_isProcessing || _isDisposed) {
-      debugPrint("Cannot take picture: processing or disposed");
       return;
     }
 
-    debugPrint("Taking picture");
     setState(() => _isProcessing = true);
     try {
       final photo = await _cameraService.takePicture();
@@ -124,7 +110,6 @@ class _ImageRecordPageState extends State<ImageRecordPage>
       return;
     }
 
-    debugPrint("Picking image");
     setState(() => _isProcessing = true);
     try {
       final file = await ImagePickerService.pickAndSaveImage();
@@ -134,13 +119,15 @@ class _ImageRecordPageState extends State<ImageRecordPage>
         final base64String = base64Encode(bytes);
         await _handleNavigation(base64String);
       } else {
-        // 如果選擇圖片失敗或取消，也要返回主畫面
-        await _handleNavigation(null);
+        // 如果選擇圖片失敗或取消，不需要返回主畫面，因為我們還在相機畫面
+        debugPrint("Image picking cancelled or failed, staying on camera page");
+        if (mounted && !_isDisposed) {
+          setState(() => _isProcessing = false);
+        }
       }
     } catch (e) {
       debugPrint("Error picking image: $e");
-      await _handleNavigation(null);
-    } finally {
+      // 發生錯誤時也不需要返回主畫面
       if (mounted && !_isDisposed) {
         setState(() => _isProcessing = false);
       }

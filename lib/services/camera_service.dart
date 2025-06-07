@@ -11,7 +11,6 @@ class CameraService {
   bool _isInitializing = false;
 
   CameraService() {
-    debugPrint("Creating new CameraService instance");
     isInitialized = ValueNotifier<bool>(false);
     error = ValueNotifier<String?>(null);
   }
@@ -43,7 +42,6 @@ class CameraService {
     }
 
     _isInitializing = true;
-    debugPrint("Starting camera initialization");
 
     try {
       if (cameras.isEmpty) {
@@ -60,11 +58,9 @@ class CameraService {
       }
 
       final camera = cameras[cameraIndex];
-      debugPrint("Initializing camera: ${camera.name}");
 
       // Dispose existing controller if any
       if (_controller != null) {
-        debugPrint("Disposing existing controller");
         await _controller!.dispose();
         _controller = null;
       }
@@ -78,7 +74,6 @@ class CameraService {
 
       await _controller!.initialize();
       if (_isDisposed) {
-        debugPrint("CameraService was disposed during initialization");
         await _controller?.dispose();
         return;
       }
@@ -167,7 +162,6 @@ class CameraService {
   Future<void> pause() async {
     if (_isDisposed) return;
     if (_controller != null && _controller!.value.isInitialized) {
-      debugPrint("Pausing camera preview");
       await _controller!.pausePreview();
       _setInitialized(false);
     }
@@ -184,11 +178,9 @@ class CameraService {
 
   Future<void> dispose() async {
     if (_isDisposed) {
-      debugPrint("CameraService already disposed");
       return;
     }
 
-    debugPrint("Starting CameraService disposal");
     _isDisposed = true;
 
     // Clear any existing values
@@ -197,13 +189,11 @@ class CameraService {
 
     // Dispose the controller first
     if (_controller != null) {
-      debugPrint("Disposing camera controller");
       await _controller!.dispose();
       _controller = null;
     }
 
     // Finally dispose the ValueNotifiers
-    debugPrint("Disposing ValueNotifiers");
     isInitialized.dispose();
     error.dispose();
 
