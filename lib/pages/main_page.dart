@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../widgets/main_progress_bar.dart';
 import '../widgets/nutrition_card.dart';
-import 'record_page.dart';
 import '../pages/setting_page.dart';
 
 class MainPage extends StatefulWidget {

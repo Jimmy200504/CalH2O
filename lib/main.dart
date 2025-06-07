@@ -5,7 +5,6 @@ import 'firebase_options.dart';
 import 'pages/main_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'pages/main_page.dart';
 import 'pages/choose_input_page.dart';
 import 'pages/image_record.dart';
 import 'pages/text_record.dart';
