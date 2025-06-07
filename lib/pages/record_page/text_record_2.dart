@@ -4,8 +4,8 @@ import '../../services/get_nutrition_from_photo.dart';
 
 import '../../model/message.dart';
 import '../../model/nutrition_result.dart';
-import '../../widgets/text_container.dart';
-import '../../widgets/nutrition_input_form.dart';
+import '../../widgets/record_page/text_container.dart';
+import '../../widgets/record_page/nutrition_input_form.dart';
 import 'nutrition_chat_page.dart';
 import '../../services/image_upload_service.dart';
 

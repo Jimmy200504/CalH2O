@@ -3,7 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../model/message.dart';
 import '../../model/nutrition_result.dart';
 import '../../services/message_sent.dart';
-import '../../widgets/message_list.dart';
+import '../../widgets/record_page/message_list.dart';
 import '../../widgets/upload_bar.dart';
 import '../../services/image_upload_service.dart';
 

@@ -2,13 +2,13 @@ import 'dart:io';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../../services/image_picker.dart';
-import '../../services/get_nutrition_from_photo.dart';
+import '../services/cloud_function_fetch/get_nutrition_from_photo.dart';
 import '../../services/image_upload_service.dart';
 import '../../model/message.dart';
 import '../../model/nutrition_result.dart';
-import '../../widgets/record_page/message_list.dart';
+import '../widgets/record_page/message_list.dart';
 import '../../widgets/upload_bar.dart';
-import '../../services/message_sent.dart';
+import '../services/cloud_function_fetch/message_sent.dart';
 
 class RecordPage extends StatefulWidget {
   final Function(NutritionResult)? onNutritionUpdate;

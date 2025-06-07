@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../services/camera_service.dart';
-import '../pages/record_page/image_record.dart';
+import '../../services/camera_service.dart';
+import '../../pages/record_page/image_record.dart';
 import 'dart:convert';
 
 /// 名字和日期時間列
