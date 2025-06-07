@@ -2,6 +2,7 @@ import 'package:calh2o/pages/startup_page/personal_info_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ProfileSetupPage extends StatefulWidget {
   const ProfileSetupPage({super.key});
@@ -170,7 +171,15 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
                                   await prefs.setString('name', _name);
                                   await prefs.setString('gender', _gender);
                                   await prefs.setString('birthday', _birthday);
-                                  await prefs.setString('language', _language);
+
+                                  await FirebaseFirestore.instance
+                                      .collection('users')
+                                      .doc('current_user')
+                                      .update({
+                                        'name': _name,
+                                        'gender': _gender,
+                                        'birthday': _birthday,
+                                      });
 
                                   Navigator.push(
                                     context,
