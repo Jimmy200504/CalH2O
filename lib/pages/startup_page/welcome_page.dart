@@ -1,5 +1,5 @@
+import 'package:calh2o/pages/startup_page/login_page.dart';
 import 'package:flutter/material.dart';
-import 'package:calh2o/pages/startup_page/profile_setup_page.dart';
 
 class WelcomePage extends StatelessWidget {
   const WelcomePage({super.key});
@@ -52,7 +52,7 @@ class WelcomePage extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const ProfileSetupPage(),
+                        builder: (context) => const LoginPage(),
                       ),
                     );
                   },

@@ -4,7 +4,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'pages/main_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
+import 'package:calh2o/pages/startup_page/login_page.dart';
 import 'pages/image_record.dart';
 import 'pages/text_record.dart';
 import 'pages/history_page.dart';
@@ -29,9 +29,10 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'CalH2O',
-      initialRoute: '/main',
+      initialRoute: '/welcome',
       routes: {
         '/welcome': (_) => const WelcomePage(),
+        '/login': (_) => const LoginPage(),
         '/main': (_) => const MainPage(),
         '/image': (_) => const ImageRecordPage(),
         '/text': (_) => const TextRecordPage_2(),
