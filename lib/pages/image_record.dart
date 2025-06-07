@@ -8,7 +8,7 @@ import '../model/nutrition_result.dart';
 import '../widgets/upload_bar.dart';
 
 class ImageRecordPage extends StatefulWidget {
-  const ImageRecordPage({Key? key}) : super(key: key);
+  const ImageRecordPage({super.key});
 
   @override
   _ImageRecordPageState createState() => _ImageRecordPageState();

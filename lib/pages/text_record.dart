@@ -7,7 +7,7 @@ import '../widgets/message_list.dart';
 import '../widgets/upload_bar.dart';
 
 class TextRecordPage extends StatefulWidget {
-  const TextRecordPage({Key? key}) : super(key: key);
+  const TextRecordPage({super.key});
 
   @override
   _TextRecordPageState createState() => _TextRecordPageState();
@@ -29,6 +29,7 @@ class _TextRecordPageState extends State<TextRecordPage> {
   // 營養狀態
   NutritionResult _nutritionResult = NutritionResult(
     foods: [],
+    imageName: '',
     calories: 0,
     carbohydrate: 0,
     protein: 0,
@@ -104,6 +105,7 @@ class _TextRecordPageState extends State<TextRecordPage> {
       _textController.clear();
       _nutritionResult = NutritionResult(
         foods: [],
+        imageName: '',
         calories: 0,
         carbohydrate: 0,
         protein: 0,
