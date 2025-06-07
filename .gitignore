@@ -45,4 +45,5 @@ app.*.map.json
 /android/app/release
 
 # Genkit
-/functions/.genkit/runtimes/*
+/functions/.genkit/
+
