@@ -16,18 +16,9 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
   String _name = '';
   String _gender = 'Men';
   String _birthday = '';
-  String _language = 'English';
   final TextEditingController _birthdayController = TextEditingController();
 
   final List<String> _genderOptions = ['Men', 'Women', 'Other'];
-  final List<String> _languageOptions = [
-    'English',
-    'Chinese',
-    'Spanish',
-    'French',
-    'German',
-  ];
-
   @override
   void dispose() {
     _birthdayController.dispose();
@@ -112,9 +103,7 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
                           buildLabel('Birthday'),
                           TextFormField(
                             controller: _birthdayController,
-                            decoration: _inputDecoration(
-                              'YYMMDD (e.g. 901010)',
-                            ),
+                            decoration: _inputDecoration('YYYY/MM/DD'),
                             keyboardType: TextInputType.number,
                             inputFormatters: [
                               FilteringTextInputFormatter.digitsOnly,
@@ -133,25 +122,6 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
                           ),
                           const SizedBox(height: 16),
 
-                          buildLabel('Language'),
-                          DropdownButtonFormField<String>(
-                            value: _language,
-                            decoration: _inputDecoration(''),
-                            items:
-                                _languageOptions.map((String value) {
-                                  return DropdownMenuItem<String>(
-                                    value: value,
-                                    child: Text(value),
-                                  );
-                                }).toList(),
-                            onChanged: (newValue) {
-                              setState(() {
-                                _language = newValue!;
-                              });
-                            },
-                          ),
-                          const SizedBox(height: 32),
-
                           SizedBox(
                             width: double.infinity,
                             child: ElevatedButton(
@@ -166,28 +136,36 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
                               onPressed: () async {
                                 if (_formKey.currentState!.validate()) {
                                   _formKey.currentState!.save();
+
                                   final prefs =
                                       await SharedPreferences.getInstance();
                                   await prefs.setString('name', _name);
                                   await prefs.setString('gender', _gender);
                                   await prefs.setString('birthday', _birthday);
 
-                                  await FirebaseFirestore.instance
-                                      .collection('users')
-                                      .doc('current_user')
-                                      .update({
-                                        'name': _name,
-                                        'gender': _gender,
-                                        'birthday': _birthday,
-                                      });
+                                  try {
+                                    await FirebaseFirestore.instance
+                                        .collection('users')
+                                        .doc(_name)
+                                        .set({
+                                          'name': _name,
+                                          'gender': _gender,
+                                          'birthday': _birthday,
+                                        }, SetOptions(merge: true));
 
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder:
-                                          (context) => const PersonalInfoPage(),
-                                    ),
-                                  );
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder:
+                                            (context) =>
+                                                const PersonalInfoPage(),
+                                      ),
+                                    );
+                                  } catch (e) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text('資料儲存失敗：$e')),
+                                    );
+                                  }
                                 }
                               },
                               child: const Text(
