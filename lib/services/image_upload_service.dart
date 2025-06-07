@@ -7,6 +7,7 @@ class ImageUploadService {
 
   static Future<void> saveNutritionResult({
     required String base64Image,
+    required String comment,
     required NutritionResult nutritionResult,
   }) async {
     try {
@@ -14,11 +15,12 @@ class ImageUploadService {
       await _firestore.collection('nutrition_records').add({
         'timestamp': FieldValue.serverTimestamp(),
         'base64Image': base64Image, // Store base64 image data
-        'FoodName': nutritionResult.FoodName,
+        'imageName': nutritionResult.imageName,
         'calories': nutritionResult.calories,
         'protein': nutritionResult.protein,
         'carbohydrate': nutritionResult.carbohydrate,
         'fat': nutritionResult.fat,
+        'comment': comment,
         'source':
             base64Image.isEmpty
                 ? 'text_input'

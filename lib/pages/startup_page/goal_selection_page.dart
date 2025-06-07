@@ -1,4 +1,5 @@
 import 'package:calh2o/pages/main_page.dart';
+import 'package:calh2o/services/dailyNeeds.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -34,6 +35,56 @@ class _GoalSelectionPageState extends State<GoalSelectionPage> {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('儲存goal失敗:$e')));
+        return;
+      }
+
+      late String userId, gender, birthday, activityLevel;
+      late int height, weight;
+      try {
+        final doc =
+            await FirebaseFirestore.instance
+                .collection('users')
+                .doc(name)
+                .get();
+        final data = doc.data()!;
+        userId = name;
+        gender = data['gender'] as String;
+        birthday = data['birthday'] as String;
+        activityLevel = data['activityLevel'] as String;
+        height = (data['height'] as num).toInt();
+        weight = (data['weight'] as num).toInt();
+      } catch (e) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('讀取 Profile 失敗: $e')));
+        return;
+      }
+      debugPrint('Checking');
+      DailyNeedsResult dailyNeeds;
+      try {
+        // debugPrint('Before try');
+        // debugPrint(gender);
+        // debugPrint(birthday);
+        // debugPrint(height.toString());
+        // debugPrint(weight.toString());
+        // debugPrint(activityLevel);
+        // debugPrint(_selectedGoal.toLowerCase());
+        dailyNeeds = await getDailyNeeds(
+          userId: userId,
+          gender: gender,
+          birthday: birthday,
+          height: height,
+          weight: weight,
+          activityLevel: activityLevel,
+          goal: _selectedGoal.toLowerCase(), // 確保符合 API 要求
+        );
+        debugPrint('After try');
+      } catch (e) {
+        debugPrint("Failed");
+        if (!mounted) return;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('取得每日需求失敗: $e')));
         return;
       }
     }
