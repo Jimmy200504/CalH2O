@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 
 import '../model/message.dart';
 import '../model/nutrition_result.dart';
-import '../services/message_sent.dart';
 import '../widgets/text_container.dart';
 import '../widgets/nutrition_input_form.dart';
 import 'nutrition_chat_page.dart';
-
+import '../services/image_upload_service.dart';
 
 class TextRecordPage_2 extends StatefulWidget {
   const TextRecordPage_2({super.key});
@@ -29,8 +27,6 @@ class _TextRecordPageState extends State<TextRecordPage_2> {
   ];
 
   final TextEditingController _textController = TextEditingController();
-  final ScrollController _scrollController = ScrollController();
-  bool _sendingMessage = false;
   int _selectedTagIndex = 0;
 
   // 營養狀態
@@ -45,62 +41,6 @@ class _TextRecordPageState extends State<TextRecordPage_2> {
 
   // 紀錄備註
   String _comment = ''; 
-
-  // 目標值
-  final int _proteinTarget = 50;
-  final int _carbsTarget = 250;
-  final int _fatsTarget = 65;
-  final int _caloriesTarget = 2000;
-
-  Future<void> _sendMessage() async {
-    final text = _textController.text.trim();
-    if (text.isEmpty || _sendingMessage) return;
-
-    setState(() {
-      _sendingMessage = true;
-      _messages.add(Message(text: text, isUser: true));
-    });
-    _textController.clear();
-    // 滾到最底
-    await Future.delayed(const Duration(milliseconds: 100));
-    _scrollController.animateTo(
-      _scrollController.position.maxScrollExtent,
-      duration: const Duration(milliseconds: 200),
-      curve: Curves.easeOut,
-    );
-
-    try {
-      final result = await messageSent(
-        text,
-        _nutritionResult,
-        _messages
-            .map((e) => e.isUser ? 'User: ${e.text}' : 'AI: ${e.text}')
-            .toList()
-            .sublist(0, _messages.length - 1),
-      );
-
-      // Save nutrition data to Firestore
-      await FirebaseFirestore.instance.collection('nutrition_records').add({
-        'timestamp': FieldValue.serverTimestamp(),
-        'calories': result.nutrition.calories,
-        'protein': result.nutrition.protein,
-        'carbohydrate': result.nutrition.carbohydrate,
-        'fat': result.nutrition.fat,
-        'source': 'text_input', // 標記來源是文字輸入
-      });
-
-      setState(() {
-        _messages.add(Message(text: result.text, isUser: false));
-        _nutritionResult = result.nutrition;
-      });
-    } catch (e) {
-      setState(() {
-        _messages.add(Message(text: '[AI 回應失敗]', isUser: false));
-      });
-    } finally {
-      setState(() => _sendingMessage = false);
-    }
-  }
 
   void _resetAll() {
     setState(() {
@@ -126,11 +66,6 @@ class _TextRecordPageState extends State<TextRecordPage_2> {
 
   @override
   Widget build(BuildContext context) {
-    // 讀取當前營養數值
-    final protein = _nutritionResult.protein;
-    final carbs = _nutritionResult.carbohydrate;
-    final fats = _nutritionResult.fat;
-    final calories = _nutritionResult.calories;
 
     // 標籤資料：icon 與文字
     final List<Map<String, dynamic>> _mealTags = [
@@ -216,8 +151,15 @@ class _TextRecordPageState extends State<TextRecordPage_2> {
           ),
           // 第二部(flex : 2):相機，[名字，時間]
           Expanded(
-            flex: 2,             // 這裡就是你要的權重
-            child: NameDateRow(),
+            flex: 2,
+            child: NameDateRow(
+              initialName: _nutritionResult.imageName,
+              onNameChanged: (name) {
+                setState(() {
+                  _nutritionResult = _nutritionResult.copyWith(imageName: name);
+                });
+              },
+            ),
           ),
           // 第三部(flex : 4)：營養數據
           Expanded(
@@ -253,16 +195,22 @@ class _TextRecordPageState extends State<TextRecordPage_2> {
                         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
                       ),
                       onPressed: () async {
-                        // 將 _nutritionResult 和 _comment 一起存進 Firestore
-                        await FirebaseFirestore.instance.collection('nutrition_records').add({
-                          'timestamp': FieldValue.serverTimestamp(),
-                          'calories': _nutritionResult.calories,
-                          'protein': _nutritionResult.protein,
-                          'carbohydrate': _nutritionResult.carbohydrate,
-                          'fat': _nutritionResult.fat,
-                          'comment': _comment,
-                          'source': 'text_input',
-                        });
+                        await ImageUploadService.saveNutritionResult(
+                          // imageUrl: imageUrl,
+                          base64Image: '',
+                          comment: _comment,
+                          nutritionResult: _nutritionResult,
+                        );
+                        // // 將 _nutritionResult 和 _comment 一起存進 Firestore
+                        // await FirebaseFirestore.instance.collection('nutrition_records').add({
+                        //   'timestamp': FieldValue.serverTimestamp(),
+                        //   'calories': _nutritionResult.calories,
+                        //   'protein': _nutritionResult.protein,
+                        //   'carbohydrate': _nutritionResult.carbohydrate,
+                        //   'fat': _nutritionResult.fat,
+                        //   'comment': _comment,
+                        //   'source': 'text_input',
+                        // });
                         // 可顯示提示訊息或返回上一頁
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text('資料已儲存')),

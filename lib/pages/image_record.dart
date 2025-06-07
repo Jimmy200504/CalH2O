@@ -46,6 +46,7 @@ class _ImageRecordPageState extends State<ImageRecordPage> {
       await ImageUploadService.saveNutritionResult(
         // imageUrl: imageUrl,
         base64Image: base64Image,
+        comment: '',
         nutritionResult: nutrition,
       );
       setState(() => _nutritionResult = nutrition);
