@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 
-import '../model/message.dart';
-import '../model/nutrition_result.dart';
-import '../widgets/text_container.dart';
-import '../widgets/nutrition_input_form.dart';
+import '../../model/message.dart';
+import '../../model/nutrition_result.dart';
+import '../../widgets/text_container.dart';
+import '../../widgets/nutrition_input_form.dart';
 import 'nutrition_chat_page.dart';
-import '../services/image_upload_service.dart';
+import '../../services/image_upload_service.dart';
 
 class TextRecordPage_2 extends StatefulWidget {
   const TextRecordPage_2({super.key});
