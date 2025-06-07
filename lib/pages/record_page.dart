@@ -56,7 +56,6 @@ class _RecordPageState extends State<RecordPage> {
     try {
       final bytes = await file.readAsBytes();
       String base64Image = "data:image/jpeg;base64,${base64Encode(bytes)}";
-      // debugPrint("img_path : $base64Image");
       final nutrition = await getNutritionFromPhoto(base64Image);
       debugPrint("Analyzed food and nutrition finished");
       setState(() {
@@ -95,6 +94,7 @@ class _RecordPageState extends State<RecordPage> {
         _nutritionResult ??
             NutritionResult(
               foods: [],
+              imageName: '',
               calories: 0,
               carbohydrate: 0,
               protein: 0,

@@ -2,7 +2,7 @@ import 'package:calh2o/pages/startup_page/welcome_page.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
-import 'package:cloud_functions/cloud_functions.dart';
+import 'pages/main_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'pages/main_page.dart';
@@ -17,11 +17,6 @@ void main() async {
 
   final prefs = await SharedPreferences.getInstance();
   final hasProfile = prefs.containsKey('name');
-
-  FirebaseFunctions.instanceFor(
-    region: 'us-central1',
-  ).useFunctionsEmulator('127.0.0.1', 5001);
-  debugPrint('🔧 Connected to Firebase Functions Emulator');
 
   runApp(MyApp(startFromMainPage: hasProfile));
 }
