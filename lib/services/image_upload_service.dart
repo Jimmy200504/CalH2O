@@ -1,43 +1,25 @@
 import 'dart:io';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../model/nutrition_result.dart';
 
 class ImageUploadService {
-  static final FirebaseStorage _storage = FirebaseStorage.instance;
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  static Future<String> uploadImage(File imageFile) async {
-    try {
-      // Create a unique filename using timestamp
-      String fileName =
-          'food_images/${DateTime.now().millisecondsSinceEpoch}.jpg';
-
-      // Upload the file to Firebase Storage
-      final storageRef = _storage.ref().child(fileName);
-      await storageRef.putFile(imageFile);
-
-      // Get the download URL
-      String downloadUrl = await storageRef.getDownloadURL();
-      return downloadUrl;
-    } catch (e) {
-      throw Exception('Failed to upload image: $e');
-    }
-  }
-
   static Future<void> saveNutritionResult({
-    // required String imageUrl,
+    required String base64Image,
     required NutritionResult nutritionResult,
   }) async {
     try {
-      // Save the nutrition result to Firestore
+      // Save the nutrition result and base64 image to Firestore
       await _firestore.collection('nutrition_records').add({
-        // 'imageUrl': imageUrl,
         'timestamp': FieldValue.serverTimestamp(),
+        'base64Image': base64Image, // Store base64 image data
+        'FoodName': nutritionResult.FoodName, 
         'calories': nutritionResult.calories,
         'protein': nutritionResult.protein,
         'carbohydrate': nutritionResult.carbohydrate,
-        'fat': nutritionResult.fat
+        'fat': nutritionResult.fat,
+        'source': 'image_input', // 標記來源是圖片輸入
       });
     } catch (e) {
       throw Exception('Failed to save nutrition result: $e');

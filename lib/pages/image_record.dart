@@ -45,6 +45,7 @@ class _ImageRecordPageState extends State<ImageRecordPage> {
       // Save results to Firestore
       await ImageUploadService.saveNutritionResult(
         // imageUrl: imageUrl,
+        base64Image: base64Image,
         nutritionResult: nutrition,
       );
       setState(() => _nutritionResult = nutrition);
