@@ -33,7 +33,6 @@ class MyApp extends StatelessWidget {
       routes: {
         '/welcome': (_) => const WelcomePage(),
         '/main': (_) => const MainPage(),
-        '/choose': (_) => const ChooseInputPage(),
         '/choose/image': (_)  => const ImageRecordPage(),
         '/choose/text': (_)   => const TextRecordPage_2(),
       },

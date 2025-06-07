@@ -8,11 +8,17 @@ class NameDateRow extends StatefulWidget {
   final String initialName;
   /// 當使用者輸入/提交名字時回傳
   final ValueChanged<String> onNameChanged;
+  /// 當使用者選擇日期時回傳
+  final ValueChanged<DateTime> onDateChanged;
+  /// 當使用者選擇時間時回傳
+  final ValueChanged<TimeOfDay> onTimeChanged;
 
   const NameDateRow({
     Key? key,
     required this.initialName,
     required this.onNameChanged,
+    required this.onDateChanged,
+    required this.onTimeChanged,
   }) : super(key: key);
 
   @override
@@ -27,14 +33,12 @@ class _NameDateRowState extends State<NameDateRow> {
   @override
   void initState() {
     super.initState();
-    // 用父元件傳入的 initialName 初始化
     _nameController = TextEditingController(text: widget.initialName);
   }
 
   @override
   void didUpdateWidget(covariant NameDateRow oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // 當父元件給的 initialName 改變時，同步更新 text
     if (widget.initialName != oldWidget.initialName) {
       _nameController.text = widget.initialName;
     }
@@ -53,7 +57,10 @@ class _NameDateRowState extends State<NameDateRow> {
       firstDate: DateTime(2000),
       lastDate: DateTime(2100),
     );
-    if (picked != null) setState(() => _selectedDate = picked);
+    if (picked != null) {
+      setState(() => _selectedDate = picked);
+      widget.onDateChanged(picked);
+    }
   }
 
   Future<void> _pickTime() async {
@@ -61,7 +68,10 @@ class _NameDateRowState extends State<NameDateRow> {
       context: context,
       initialTime: _selectedTime,
     );
-    if (picked != null) setState(() => _selectedTime = picked);
+    if (picked != null) {
+      setState(() => _selectedTime = picked);
+      widget.onTimeChanged(picked);
+    }
   }
 
   @override
@@ -71,7 +81,6 @@ class _NameDateRowState extends State<NameDateRow> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // 左：相機 icon
           Expanded(
             flex: 1,
             child: Center(
@@ -82,14 +91,12 @@ class _NameDateRowState extends State<NameDateRow> {
               ),
             ),
           ),
-          // 右：名字 + 日期 + 時間
           Expanded(
             flex: 1,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // 名字輸入框
                 TextField(
                   controller: _nameController,
                   decoration: const InputDecoration(
@@ -104,7 +111,6 @@ class _NameDateRowState extends State<NameDateRow> {
                   },
                 ),
                 const SizedBox(height: 8),
-                // 日期＋時間按鈕
                 Row(
                   children: [
                     Flexible(

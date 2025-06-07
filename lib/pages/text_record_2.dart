@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 
 
 import '../model/message.dart';
@@ -41,6 +43,7 @@ class _TextRecordPageState extends State<TextRecordPage_2> {
 
   // 紀錄備註
   String _comment = ''; 
+  Timestamp? _timestamp;
 
   void _resetAll() {
     setState(() {
@@ -159,7 +162,23 @@ class _TextRecordPageState extends State<TextRecordPage_2> {
                   _nutritionResult = _nutritionResult.copyWith(imageName: name);
                 });
               },
-            ),
+              onDateChanged: (d) {
+                setState(() {
+                  final prev = _timestamp?.toDate() ?? DateTime.now();
+                  _timestamp = Timestamp.fromDate(
+                    DateTime(d.year, d.month, d.day, prev.hour, prev.minute),
+                  );
+                });
+              },
+              onTimeChanged: (t) {
+                setState(() {
+                  final prev = _timestamp?.toDate() ?? DateTime.now();
+                  _timestamp = Timestamp.fromDate(
+                    DateTime(prev.year, prev.month, prev.day, t.hour, t.minute),
+                  );
+                });
+              },
+            )
           ),
           // 第三部(flex : 4)：營養數據
           Expanded(
@@ -200,6 +219,7 @@ class _TextRecordPageState extends State<TextRecordPage_2> {
                           base64Image: '',
                           comment: _comment,
                           nutritionResult: _nutritionResult,
+                          time: _timestamp,
                         );
                         // // 將 _nutritionResult 和 _comment 一起存進 Firestore
                         // await FirebaseFirestore.instance.collection('nutrition_records').add({
