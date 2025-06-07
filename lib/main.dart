@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'pages/choose_input_page.dart';
 import 'pages/image_record.dart';
 import 'pages/text_record.dart';
+import 'pages/history_page.dart';
 import 'pages/text_record_2.dart';
 
 void main() async {
@@ -29,12 +30,13 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'CalH2O',
-      initialRoute: '/welcome',
+      initialRoute: '/main',
       routes: {
         '/welcome': (_) => const WelcomePage(),
         '/main': (_) => const MainPage(),
-        '/choose/image': (_)  => const ImageRecordPage(),
+        '/choose/image': (_) => const ImageRecordPage(),
         '/choose/text': (_)   => const TextRecordPage_2(),
+        '/history': (_) => const HistoryPage(),
       },
       home: startFromMainPage ? const MainPage() : const WelcomePage(),
     );
