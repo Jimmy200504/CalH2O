@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../services/image_picker.dart';
 import '../services/get_nutrition_from_photo.dart';
+import '../services/image_upload_service.dart';
 import '../model/message.dart';
 import '../model/nutrition_result.dart';
 import '../widgets/message_list.dart';
@@ -10,7 +11,8 @@ import '../widgets/upload_bar.dart';
 import '../services/message_sent.dart';
 
 class RecordPage extends StatefulWidget {
-  const RecordPage({super.key});
+  final Function(NutritionResult)? onNutritionUpdate;
+  const RecordPage({super.key, this.onNutritionUpdate});
 
   @override
   _RecordPageState createState() => _RecordPageState();
@@ -54,10 +56,39 @@ class _RecordPageState extends State<RecordPage> {
       _loadingNutrition = true;
     });
     try {
+      // Show analysis progress
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('正在分析營養成分...'),
+          duration: Duration(seconds: 1),
+        ),
+      );
+      debugPrint('正在分析營養成分...');
+
+      // Get nutrition analysis
       final bytes = await file.readAsBytes();
       String base64Image = "data:image/jpeg;base64,${base64Encode(bytes)}";
-      // debugPrint("img_path : $base64Image");
       final nutrition = await getNutritionFromPhoto(base64Image);
+
+      // // Show upload progress
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   const SnackBar(
+      //     content: Text('正在上傳圖片...'),
+      //     duration: Duration(seconds: 1),
+      //   ),
+      // );
+      // debugPrint('正在上傳圖片到database...');
+
+      // // Upload image to Firebase Storage
+      // String imageUrl = await ImageUploadService.uploadImage(file);
+
+      // Save results to Firestore
+      await ImageUploadService.saveNutritionResult(
+        // imageUrl: imageUrl,
+        base64Image: base64Image,
+        nutritionResult: nutrition,
+      );
+
       debugPrint("Analyzed food and nutrition finished");
       setState(() {
         _nutritionResult = nutrition;
@@ -95,6 +126,7 @@ class _RecordPageState extends State<RecordPage> {
         _nutritionResult ??
             NutritionResult(
               foods: [],
+              FoodName: '',
               calories: 0,
               carbohydrate: 0,
               protein: 0,
@@ -109,6 +141,11 @@ class _RecordPageState extends State<RecordPage> {
         _messages.add(Message(text: messageWithNutrition.text, isUser: false));
         _nutritionResult = messageWithNutrition.nutrition;
       });
+
+      // Update main page nutrition data
+      if (widget.onNutritionUpdate != null) {
+        widget.onNutritionUpdate!(_nutritionResult!);
+      }
     } catch (e) {
       debugPrint('[ERROR] Failed to send message: \\${e.toString()}');
       setState(() {

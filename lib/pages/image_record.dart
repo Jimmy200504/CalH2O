@@ -3,11 +3,12 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../services/image_picker.dart';
 import '../services/get_nutrition_from_photo.dart';
+import '../services/image_upload_service.dart';
 import '../model/nutrition_result.dart';
 import '../widgets/upload_bar.dart';
 
 class ImageRecordPage extends StatefulWidget {
-  const ImageRecordPage({Key? key}) : super(key: key);
+  const ImageRecordPage({super.key});
 
   @override
   _ImageRecordPageState createState() => _ImageRecordPageState();
@@ -41,6 +42,12 @@ class _ImageRecordPageState extends State<ImageRecordPage> {
       final bytes = await file.readAsBytes();
       final base64Image = 'data:image/jpeg;base64,${base64Encode(bytes)}';
       final nutrition = await getNutritionFromPhoto(base64Image);
+      // Save results to Firestore
+      await ImageUploadService.saveNutritionResult(
+        // imageUrl: imageUrl,
+        base64Image: base64Image,
+        nutritionResult: nutrition,
+      );
       setState(() => _nutritionResult = nutrition);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(

@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../model/message.dart';
 import '../model/nutrition_result.dart';
 import '../services/message_sent.dart';
 import '../widgets/message_list.dart';
 import '../widgets/upload_bar.dart';
+import '../services/image_upload_service.dart';
 
 class TextRecordPage extends StatefulWidget {
-  const TextRecordPage({Key? key}) : super(key: key);
+  const TextRecordPage({super.key});
 
   @override
   _TextRecordPageState createState() => _TextRecordPageState();
@@ -17,7 +19,7 @@ class _TextRecordPageState extends State<TextRecordPage> {
   final List<Message> _messages = [
     Message(
       text:
-        'Hello. I can help you track your daily water and nutrition intake. You can tell me what you ate or drank today.',
+          'Hello. I can help you track your daily water and nutrition intake. You can tell me what you ate or drank today.',
       isUser: false,
     ),
   ];
@@ -27,13 +29,18 @@ class _TextRecordPageState extends State<TextRecordPage> {
 
   // 營養狀態
   NutritionResult _nutritionResult = NutritionResult(
-    foods: [], calories: 0, carbohydrate: 0, protein: 0, fat: 0,
+    foods: [],
+    FoodName: '',
+    calories: 0,
+    carbohydrate: 0,
+    protein: 0,
+    fat: 0,
   );
 
   // 目標值
-  final int _proteinTarget  = 50;
-  final int _carbsTarget    = 250;
-  final int _fatsTarget     = 65;
+  final int _proteinTarget = 50;
+  final int _carbsTarget = 250;
+  final int _fatsTarget = 65;
   final int _caloriesTarget = 2000;
 
   Future<void> _sendMessage() async {
@@ -62,6 +69,13 @@ class _TextRecordPageState extends State<TextRecordPage> {
             .toList()
             .sublist(0, _messages.length - 1),
       );
+
+      // Save nutrition data using ImageUploadService
+      await ImageUploadService.saveNutritionResult(
+        base64Image: '', // Empty base64 string for text input
+        nutritionResult: result.nutrition,
+      );
+
       setState(() {
         _messages.add(Message(text: result.text, isUser: false));
         _nutritionResult = result.nutrition;
@@ -78,14 +92,21 @@ class _TextRecordPageState extends State<TextRecordPage> {
   void _resetAll() {
     setState(() {
       _messages.clear();
-      _messages.add(Message(
-        text:
-          'Hello. I can help you track your daily water and nutrition intake. You can tell me what you ate or drank today.',
-        isUser: false,
-      ));
+      _messages.add(
+        Message(
+          text:
+              'Hello. I can help you track your daily water and nutrition intake. You can tell me what you ate or drank today.',
+          isUser: false,
+        ),
+      );
       _textController.clear();
       _nutritionResult = NutritionResult(
-        foods: [], calories: 0, carbohydrate: 0, protein: 0, fat: 0,
+        foods: [],
+        FoodName: '',
+        calories: 0,
+        carbohydrate: 0,
+        protein: 0,
+        fat: 0,
       );
     });
   }
@@ -93,9 +114,9 @@ class _TextRecordPageState extends State<TextRecordPage> {
   @override
   Widget build(BuildContext context) {
     // 讀取當前營養數值
-    final protein  = _nutritionResult.protein;
-    final carbs    = _nutritionResult.carbohydrate;
-    final fats     = _nutritionResult.fat;
+    final protein = _nutritionResult.protein;
+    final carbs = _nutritionResult.carbohydrate;
+    final fats = _nutritionResult.fat;
     final calories = _nutritionResult.calories;
 
     return Scaffold(
@@ -103,10 +124,7 @@ class _TextRecordPageState extends State<TextRecordPage> {
       appBar: AppBar(
         title: const Text('文字輸入'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _resetAll,
-          ),
+          IconButton(icon: const Icon(Icons.refresh), onPressed: _resetAll),
         ],
         backgroundColor: Colors.white,
       ),
@@ -138,7 +156,10 @@ class _TextRecordPageState extends State<TextRecordPage> {
                   ),
                   const Divider(height: 1),
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     child: Row(
                       children: [
                         Expanded(
@@ -151,13 +172,19 @@ class _TextRecordPageState extends State<TextRecordPage> {
                           ),
                         ),
                         IconButton(
-                          icon: _sendingMessage
-                              ? const SizedBox(
-                                  width: 24,
-                                  height: 24,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
-                                )
-                              : const Icon(Icons.send, color: Colors.blueAccent),
+                          icon:
+                              _sendingMessage
+                                  ? const SizedBox(
+                                    width: 24,
+                                    height: 24,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                  : const Icon(
+                                    Icons.send,
+                                    color: Colors.blueAccent,
+                                  ),
                           onPressed: _sendingMessage ? null : _sendMessage,
                         ),
                       ],

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class ChooseInputPage extends StatelessWidget {
-  const ChooseInputPage({Key? key}) : super(key: key);
+  const ChooseInputPage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -46,11 +46,11 @@ class _FloatingButton extends StatelessWidget {
   final VoidCallback onTap;
 
   const _FloatingButton({
-    Key? key,
+    super.key,
     required this.asset,
     required this.label,
     required this.onTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
