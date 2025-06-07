@@ -3,6 +3,7 @@ import '../widgets/main_progress_bar.dart';
 import '../widgets/nutrition_card.dart';
 import 'record_page.dart';
 import '../widgets/animation.dart';
+import '../pages/setting_page.dart';
 
 
 class MainPage extends StatefulWidget {
@@ -72,16 +73,23 @@ class _MainPageState extends State<MainPage> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Icon(Icons.settings, size: 40),
+                  IconButton(
+                    icon: Icon(Icons.settings, size: 40),
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => const SettingPage()),
+                      );
+                    },
+                  ),
                   Text(
-                    'H2OCal',
+                    'CalH2O',
                     style: TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 1,
                     ),
                   ),
-                  Icon(Icons.info_outline, size: 40),
+                  Icon(Icons.info, size: 40),
                 ],
               ),
             ),
@@ -171,9 +179,7 @@ class _MainPageState extends State<MainPage> {
                     //跳到 upload page
                     icon: const Icon(Icons.lunch_dining, size: 40),
                     onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const RecordPage()),
-                      );
+                      Navigator.of(context).pushNamed('/choose');
                     },
                   ),
                   Icon(Icons.access_time, size: 40),

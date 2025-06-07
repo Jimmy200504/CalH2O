@@ -17,7 +17,7 @@ class WelcomePage extends StatelessWidget {
             children: [
               const Spacer(),
               const Text(
-                'Welcome to H2O Cal.',
+                'Welcome to CalH2O.',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 36, fontWeight: FontWeight.bold),
               ),

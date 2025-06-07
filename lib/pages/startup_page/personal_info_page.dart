@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'goal_selection_page.dart'; // 下一頁可自行切換為 main_page.dart
+import 'goal_selection_page.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class PersonalInfoPage extends StatefulWidget {
   const PersonalInfoPage({super.key});
@@ -13,6 +14,14 @@ class _PersonalInfoPageState extends State<PersonalInfoPage> {
   final _formKey = GlobalKey<FormState>();
   String _height = '';
   String _weight = '';
+  String _activityLevel = 'active'; // 預設值
+  final List<String> _activityOptions = [
+    'sedentary',
+    'light',
+    'active',
+    'very active',
+    'extra active',
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -95,7 +104,36 @@ class _PersonalInfoPageState extends State<PersonalInfoPage> {
                                         : null,
                             onSaved: (value) => _weight = value!,
                           ),
-                          const SizedBox(height: 32),
+                          const SizedBox(height: 16),
+                          const Text(
+                            'Activity Level',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          DropdownButtonFormField<String>(
+                            value: _activityLevel,
+                            items:
+                                _activityOptions.map((String level) {
+                                  return DropdownMenuItem<String>(
+                                    value: level,
+                                    child: Text(level),
+                                  );
+                                }).toList(),
+                            onChanged: (value) {
+                              setState(() {
+                                _activityLevel = value!;
+                              });
+                            },
+                            decoration: InputDecoration(
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: 32),
                           SizedBox(
                             width: double.infinity,
                             child: ElevatedButton(
@@ -115,8 +153,22 @@ class _PersonalInfoPageState extends State<PersonalInfoPage> {
                                       await SharedPreferences.getInstance();
                                   await prefs.setString('height', _height);
                                   await prefs.setString('weight', _weight);
+                                  await prefs.setString(
+                                    'activityLevel',
+                                    _activityLevel,
+                                  );
+                                  final name = prefs.getString('name');
 
-                                  // 👉 下一頁可以是 GoalSelectionPage 或 MainPage
+                                  if (name != null) {
+                                    await FirebaseFirestore.instance
+                                        .collection('users')
+                                        .doc(name)
+                                        .set({
+                                          'height': _height,
+                                          'weight': _weight,
+                                          'activityLevel': _activityLevel,
+                                        }, SetOptions(merge: true));
+                                  }
                                   Navigator.pushReplacement(
                                     context,
                                     MaterialPageRoute(
