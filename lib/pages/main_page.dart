@@ -34,49 +34,45 @@ class _MainPageState extends State<MainPage> {
   @override
   void initState() {
     super.initState();
-    _loadTodayNutrition();
+    _setupNutritionListener();
   }
 
-  Future<void> _loadTodayNutrition() async {
-    try {
-      // Get today's start and end timestamps
-      final now = DateTime.now();
-      final startOfDay = DateTime(now.year, now.month, now.day);
-      final endOfDay = startOfDay.add(const Duration(days: 1));
+  void _setupNutritionListener() {
+    // Get today's start and end timestamps
+    final now = DateTime.now();
+    final startOfDay = DateTime(now.year, now.month, now.day);
+    final endOfDay = startOfDay.add(const Duration(days: 1));
 
-      // Query Firestore for today's records
-      final querySnapshot =
-          await FirebaseFirestore.instance
-              .collection('nutrition_records')
-              .where('timestamp', isGreaterThanOrEqualTo: startOfDay)
-              .where('timestamp', isLessThan: endOfDay)
-              .get();
+    // Listen to Firestore for real-time updates
+    FirebaseFirestore.instance
+        .collection('nutrition_records')
+        .where('timestamp', isGreaterThanOrEqualTo: startOfDay)
+        .where('timestamp', isLessThan: endOfDay)
+        .snapshots()
+        .listen((snapshot) {
+          // Reset values
+          setState(() {
+            _calories = 0;
+            _protein = 0;
+            _carbs = 0;
+            _fats = 0;
+          });
 
-      // Reset values
-      setState(() {
-        _calories = 0;
-        _protein = 0;
-        _carbs = 0;
-        _fats = 0;
-      });
+          // Sum up all nutrition values
+          for (var doc in snapshot.docs) {
+            setState(() {
+              _calories += (doc['calories'] as num).toInt();
+              _protein += (doc['protein'] as num).toInt();
+              _carbs += (doc['carbohydrate'] as num).toInt();
+              _fats += (doc['fat'] as num).toInt();
+            });
+          }
 
-      // Sum up all nutrition values
-      for (var doc in querySnapshot.docs) {
-        setState(() {
-          _calories += (doc['calories'] as num).toInt();
-          _protein += (doc['protein'] as num).toInt();
-          _carbs += (doc['carbohydrate'] as num).toInt();
-          _fats += (doc['fat'] as num).toInt();
+          // Update progress values
+          setState(() {
+            _caloriesProgress = (_calories / _caloriesTarget).clamp(0.0, 1.0);
+          });
         });
-      }
-
-      // Update progress values
-      setState(() {
-        _caloriesProgress = (_calories / _caloriesTarget).clamp(0.0, 1.0);
-      });
-    } catch (e) {
-      debugPrint('Error loading nutrition data: $e');
-    }
   }
 
   String _getLabel(int current, int target, String unit) {
@@ -100,17 +96,17 @@ class _MainPageState extends State<MainPage> {
     });
   }
 
-  void _updateNutrition(NutritionResult nutrition) {
-    setState(() {
-      _calories += nutrition.calories.round();
-      _protein += nutrition.protein.round();
-      _carbs += nutrition.carbohydrate.round();
-      _fats += nutrition.fat.round();
+  // void _updateNutrition(NutritionResult nutrition) {
+  //   setState(() {
+  //     _calories += nutrition.calories.round();
+  //     _protein += nutrition.protein.round();
+  //     _carbs += nutrition.carbohydrate.round();
+  //     _fats += nutrition.fat.round();
 
-      // Update progress values
-      _caloriesProgress = (_calories / _caloriesTarget).clamp(0.0, 1.0);
-    });
-  }
+  //     // Update progress values
+  //     _caloriesProgress = (_calories / _caloriesTarget).clamp(0.0, 1.0);
+  //   });
+  // }
 
   void _incrementWater() {
     setState(() {
