@@ -43,7 +43,7 @@ const activityFactors: Record<string, number> = {
 // --- AI Prompt: 根據使用者目標估算額外調整係數 ---
 const goalAdjustmentPrompt = ai.definePrompt({
   name: "goalAdjustmentPrompt",
-  model: "vertexai/gemini-2.5-pro-preview-05-06",
+  model: "vertexai/gemini-2.0-flash",
   messages: `
 You are a professional dietitian. Given a user's goal, suggest an adjustment factor to apply on top of the activity multiplier.
 
@@ -69,7 +69,7 @@ User Goal: {{goal}}
 // --- AI Prompt: 計算宏量營養素分配 ---
 const macroTargetsPrompt = ai.definePrompt({
   name: "macroTargetsPrompt",
-  model: "vertexai/gemini-2.5-pro-preview-05-06",
+  model: "vertexai/gemini-2.0-flash",
   messages: `
 You are a professional dietitian. Given a user's daily calorie target, suggest an appropriate macronutrient split (protein, carbs, fats) in grams.
 
