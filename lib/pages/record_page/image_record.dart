@@ -79,17 +79,19 @@ class _ImageRecordPageState extends State<ImageRecordPage>
 
   Future<void> _takePicture() async {
     if (_isProcessing || _isDisposed) {
+      debugPrint("Cannot take picture: processing or disposed");
       return;
     }
 
+    debugPrint("Taking picture");
     setState(() => _isProcessing = true);
     try {
       final photo = await _cameraService.takePicture();
       if (photo != null && mounted && !_isDisposed) {
         debugPrint("Picture taken, converting to base64");
         final bytes = await photo.readAsBytes();
-        final base64String = base64Encode(bytes);
-        await _handleNavigation(base64String);
+        final base64Image = 'data:image/jpeg;base64,${base64Encode(bytes)}';
+        await _handleNavigation(base64Image);
       } else {
         // 如果拍照失敗，也要返回主畫面
         await _handleNavigation(null);
@@ -110,14 +112,15 @@ class _ImageRecordPageState extends State<ImageRecordPage>
       return;
     }
 
+    debugPrint("Picking image");
     setState(() => _isProcessing = true);
     try {
       final file = await ImagePickerService.pickAndSaveImage();
       if (file != null && mounted && !_isDisposed) {
         debugPrint("Image picked, converting to base64");
         final bytes = await file.readAsBytes();
-        final base64String = base64Encode(bytes);
-        await _handleNavigation(base64String);
+        final base64Image = 'data:image/jpeg;base64,${base64Encode(bytes)}';
+        await _handleNavigation(base64Image);
       } else {
         // 如果選擇圖片失敗或取消，不需要返回主畫面，因為我們還在相機畫面
         debugPrint("Image picking cancelled or failed, staying on camera page");
