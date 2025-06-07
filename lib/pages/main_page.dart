@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../widgets/main_progress_bar.dart';
-import '../widgets/nutrition_card.dart';
+
 import '../model/nutrition_result.dart';
+import '../widgets/main_page/main_progress_bar.dart';
+import '../widgets/main_page/nutrition_card.dart';
+import '../widgets/main_page/loading_overlay.dart';
 import '../widgets/animation.dart';
+import '../services/get_nutrition_from_photo.dart';
+import '../services/image_upload_service.dart';
 
 import '../pages/setting_page.dart';
 import '../pages/history_page.dart';
@@ -18,6 +22,7 @@ class MainPage extends StatefulWidget {
 class _MainPageState extends State<MainPage> {
   double _caloriesProgress = 0.0;
   double _waterProgress = 0.0;
+  bool _isProcessing = false;
 
   // Nutrition variables
   int _water = 0;
@@ -127,6 +132,28 @@ class _MainPageState extends State<MainPage> {
     });
   }
 
+  Future<void> _handleImageResult(String? result) async {
+    if (result == null) return;
+    debugPrint("Get the base64 string in main page.");
+    setState(() => _isProcessing = true);
+    try {
+      // 分析營養成分
+      final nutritionResult = await getNutritionFromPhoto(result);
+
+      // 上傳到資料庫
+      await ImageUploadService.saveNutritionResult(
+        base64Image: result,
+        comment: '',
+        nutritionResult: nutritionResult,
+      );
+    } catch (e) {
+      debugPrint('Error processing image: $e');
+      // 可以在這裡添加錯誤提示
+    } finally {
+      setState(() => _isProcessing = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -211,36 +238,37 @@ class _MainPageState extends State<MainPage> {
                     ],
                   ),
                 ),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: Container(
-                    margin: const EdgeInsets.only(top: 16, right: 24),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 8,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    if (_isProcessing)
+                      const Padding(
+                        padding: EdgeInsets.only(right: 8),
+                        child: LoadingOverlay(),
+                      ),
+                    Container(
+                      margin: const EdgeInsets.only(top: 16, right: 24),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(24),
+                      ),
+                      child: Text(
+                        'combo',
+                        style: TextStyle(fontSize: 20, color: Colors.black54),
+                      ),
                     ),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[300],
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                    child: Text(
-                      'combo',
-                      style: TextStyle(fontSize: 20, color: Colors.black54),
-                    ),
-                  ),
+                  ],
                 ),
                 SizedBox(height: 8),
                 Expanded(
                   child: Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          width: 200,
-                          height: 200,
-                          child: FrameAnimationWidget(size: 200),
-                        ),
-                      ],
+                      children: [const FrameAnimationWidget(size: 200)],
                     ),
                   ),
                 ),
@@ -336,8 +364,14 @@ class _MainPageState extends State<MainPage> {
                     // 圖片輸入按鈕（右方）
                     IconButton(
                       icon: const Icon(Icons.camera_alt, size: 40),
-                      onPressed: () {
-                        Navigator.pushNamed(context, '/image');
+                      onPressed: () async {
+                        final result = await Navigator.pushNamed(
+                          context,
+                          '/image',
+                        );
+                        if (result != null) {
+                          await _handleImageResult(result as String);
+                        }
                         _toggleSubButtons();
                       },
                     ),
