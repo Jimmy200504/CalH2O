@@ -3,7 +3,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../widgets/main_progress_bar.dart';
 import '../widgets/nutrition_card.dart';
 import '../model/nutrition_result.dart';
-import 'record_page.dart';
 import '../widgets/animation.dart';
 
 import '../pages/setting_page.dart';
@@ -308,7 +307,7 @@ class _MainPageState extends State<MainPage> {
                     IconButton(
                       icon: const Icon(Icons.edit_note, size: 40),
                       onPressed: () {
-                        Navigator.pushNamed(context, '/choose/text');
+                        Navigator.pushNamed(context, '/text');
                         _toggleSubButtons();
                       },
                     ),
@@ -338,7 +337,7 @@ class _MainPageState extends State<MainPage> {
                     IconButton(
                       icon: const Icon(Icons.camera_alt, size: 40),
                       onPressed: () {
-                        Navigator.pushNamed(context, '/choose/image');
+                        Navigator.pushNamed(context, '/image');
                         _toggleSubButtons();
                       },
                     ),
