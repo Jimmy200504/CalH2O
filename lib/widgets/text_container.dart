@@ -1,47 +1,74 @@
 import 'package:flutter/material.dart';
 
+/// 名字和日期時間列
+/// 允許使用者輸入名字並回傳給父元件，
+/// 也可選擇日期與時間
 class NameDateRow extends StatefulWidget {
-  const NameDateRow({Key? key}) : super(key: key);
+  /// 初始顯示的名字
+  final String initialName;
+  /// 當使用者輸入/提交名字時回傳
+  final ValueChanged<String> onNameChanged;
+
+  const NameDateRow({
+    Key? key,
+    required this.initialName,
+    required this.onNameChanged,
+  }) : super(key: key);
 
   @override
   _NameDateRowState createState() => _NameDateRowState();
 }
 
 class _NameDateRowState extends State<NameDateRow> {
-  // 1. 控制器：用來讀取 TextField 輸入文字
-  final TextEditingController _nameController = TextEditingController();
-
-  // 2. 分別記錄使用者選的日期／時間
+  late TextEditingController _nameController;
   DateTime _selectedDate = DateTime.now();
   TimeOfDay _selectedTime = TimeOfDay.now();
 
-  // 3. 跳出日期選擇器
+  @override
+  void initState() {
+    super.initState();
+    // 用父元件傳入的 initialName 初始化
+    _nameController = TextEditingController(text: widget.initialName);
+  }
+
+  @override
+  void didUpdateWidget(covariant NameDateRow oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // 當父元件給的 initialName 改變時，同步更新 text
+    if (widget.initialName != oldWidget.initialName) {
+      _nameController.text = widget.initialName;
+    }
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    super.dispose();
+  }
+
   Future<void> _pickDate() async {
-    DateTime? picked = await showDatePicker(
+    final picked = await showDatePicker(
       context: context,
       initialDate: _selectedDate,
       firstDate: DateTime(2000),
       lastDate: DateTime(2100),
     );
-    if (picked != null) {
-      setState(() => _selectedDate = picked);
-    }
+    if (picked != null) setState(() => _selectedDate = picked);
   }
 
-  // 4. 跳出時間選擇器
   Future<void> _pickTime() async {
-    TimeOfDay? picked =
-        await showTimePicker(context: context, initialTime: _selectedTime);
-    if (picked != null) {
-      setState(() => _selectedTime = picked);
-    }
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: _selectedTime,
+    );
+    if (picked != null) setState(() => _selectedTime = picked);
   }
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
-      child:Row(
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           // 左：相機 icon
@@ -55,7 +82,6 @@ class _NameDateRowState extends State<NameDateRow> {
               ),
             ),
           ),
-
           // 右：名字 + 日期 + 時間
           Expanded(
             flex: 1,
@@ -71,13 +97,13 @@ class _NameDateRowState extends State<NameDateRow> {
                     border: OutlineInputBorder(),
                     isDense: true,
                   ),
+                  textInputAction: TextInputAction.done,
                   onSubmitted: (text) {
-                    // 使用者按 Enter 後，你可以在這裡取得 _nameController.text
-                    // 例如：print('使用者輸入名字：$text');
+                    widget.onNameChanged(text);
+                    FocusScope.of(context).unfocus();
                   },
                 ),
                 const SizedBox(height: 8),
-
                 // 日期＋時間按鈕
                 Row(
                   children: [
