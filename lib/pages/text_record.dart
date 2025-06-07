@@ -5,6 +5,7 @@ import '../model/nutrition_result.dart';
 import '../services/message_sent.dart';
 import '../widgets/message_list.dart';
 import '../widgets/upload_bar.dart';
+import '../services/image_upload_service.dart';
 
 class TextRecordPage extends StatefulWidget {
   const TextRecordPage({super.key});
@@ -69,16 +70,11 @@ class _TextRecordPageState extends State<TextRecordPage> {
             .sublist(0, _messages.length - 1),
       );
 
-      // Save nutrition data to Firestore
-      await FirebaseFirestore.instance.collection('nutrition_records').add({
-        'timestamp': FieldValue.serverTimestamp(),
-        'FoodName': result.nutrition.FoodName, 
-        'calories': result.nutrition.calories,
-        'protein': result.nutrition.protein,
-        'carbohydrate': result.nutrition.carbohydrate,
-        'fat': result.nutrition.fat,
-        'source': 'text_input', // 標記來源是文字輸入
-      });
+      // Save nutrition data using ImageUploadService
+      await ImageUploadService.saveNutritionResult(
+        base64Image: '', // Empty base64 string for text input
+        nutritionResult: result.nutrition,
+      );
 
       setState(() {
         _messages.add(Message(text: result.text, isUser: false));

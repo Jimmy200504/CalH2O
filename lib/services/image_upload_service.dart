@@ -14,12 +14,15 @@ class ImageUploadService {
       await _firestore.collection('nutrition_records').add({
         'timestamp': FieldValue.serverTimestamp(),
         'base64Image': base64Image, // Store base64 image data
-        'FoodName': nutritionResult.FoodName, 
+        'FoodName': nutritionResult.FoodName,
         'calories': nutritionResult.calories,
         'protein': nutritionResult.protein,
         'carbohydrate': nutritionResult.carbohydrate,
         'fat': nutritionResult.fat,
-        'source': 'image_input', // 標記來源是圖片輸入
+        'source':
+            base64Image.isEmpty
+                ? 'text_input'
+                : 'image_input', // Set source based on base64Image
       });
     } catch (e) {
       throw Exception('Failed to save nutrition result: $e');
