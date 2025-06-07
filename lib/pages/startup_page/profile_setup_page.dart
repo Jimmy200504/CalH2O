@@ -103,18 +103,18 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
                           buildLabel('Birthday'),
                           TextFormField(
                             controller: _birthdayController,
-                            decoration: _inputDecoration('YYYY/MM/DD'),
+                            decoration: _inputDecoration('YYYYMMDD'),
                             keyboardType: TextInputType.number,
                             inputFormatters: [
                               FilteringTextInputFormatter.digitsOnly,
-                              LengthLimitingTextInputFormatter(6),
+                              LengthLimitingTextInputFormatter(8),
                             ],
                             validator: (value) {
                               if (value == null || value.isEmpty) {
                                 return 'Please enter your birthday';
                               }
-                              if (value.length != 6) {
-                                return 'Please enter 6 digits (YYMMDD)';
+                              if (value.length != 8) {
+                                return 'Please enter 8 digits (YYYYMMDD)';
                               }
                               return null;
                             },

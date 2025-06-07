@@ -1,8 +1,12 @@
 import * as functionsV1 from "firebase-functions/v1";
+import * as admin from "firebase-admin";
 import { foodPhotoNutritionFlow } from "./flow/foodPhotoToNutritionFlow";
 import { textToNutritionFlow } from "./flow/textToNutritionFlow";
-import { dailyNeedsFlow } from './flow/dailyNeedsFlow'
+import { dailyNeedsFlow } from './flow/dailyNeedsFlow';
 import { Request, Response } from "express";
+
+// Initialize Admin SDK
+admin.initializeApp();
 
 export const foodPhotoNutrition = functionsV1
   .runWith({ timeoutSeconds: 540})
@@ -62,47 +66,63 @@ export const textToNutrition = functionsV1
   }
 });
 
+// Handle daily needs and store to Firestore
 export const dailyNeeds = functionsV1
   .runWith({ timeoutSeconds: 540 })
   .https.onRequest(async (req: Request, res: Response) => {
-    // 只接受 POST 並且 Content-Type: application/json
-    if (req.method !== "POST") {
-      res.status(405).json({ error: "Method Not Allowed" });
+    if (req.method !== 'POST') {
+      res.status(405).json({ error: 'Method Not Allowed' });
       return;
     }
-    if (!req.is("application/json")) {
-      res.status(415).json({ error: "Content-Type must be application/json" });
+    if (!req.is('application/json')) {
+      res.status(415).json({ error: 'Content-Type must be application/json' });
       return;
     }
-
     try {
-      const { gender, birthday, height, weight } = req.body;
-      // 基本驗證
+      const { userId, gender, birthday, height, weight, activityLevel, goal } = req.body;
       if (
-        typeof gender !== "string" ||
-        typeof birthday !== "string" ||
-        typeof height !== "number" ||
-        typeof weight !== "number"
+        typeof userId !== 'string' ||
+        typeof gender !== 'string' ||
+        typeof birthday !== 'string' ||
+        typeof height !== 'number' ||
+        typeof weight !== 'number' ||
+        typeof activityLevel !== 'string' ||
+        typeof goal !== 'string'
       ) {
-        res
-          .status(400)
-          .json({ error: "Missing or invalid fields" });
+        res.status(400).json({ error: 'Missing or invalid fields' });
         return;
       }
-
-      // 呼叫 flow
+      // Validate enum values
+      const validGenders = ["Men", "Women", "Other"] as const;
+      const validActivities = ["sedentary","light","active","very active","extra active"] as const;
+      const validGoals = ["gain weight","maintain weight","lose weight","drink more water"] as const;
+      if (
+        !validGenders.includes(gender as any) ||
+        !validActivities.includes(activityLevel as any) ||
+        !validGoals.includes(goal as any)
+      ) {
+        res.status(400).json({ error: 'Invalid enum value for gender, activityLevel, or goal' });
+        return;
+      }
+      // Call flow
       const result = await dailyNeedsFlow({
-        gender,
+        gender: gender as typeof validGenders[number],
         birthday,
         height,
         weight,
+        activityLevel: activityLevel as typeof validActivities[number],
+        goal: goal as typeof validGoals[number],
       });
-
+      await admin.firestore()
+        .collection('users')
+        .doc(userId)
+        .set(
+          {...result},
+           { merge: true }   
+        );
       res.status(200).json(result);
-    } catch (error) {
-      console.error("dailyNeeds error:", error);
-      res
-        .status(500)
-        .json({ error: error instanceof Error ? error.message : String(error) });
+    } catch (error: any) {
+      console.error('dailyNeeds error:', error);
+      res.status(500).json({ error: error.message || String(error) });
     }
   });
