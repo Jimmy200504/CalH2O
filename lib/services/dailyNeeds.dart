@@ -39,10 +39,10 @@ Future<DailyNeedsResult> getDailyNeeds({
   required String goal,
   Duration timeout = const Duration(seconds: 30),
 }) async {
-  // final uri = Uri.parse(
-  //   'https://us-central1-calh2o.cloudfunctions.net/dailyNeeds',
-  // );
-  final uri = Uri.parse('http://10.0.2.2:5001/calh2o/us-central1/dailyNeeds');
+  final uri = Uri.parse(
+    'https://us-central1-calh2o.cloudfunctions.net/dailyNeeds',
+  );
+  // final uri = Uri.parse('http://10.0.2.2:5001/calh2o/us-central1/dailyNeeds');
 
   final payload = {
     'userId': userId,
