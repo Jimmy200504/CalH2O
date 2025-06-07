@@ -3,10 +3,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../widgets/main_progress_bar.dart';
 import '../widgets/nutrition_card.dart';
 import '../model/nutrition_result.dart';
-import 'record_page.dart';
 import '../widgets/animation.dart';
 
 import '../pages/setting_page.dart';
+import '../pages/history_page.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -261,7 +261,17 @@ class _MainPageState extends State<MainPage> {
                         ),
                         onPressed: _toggleSubButtons,
                       ),
-                      Icon(Icons.access_time, size: 40),
+                      IconButton(
+                        icon: const Icon(Icons.access_time, size: 40),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const HistoryPage(),
+                            ),
+                          );
+                        },
+                      ),
                     ],
                   ),
                 ),
