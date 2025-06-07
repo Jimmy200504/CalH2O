@@ -42,6 +42,7 @@ dependencies:
   cloud_functions: ^4.7.6
   http: ^1.4.0
   shared_preferences: ^2.2.2
+  google_fonts: ^5.0.0
 
 dev_dependencies:
   flutter_test:
@@ -68,6 +69,8 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets:
     - assets/minion.png
+    - assets/selfie_cartoon.png
+    - assets/text_input_cartoon.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
