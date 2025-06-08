@@ -92,6 +92,7 @@ class _TextRecordPageState extends State<TextRecordPage> {
 
     return Scaffold(
       backgroundColor: Colors.white,
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         title: const Text('Record Nutrition'),
         actions: [
@@ -165,183 +166,219 @@ class _TextRecordPageState extends State<TextRecordPage> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          // 第二部(flex : 1)：標籤選擇
-          Container(
-            height: 100,
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: _getMealTags().length,
-              itemBuilder: (context, idx) {
-                final tagData = _getMealTags()[idx];
-                final isSelected = idx == _selectedTagIndex;
-                return GestureDetector(
-                  onTap:
-                      () => setState(() {
-                        _selectedTagIndex = idx;
-                        _tag = tagData['label'] as String;
-                        draft.tag = _tag;
-                      }),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    margin: EdgeInsets.only(
-                      left: idx == 0 ? 16 : 8,
-                      right: idx == _getMealTags().length - 1 ? 16 : 8,
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isSelected ? Colors.orangeAccent : Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow:
-                          isSelected
-                              ? [
-                                BoxShadow(
-                                  color: Colors.orangeAccent.withOpacity(0.4),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ]
-                              : null,
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          tagData['icon'] as IconData,
-                          color: isSelected ? Colors.black87 : Colors.grey,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          tagData['label'] as String,
-                          style: TextStyle(
-                            color: isSelected ? Colors.black87 : Colors.grey,
-                            fontWeight:
-                                isSelected
-                                    ? FontWeight.bold
-                                    : FontWeight.normal,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
+      body: GestureDetector(
+        // 點擊空白處收起鍵盤
+        onTap: () => FocusScope.of(context).unfocus(),
+        // 確保點擊事件不會影響子組件
+        behavior: HitTestBehavior.translucent,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: MediaQuery.of(context).size.height,
             ),
-          ),
-          const SizedBox(height: 10),
-          // 第一部(flex : 1)：名稱與日期
-          NameDateRow(
-            initialName: _nutritionResult.imageName,
-            initialImage: _capturedImageBase64,
-            onNameChanged: (name) {
-              setState(() {
-                _nutritionResult = _nutritionResult.copyWith(imageName: name);
-                draft.nutritionResult = _nutritionResult;
-              });
-            },
-            onDateChanged: (d) {
-              setState(() {
-                final prev = _timestamp?.toDate() ?? DateTime.now();
-                _timestamp = Timestamp.fromDate(
-                  DateTime(d.year, d.month, d.day, prev.hour, prev.minute),
-                );
-                draft.timestamp = _timestamp;
-              });
-            },
-            onTimeChanged: (t) {
-              setState(() {
-                final prev = _timestamp?.toDate() ?? DateTime.now();
-                _timestamp = Timestamp.fromDate(
-                  DateTime(prev.year, prev.month, prev.day, t.hour, t.minute),
-                );
-                draft.timestamp = _timestamp;
-              });
-            },
-            onImageCaptured: (base64Image) {
-              setState(() {
-                _capturedImageBase64 = base64Image;
-              });
-            },
-          ),
-
-          const SizedBox(height: 10),
-          // Generate Nutrition Button
-          SizedBox(
-            // 靠在畫面右邊
-            height: 50,
-            width: 500,
-            child: Align(
-              alignment: Alignment.centerRight,
-
-              child: GenerateNutritionButton(
-                nutritionResult: _nutritionResult,
-                onNutritionGenerated: (newNutrition) {
-                  setState(() {
-                    _nutritionResult = newNutrition;
-                  });
-                },
-              ),
-            ),
-          ),
-
-          // 第三部(flex : 4)：營養數據
-          Expanded(
-            flex: 3,
-            child: NutritionInputForm(
-              initial: _nutritionResult,
-              onChanged:
-                  (newData) => setState(() {
-                    _nutritionResult = newData;
-                    draft.nutritionResult = newData;
-                  }),
-              onCommentChanged:
-                  (text) => setState(() {
-                    _comment = text;
-                    draft.comment = text;
-                  }),
-            ),
-          ),
-
-          // 第四部(flex : 1)Space bar
-          Expanded(
-            flex: 1,
-            child: Padding(
-              padding: const EdgeInsets.all(8),
-              child: Align(
-                alignment: Alignment.bottomRight,
-                child: FloatingActionButton(
-                  backgroundColor: Colors.amberAccent,
-                  onPressed: () async {
-                    final result = await Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder:
-                            (_) => NutritionChatPage(
-                              initial: _nutritionResult,
-                              initialMessages: _messages,
+            child: IntrinsicHeight(
+              child: Column(
+                children: [
+                  // 第二部(flex : 1)：標籤選擇
+                  Container(
+                    height: 100,
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: _getMealTags().length,
+                      itemBuilder: (context, idx) {
+                        final tagData = _getMealTags()[idx];
+                        final isSelected = idx == _selectedTagIndex;
+                        return GestureDetector(
+                          onTap:
+                              () => setState(() {
+                                _selectedTagIndex = idx;
+                                _tag = tagData['label'] as String;
+                                draft.tag = _tag;
+                              }),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            margin: EdgeInsets.only(
+                              left: idx == 0 ? 16 : 8,
+                              right: idx == _getMealTags().length - 1 ? 16 : 8,
                             ),
-                      ),
-                    );
-                    if (result != null) {
-                      setState(() {
-                        _nutritionResult = result['nutrition'];
-                        _messages = result['messages'];
-                      });
-                    }
-                  },
-                  child: const Icon(
-                    Icons.chat_bubble_outline,
-                    color: Colors.black87,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              color:
+                                  isSelected
+                                      ? Colors.orangeAccent
+                                      : Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow:
+                                  isSelected
+                                      ? [
+                                        BoxShadow(
+                                          color: Colors.orangeAccent
+                                              .withOpacity(0.4),
+                                          blurRadius: 8,
+                                          offset: const Offset(0, 4),
+                                        ),
+                                      ]
+                                      : null,
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  tagData['icon'] as IconData,
+                                  color:
+                                      isSelected ? Colors.black87 : Colors.grey,
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  tagData['label'] as String,
+                                  style: TextStyle(
+                                    color:
+                                        isSelected
+                                            ? Colors.black87
+                                            : Colors.grey,
+                                    fontWeight:
+                                        isSelected
+                                            ? FontWeight.bold
+                                            : FontWeight.normal,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
                   ),
-                ),
+                  const SizedBox(height: 10),
+                  // 第一部(flex : 1)：名稱與日期
+                  NameDateRow(
+                    initialName: _nutritionResult.imageName,
+                    initialImage: _capturedImageBase64,
+                    onNameChanged: (name) {
+                      setState(() {
+                        _nutritionResult = _nutritionResult.copyWith(
+                          imageName: name,
+                        );
+                        draft.nutritionResult = _nutritionResult;
+                      });
+                    },
+                    onDateChanged: (d) {
+                      setState(() {
+                        final prev = _timestamp?.toDate() ?? DateTime.now();
+                        _timestamp = Timestamp.fromDate(
+                          DateTime(
+                            d.year,
+                            d.month,
+                            d.day,
+                            prev.hour,
+                            prev.minute,
+                          ),
+                        );
+                        draft.timestamp = _timestamp;
+                      });
+                    },
+                    onTimeChanged: (t) {
+                      setState(() {
+                        final prev = _timestamp?.toDate() ?? DateTime.now();
+                        _timestamp = Timestamp.fromDate(
+                          DateTime(
+                            prev.year,
+                            prev.month,
+                            prev.day,
+                            t.hour,
+                            t.minute,
+                          ),
+                        );
+                        draft.timestamp = _timestamp;
+                      });
+                    },
+                    onImageCaptured: (base64Image) {
+                      setState(() {
+                        _capturedImageBase64 = base64Image;
+                      });
+                    },
+                  ),
+
+                  const SizedBox(height: 10),
+                  // Generate Nutrition Button
+                  SizedBox(
+                    height: 50,
+                    width: 500,
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      child: GenerateNutritionButton(
+                        nutritionResult: _nutritionResult,
+                        onNutritionGenerated: (newNutrition) {
+                          setState(() {
+                            _nutritionResult = newNutrition;
+                          });
+                        },
+                      ),
+                    ),
+                  ),
+
+                  // 第三部：營養數據
+                  Container(
+                    height: MediaQuery.of(context).size.height * 0.4,
+                    child: NutritionInputForm(
+                      initial: _nutritionResult,
+                      onChanged:
+                          (newData) => setState(() {
+                            _nutritionResult = newData;
+                            draft.nutritionResult = newData;
+                          }),
+                      onCommentChanged:
+                          (text) => setState(() {
+                            _comment = text;
+                            draft.comment = text;
+                          }),
+                    ),
+                  ),
+
+                  // 第四部：聊天按鈕
+                  Container(
+                    height: 100,
+                    padding: const EdgeInsets.all(8),
+                    child: Align(
+                      alignment: Alignment.bottomRight,
+                      child: FloatingActionButton(
+                        backgroundColor: Colors.amberAccent,
+                        onPressed: () async {
+                          final result = await Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder:
+                                  (_) => NutritionChatPage(
+                                    initial: _nutritionResult,
+                                    initialMessages: _messages,
+                                  ),
+                            ),
+                          );
+                          if (result != null) {
+                            setState(() {
+                              _nutritionResult = result['nutrition'];
+                              _messages = result['messages'];
+                            });
+                          }
+                        },
+                        child: const Icon(
+                          Icons.chat_bubble_outline,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ),
+                  ),
+                  // 添加底部空間，確保內容不會被鍵盤遮擋
+                  SizedBox(height: MediaQuery.of(context).viewInsets.bottom),
+                ],
               ),
             ),
           ),
-        ],
+        ),
       ),
     );
   }
