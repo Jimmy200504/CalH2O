@@ -55,11 +55,11 @@ void main() async {
   // Initialize cameras
   await initializeCameras();
 
-  // Check user profile
+  // Check login status
   final prefs = await SharedPreferences.getInstance();
-  final hasProfile = prefs.containsKey('name');
+  final isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
 
-  runApp(MyApp(startFromMainPage: hasProfile));
+  runApp(MyApp(startFromMainPage: isLoggedIn));
 }
 
 class MyApp extends StatelessWidget {
@@ -71,7 +71,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'CalH2O',
-      initialRoute: '/welcome',
+      initialRoute: startFromMainPage ? '/main' : '/welcome',
       routes: {
         '/welcome': (_) => const WelcomePage(),
         '/login': (_) => const LoginPage(),
