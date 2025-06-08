@@ -10,12 +10,12 @@ import 'package:provider/provider.dart';
 
 import 'pages/record_page/image_record.dart';
 import 'pages/history_page.dart';
-import 'pages/record_page/text_record_2.dart';
 import 'model/nutrition_draft.dart';
+import 'pages/record_page/text_record_page.dart';
 
 late List<CameraDescription> cameras;
-final GlobalKey<ScaffoldMessengerState> rootScaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
-
+final GlobalKey<ScaffoldMessengerState> rootScaffoldMessengerKey =
+    GlobalKey<ScaffoldMessengerState>();
 
 Future<void> initializeCameras() async {
   try {
