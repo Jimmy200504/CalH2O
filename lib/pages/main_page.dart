@@ -23,29 +23,30 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
-  double _caloriesProgress = 0.0;
-  double _waterProgress = 0.0;
-  bool _isProcessing = false;
-
-  // Nutrition variables
-  int _water = 0;
   int _calories = 0;
   int _protein = 0;
   int _carbs = 0;
   int _fats = 0;
+  int _water = 0;
 
-  // Nutrition targets
-  int _waterTarget = 2500; // 2500ml water target
-  int _caloriesTarget = 2000; // 2000kcal calories target
-  int _proteinTarget = 50; // 50g protein target
-  int _carbsTarget = 250; // 250g carbs target
-  int _fatsTarget = 65; // 65g fats target
+  int _caloriesTarget = 2000;
+  int _proteinTarget = 50;
+  int _carbsTarget = 250;
+  int _fatsTarget = 65;
+  int _waterTarget = 2000;
+
+  double _caloriesProgress = 0.0;
+  double _proteinProgress = 0.0;
+  double _carbsProgress = 0.0;
+  double _fatsProgress = 0.0;
+  double _waterProgress = 0.0;
 
   bool _showSubButtons = false;
+  bool _isProcessing = false;
 
-  final GlobalKey _comboKey = GlobalKey();
   final GlobalKey _addKey = GlobalKey();
   final GlobalKey _historyKey = GlobalKey();
+  final GlobalKey _comboKey = GlobalKey();
   final GlobalKey _editNoteKey = GlobalKey();
   final GlobalKey _cameraAltKey = GlobalKey();
 
@@ -53,7 +54,7 @@ class _MainPageState extends State<MainPage> {
   void initState() {
     super.initState();
     _loadTargets();
-    // _setupNutritionListener();
+    _setupNutritionListener();
   }
 
   Future<void> _loadTargets() async {
@@ -85,43 +86,57 @@ class _MainPageState extends State<MainPage> {
     });
   }
 
-  // void _setupNutritionListener() {
-  // Get today's start and end timestamps
-  //   final now = DateTime.now();
-  //   final startOfDay = DateTime(now.year, now.month, now.day);
-  //   final endOfDay = startOfDay.add(const Duration(days: 1));
+  void _setupNutritionListener() async {
+    // Get user account
+    final prefs = await SharedPreferences.getInstance();
+    final account = prefs.getString('account');
+    if (account == null) return;
 
-  // Listen to Firestore for real-time updates
-  //   FirebaseFirestore.instance
-  //       .collection('nutrition_records')
-  //       .where('timestamp', isGreaterThanOrEqualTo: startOfDay)
-  //       .where('timestamp', isLessThan: endOfDay)
-  //       .snapshots()
-  //       .listen((snapshot) {
-  //         // Reset values
-  //         setState(() {
-  //           _calories = 0;
-  //           _protein = 0;
-  //           _carbs = 0;
-  //           _fats = 0;
-  //         });
+    // Get today's start and end timestamps
+    final now = DateTime.now();
+    final startOfDay = DateTime(now.year, now.month, now.day);
+    final endOfDay = startOfDay.add(const Duration(days: 1));
 
-  //         // Sum up all nutrition values
-  //         for (var doc in snapshot.docs) {
-  //           setState(() {
-  //             _calories += (doc['calories'] as num).toInt();
-  //             _protein += (doc['protein'] as num).toInt();
-  //             _carbs += (doc['carbohydrate'] as num).toInt();
-  //             _fats += (doc['fat'] as num).toInt();
-  //           });
-  //         }
+    // Listen to Firestore for real-time updates
+    FirebaseFirestore.instance
+        .collection('users')
+        .doc(account)
+        .collection('nutrition_records')
+        .where(
+          'timestamp',
+          isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay),
+        )
+        .where('timestamp', isLessThan: Timestamp.fromDate(endOfDay))
+        .snapshots()
+        .listen((snapshot) {
+          // Reset values
+          setState(() {
+            _calories = 0;
+            _protein = 0;
+            _carbs = 0;
+            _fats = 0;
+          });
 
-  //         // Update progress values
-  //         setState(() {
-  //           _caloriesProgress = (_calories / _caloriesTarget).clamp(0.0, 1.0);
-  //         });
-  //       });
-  // }
+          // Sum up all nutrition values
+          for (var doc in snapshot.docs) {
+            final data = doc.data();
+            setState(() {
+              _calories += (data['calories'] as num).toInt();
+              _protein += (data['protein'] as num).toInt();
+              _carbs += (data['carbohydrate'] as num).toInt();
+              _fats += (data['fat'] as num).toInt();
+            });
+          }
+
+          // Update progress values
+          setState(() {
+            _caloriesProgress = (_calories / _caloriesTarget).clamp(0.0, 1.0);
+            _proteinProgress = (_protein / _proteinTarget).clamp(0.0, 1.0);
+            _carbsProgress = (_carbs / _carbsTarget).clamp(0.0, 1.0);
+            _fatsProgress = (_fats / _fatsTarget).clamp(0.0, 1.0);
+          });
+        });
+  }
 
   String _getLabel(int current, int target, String unit) {
     if (current >= target) {
@@ -437,7 +452,8 @@ class _MainPageState extends State<MainPage> {
                         color: Colors.grey[300],
                         borderRadius: BorderRadius.circular(24),
                       ),
-                      child: Text(//
+                      child: Text(
+                        //
                         'combo',
                         style: TextStyle(fontSize: 20, color: Colors.black54),
                       ),
