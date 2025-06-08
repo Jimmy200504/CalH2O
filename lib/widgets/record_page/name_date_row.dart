@@ -180,7 +180,7 @@ class _NameDateRowState extends State<NameDateRow> {
                 TextField(
                   controller: _nameController,
                   decoration: const InputDecoration(
-                    labelText: '名字',
+                    labelText: 'Name',
                     border: OutlineInputBorder(),
                     isDense: true,
                   ),
@@ -236,7 +236,9 @@ class _NameDateRowState extends State<NameDateRow> {
                 ),
               ],
             ),
+            //
           ),
+          // Generate Nutrition Button
         ],
       ),
     );

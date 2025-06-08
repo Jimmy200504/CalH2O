@@ -8,7 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:calh2o/pages/startup_page/login_page.dart';
 import 'pages/record_page/image_record.dart';
 import 'pages/history_page.dart';
-import 'pages/record_page/text_record_2.dart';
+import 'pages/record_page/text_record_page.dart';
 
 late List<CameraDescription> cameras;
 
