@@ -192,9 +192,6 @@ class _WaveClipperLeftGravity extends CustomClipper<Path> {
   }
 }
 
-
-
-
 class MainProgressBar extends StatelessWidget {
   final Color color;
   final String label;
@@ -248,26 +245,26 @@ class MainProgressBar extends StatelessWidget {
                           ),
                         ),
                       ),
-                    Positioned(
-                      right: 16,
-                      top: 0,
-                      bottom: 0,
-                      child: Center(
-                        child: GestureDetector(
-                          onTap: onIncrement,
-                          // child: Container(
-                          //   width: 44,
-                          //   height: 44,
-                          //   decoration: BoxDecoration(
-                          //     color: Colors.white,
-                          //     border: Border.all(color: Colors.black, width: 2),
-                          //     shape: BoxShape.circle,
-                          //   ),
-                          //   child: Icon(Icons.add, size: 28),
-                          // ),
-                        ),
-                      ),
-                    ),
+                    // Positioned(
+                    //   right: 16,
+                    //   top: 0,
+                    //   bottom: 0,
+                    //   child: Center(
+                    //     child: GestureDetector(
+                    //       onTap: onIncrement,
+                    //       // child: Container(
+                    //       //   width: 44,
+                    //       //   height: 44,
+                    //       //   decoration: BoxDecoration(
+                    //       //     color: Colors.white,
+                    //       //     border: Border.all(color: Colors.black, width: 2),
+                    //       //     shape: BoxShape.circle,
+                    //       //   ),
+                    //       //   child: Icon(Icons.add, size: 28),
+                    //       // ),
+                    //     ),
+                    //   ),
+                    // ),
                   ],
                 ),
               ),
