@@ -1,6 +1,11 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 
+// lib/widgets/main_page/wave_progress_bar.dart
+import 'dart:math';
+import 'package:flutter/material.dart';
+
+/// 波浪式進度條，半波形頂部，按加/減持續循環動畫，根據最後一次方向決定移動方向
 class WaveProgressBar extends StatefulWidget {
   final String label;
   final double value;
@@ -24,6 +29,7 @@ class WaveProgressBar extends StatefulWidget {
 class _WaveProgressBarState extends State<WaveProgressBar>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
+  bool _isForward = true;
 
   @override
   void initState() {
@@ -31,17 +37,9 @@ class _WaveProgressBarState extends State<WaveProgressBar>
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 800),
-    )..addListener(() => setState(() {}));
-  }
-
-  @override
-  void didUpdateWidget(covariant WaveProgressBar oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.value > oldWidget.value) {
-      _controller.forward(from: 0);
-    } else if (widget.value < oldWidget.value) {
-      _controller.reverse(from: 1);
-    }
+    )
+      ..addListener(() => setState(() {}))
+      ..stop();
   }
 
   @override
@@ -51,10 +49,18 @@ class _WaveProgressBarState extends State<WaveProgressBar>
   }
 
   void _onAdd() {
+    _isForward = true;
+    _controller
+      ..stop()
+      ..repeat();
     widget.onIncrement();
   }
 
   void _onSubtract() {
+    _isForward = false;
+    _controller
+      ..stop()
+      ..repeat();
     widget.onDecrement();
   }
 
@@ -86,7 +92,9 @@ class _WaveProgressBarState extends State<WaveProgressBar>
                       borderRadius: BorderRadius.circular(40),
                       child: ClipPath(
                         clipper: _WaveClipperLeftGravity(
-                          wavePhase: _controller.value * 2 * pi,
+                          wavePhase: (_isForward
+                                  ? _controller.value
+                                  : -_controller.value) * 2 * pi,
                           progress: progress,
                         ),
                         child: Container(color: Colors.blue),
