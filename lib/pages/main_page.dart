@@ -31,13 +31,11 @@ class _MainPageState extends State<MainPage> {
   bool _isProcessing = false;
 
   int _calories = 0;
-
   int _protein = 0;
   int _carbs = 0;
   int _fats = 0;
   int _initialWater = 0;
   int _water = 0;
-
 
   int _caloriesTarget = 2000;
   int _proteinTarget = 50;
@@ -49,10 +47,8 @@ class _MainPageState extends State<MainPage> {
   double _proteinProgress = 0.0;
   double _carbsProgress = 0.0;
   double _fatsProgress = 0.0;
-  double _waterProgress = 0.0;
 
   bool _showSubButtons = false;
-  bool _isProcessing = false;
 
   final GlobalKey _addKey = GlobalKey();
   final GlobalKey _historyKey = GlobalKey();
@@ -73,7 +69,6 @@ class _MainPageState extends State<MainPage> {
     });
     _loadTargets();
     _setupNutritionListener();
-
   }
 
   Future<void> _loadTargets() async {
@@ -130,27 +125,6 @@ class _MainPageState extends State<MainPage> {
     final prefs = await SharedPreferences.getInstance();
     final account = prefs.getString('account');
     if (account == null) return;
-
-    // 2. 直接從 Firestore 抓 doc 一次
-    final doc =
-        await FirebaseFirestore.instance.collection('users').doc(account).get();
-    final data = doc.data();
-    if (data == null) return;
-
-    // 3. 讀欄位並存進變數
-    final int waterTarget = (data['water'] as num).toInt();
-    final int proteinTarget = (data['proteinTarget'] as num).toInt();
-    final int carbsTarget = (data['carbsTarget'] as num).toInt();
-    final int fatsTarget = (data['fatsTarget'] as num).toInt();
-
-    // 4. 把它們存到 State 裡
-    setState(() {
-      _waterTarget = waterTarget;
-      _proteinTarget = proteinTarget;
-      _carbsTarget = carbsTarget;
-      _fatsTarget = fatsTarget;
-    });
-  }
 
     // Get today's start and end timestamps
     final now = DateTime.now();
@@ -213,7 +187,6 @@ class _MainPageState extends State<MainPage> {
     await Navigator.of(context).pushNamed(routeName);
     _uploadDelta();
   }
-
 
   String _getLabel(int current, int target, String unit) {
     if (current >= target) {
@@ -484,23 +457,18 @@ class _MainPageState extends State<MainPage> {
                     ],
                   ),
                 ),
+
                 MainProgressBar(
                   color: Colors.orange,
-                  label: _getLabel(
-                    _calories,
-                    _caloriesTarget,
-                    ' kcal Calories',
-                  ),
+                  label: 'Calories $_calories kcal',
                   value: _caloriesProgress,
                   onIncrement: _incrementCalories,
-                  additionalInfo: 'Total Calories: $_calories kcal',
                 ),
                 WaveProgressBar(
-                  label: _getLabel(_water, _waterTarget, ' ml Water'),
+                  label: 'Water $_water ml',
                   value: _waterProgress,
                   onIncrement: _incrementWater,
                   onDecrement: _decrementWater,
-                  additionalInfo: 'Total Water: $_water ml',
                 ),
                 SizedBox(height: cardSpacing),
                 Padding(
@@ -646,7 +614,6 @@ class _MainPageState extends State<MainPage> {
                       onPressed: () {
                         setState(() => _showSubButtons = false);
                         Navigator.pushNamed(context, '/text');
-
                       },
                     ),
                     SizedBox(width: screenWidth * 0.1),

@@ -70,7 +70,7 @@ class _WaveProgressBarState extends State<WaveProgressBar>
             children: [
               // 背景邊框
               Container(
-                height: 64,
+                height: 48,
                 decoration: BoxDecoration(
                   color: Colors.grey[200],
                   borderRadius: BorderRadius.circular(40),
@@ -220,7 +220,7 @@ class MainProgressBar extends StatelessWidget {
             alignment: Alignment.centerRight,
             children: [
               Container(
-                height: 64,
+                height: 48,
                 decoration: BoxDecoration(
                   color: Colors.grey[200],
                   borderRadius: BorderRadius.circular(40),
