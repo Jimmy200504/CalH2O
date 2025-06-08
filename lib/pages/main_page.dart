@@ -67,7 +67,7 @@ class _MainPageState extends State<MainPage> {
         _waterProgress = (_water / _waterTarget).clamp(0.0, 1.0);
       });
     });
-    _loadTargets()
+    _loadTargets();
     _setupNutritionListener();
   }
 
@@ -126,25 +126,25 @@ class _MainPageState extends State<MainPage> {
     final account = prefs.getString('account');
     if (account == null) return;
 
-//     final doc =
-//         await FirebaseFirestore.instance.collection('users').doc(account).get();
-//     final data = doc.data();
-//     if (data == null) return;
+    //     final doc =
+    //         await FirebaseFirestore.instance.collection('users').doc(account).get();
+    //     final data = doc.data();
+    //     if (data == null) return;
 
-//     final int caloriesTarget = (data['calories'] as num).toInt();
-//     final int waterTarget = (data['water'] as num).toInt();
-//     final int proteinTarget = (data['proteinTarget'] as num).toInt();
-//     final int carbsTarget = (data['carbsTarget'] as num).toInt();
-//     final int fatsTarget = (data['fatsTarget'] as num).toInt();
+    //     final int caloriesTarget = (data['calories'] as num).toInt();
+    //     final int waterTarget = (data['water'] as num).toInt();
+    //     final int proteinTarget = (data['proteinTarget'] as num).toInt();
+    //     final int carbsTarget = (data['carbsTarget'] as num).toInt();
+    //     final int fatsTarget = (data['fatsTarget'] as num).toInt();
 
-//     setState(() {
-//       _caloriesTarget = caloriesTarget;
-//       _waterTarget = waterTarget;
-//       _proteinTarget = proteinTarget;
-//       _carbsTarget = carbsTarget;
-//       _fatsTarget = fatsTarget;
-//     });
-//   }
+    //     setState(() {
+    //       _caloriesTarget = caloriesTarget;
+    //       _waterTarget = waterTarget;
+    //       _proteinTarget = proteinTarget;
+    //       _carbsTarget = carbsTarget;
+    //       _fatsTarget = fatsTarget;
+    //     });
+    //   }
 
     // Get today's start and end timestamps
     final now = DateTime.now();
@@ -207,7 +207,6 @@ class _MainPageState extends State<MainPage> {
     await Navigator.of(context).pushNamed(routeName);
     _uploadDelta();
   }
-
 
   String _getLabel(int current, int target, String unit) {
     if (current >= target) {
