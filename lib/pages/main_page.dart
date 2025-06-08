@@ -409,7 +409,7 @@ class _MainPageState extends State<MainPage> {
                         color: Colors.grey[300],
                         borderRadius: BorderRadius.circular(24),
                       ),
-                      child: Text(
+                      child: Text(//
                         'combo',
                         style: TextStyle(fontSize: 20, color: Colors.black54),
                       ),
