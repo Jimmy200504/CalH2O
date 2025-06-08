@@ -10,6 +10,8 @@ import 'pages/record_page/image_record.dart';
 import 'pages/record_page/text_record.dart';
 import 'pages/history_page.dart';
 import 'pages/record_page/text_record_2.dart';
+import 'package:calh2o/pages/logo_page.dart';
+
 
 late List<CameraDescription> cameras;
 
@@ -72,8 +74,9 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'CalH2O',
-      initialRoute: startFromMainPage ? '/main' : '/welcome',
+      initialRoute: '/logo',
       routes: {
+        '/logo': (_) => const LogoPage(),
         '/welcome': (_) => const WelcomePage(),
         '/login': (_) => const LoginPage(),
         '/main': (_) => const MainPage(),
