@@ -29,7 +29,7 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: const BackButton(),
+        // leading: const BackButton(),
         title: const Text(""),
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
