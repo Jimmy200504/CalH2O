@@ -56,7 +56,7 @@ class _LoginPageState extends State<LoginPage>
           .get();
 
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('name', _account);
+      await prefs.setString('account', _account);
 
       if (userDoc.exists) {
         final data = userDoc.data()!;
@@ -131,26 +131,40 @@ class _LoginPageState extends State<LoginPage>
                     'Login to CalH2O',
                     style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
                   ),
-                  const SizedBox(height: 24),
-                  TextFormField(
-                    decoration: _inputDecoration('Username'),
-                    onSaved: (value) => _account = value!.trim(),
-                    validator: (value) =>
-                        value == null || value.isEmpty ? 'Enter username' : null,
+                  autofillHints: null,
+                  enableSuggestions: false,
+                  autocorrect: false,
+                  onSaved: (value) => _account = value!.trim(),
+                  validator:
+                      (value) =>
+                          value == null || value.isEmpty
+                              ? 'Enter username'
+                              : null,
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  decoration: const InputDecoration(
+                    labelText: 'Password',
+                    border: OutlineInputBorder(),
                   ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    decoration: _inputDecoration('Password'),
-                    onSaved: (value) => _password = value!.trim(),
-                    validator: (value) =>
-                        value == null || value.isEmpty ? 'Enter password' : null,
-                  ),
-                  const SizedBox(height: 24),
-                  SizedBox(
-                    width: double.infinity,
-                    child: _loading
-                        ? const Center(child: CircularProgressIndicator())
-                        : ElevatedButton(
+                  obscureText: true,
+                  autofillHints: null,
+                  enableSuggestions: false,
+                  autocorrect: false,
+                  onSaved: (value) => _password = value!.trim(),
+                  validator:
+                      (value) =>
+                          value == null || value.isEmpty
+                              ? 'Enter password'
+                              : null,
+                ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child:
+                      _loading
+                          ? const Center(child: CircularProgressIndicator())
+                          : ElevatedButton(
                             onPressed: _handleLogin,
                             style: ElevatedButton.styleFrom(
                               padding:

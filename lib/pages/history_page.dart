@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
-import '../model/nutrition_result.dart';
 import 'dart:convert';
 
 class HistoryPage extends StatefulWidget {
@@ -88,32 +87,59 @@ class _HistoryPageState extends State<HistoryPage> {
               .orderBy('timestamp', descending: true)
               .get();
 
-      // 計算當天的總營養攝取
-      double totalCalories = 0;
-      double totalProtein = 0;
-      double totalCarbs = 0;
-      double totalFat = 0;
       List<Map<String, dynamic>> records = [];
 
       for (var doc in snapshot.docs) {
         final data = doc.data() as Map<String, dynamic>;
+        // 添加文檔ID到數據中
+        data['id'] = doc.id;
         records.add(data);
-
-        totalCalories += (data['calories'] ?? 0).toDouble();
-        totalProtein += (data['protein'] ?? 0).toDouble();
-        totalCarbs += (data['carbohydrate'] ?? 0).toDouble();
-        totalFat += (data['fat'] ?? 0).toDouble();
       }
 
       setState(() {
         _dailyRecords = records;
       });
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('載入記錄失敗：$e')));
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error loading records: $e')));
+      }
     } finally {
       setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _deleteRecord(String docId) async {
+    try {
+      // 先從本地列表中移除
+      setState(() {
+        _dailyRecords.removeWhere((record) => record['id'] == docId);
+      });
+
+      // 從數據庫中刪除
+      await FirebaseFirestore.instance
+          .collection('nutrition_records')
+          .doc(docId)
+          .delete();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Record deleted successfully')),
+        );
+      }
+    } catch (e) {
+      // 如果刪除失敗，重新加載數據
+      _loadDailyRecords();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error deleting record: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -136,7 +162,12 @@ class _HistoryPageState extends State<HistoryPage> {
     }
   }
 
-  Widget _buildNutritionRow(String label, String value, String type) {
+  Widget _buildNutritionRow(
+    String label,
+    String value,
+    String type,
+    String unit,
+  ) {
     final double currentValue = double.tryParse(value.split(' ')[0]) ?? 0;
     final double targetValue = _nutritionTargets[type] ?? 0;
     final bool isExceeded = currentValue > targetValue;
@@ -158,10 +189,140 @@ class _HistoryPageState extends State<HistoryPage> {
               ),
               const SizedBox(width: 8),
               Text(
-                '/ ${targetValue.toStringAsFixed(1)}',
+                '/ ${targetValue.toStringAsFixed(1)} $unit',
                 style: TextStyle(color: Colors.grey[600], fontSize: 12),
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDetailBottomSheet(Map<String, dynamic> record) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      enableDrag: true,
+      isDismissible: true,
+      useSafeArea: true,
+      builder:
+          (context) => Container(
+            height: MediaQuery.of(context).size.height * 0.6,
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            child: Column(
+              children: [
+                if (record['base64Image'] != null &&
+                    record['base64Image'].toString().isNotEmpty)
+                  Container(
+                    height: 200,
+                    width: double.infinity,
+                    decoration: const BoxDecoration(
+                      borderRadius: BorderRadius.vertical(
+                        top: Radius.circular(20),
+                      ),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(20),
+                      ),
+                      child: _buildImageFromBase64(record['base64Image']),
+                    ),
+                  ),
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            record['imageName'] ?? 'Unnamed food',
+                            style: const TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          const Text(
+                            'Nutrition Information',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          _buildDetailRow(
+                            'Calories',
+                            '${record['calories']} kcal',
+                          ),
+                          _buildDetailRow('Protein', '${record['protein']}g'),
+                          _buildDetailRow(
+                            'Carbohydrates',
+                            '${record['carbohydrate']}g',
+                          ),
+                          _buildDetailRow('Fat', '${record['fat']}g'),
+                          const SizedBox(height: 16),
+                          const Text(
+                            'Additional Information',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          _buildDetailRow(
+                            'Source',
+                            record['source'] == 'image_input'
+                                ? 'Image Input'
+                                : 'Text Input',
+                          ),
+                          if (record['tags'] != null)
+                            _buildDetailRow('Tags', record['tags'].join(', ')),
+                          if (record['commit'] != null)
+                            _buildDetailRow('Commit', record['commit']),
+                          _buildDetailRow(
+                            'Time',
+                            DateFormat('yyyy/MM/dd HH:mm').format(
+                              (record['timestamp'] as Timestamp).toDate(),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 120,
+            child: Text(
+              label,
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(fontWeight: FontWeight.w500),
+            ),
           ),
         ],
       ),
@@ -221,21 +382,25 @@ class _HistoryPageState extends State<HistoryPage> {
                   'Calories',
                   '${_dailyRecords.fold<double>(0, (sum, record) => sum + (record['calories'] ?? 0)).toStringAsFixed(1)} kcal',
                   'calories',
+                  'kcal',
                 ),
                 _buildNutritionRow(
                   'Protein',
                   '${_dailyRecords.fold<double>(0, (sum, record) => sum + (record['protein'] ?? 0)).toStringAsFixed(1)} g',
                   'protein',
+                  'g',
                 ),
                 _buildNutritionRow(
                   'Carbs',
                   '${_dailyRecords.fold<double>(0, (sum, record) => sum + (record['carbohydrate'] ?? 0)).toStringAsFixed(1)} g',
                   'carbohydrate',
+                  'g',
                 ),
                 _buildNutritionRow(
                   'Fat',
                   '${_dailyRecords.fold<double>(0, (sum, record) => sum + (record['fat'] ?? 0)).toStringAsFixed(1)} g',
                   'fat',
+                  'g',
                 ),
               ],
             ),
@@ -253,67 +418,95 @@ class _HistoryPageState extends State<HistoryPage> {
                       itemCount: _dailyRecords.length,
                       itemBuilder: (context, index) {
                         final record = _dailyRecords[index];
-                        return Card(
-                          margin: const EdgeInsets.only(bottom: 12),
-                          child: Padding(
-                            padding: const EdgeInsets.all(12),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                // 圖片區域
-                                Container(
-                                  width: 60,
-                                  height: 60,
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey[200],
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child:
-                                      record['base64Image'] != null &&
-                                              record['base64Image']
-                                                  .toString()
-                                                  .isNotEmpty
-                                          ? _buildImageFromBase64(
-                                            record['base64Image'],
-                                          )
-                                          : const Icon(
-                                            Icons.text_fields,
-                                            color: Colors.grey,
-                                            size: 24,
+                        return Dismissible(
+                          key: Key(record['id'] ?? index.toString()),
+                          direction: DismissDirection.endToStart,
+                          background: Container(
+                            alignment: Alignment.centerRight,
+                            padding: const EdgeInsets.only(right: 20),
+                            decoration: BoxDecoration(
+                              color: Colors.red,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(
+                              Icons.delete,
+                              color: Colors.white,
+                            ),
+                          ),
+                          onDismissed: (direction) {
+                            if (record['id'] != null) {
+                              _deleteRecord(record['id']);
+                            }
+                          },
+                          child: Card(
+                            margin: const EdgeInsets.only(bottom: 12),
+                            child: InkWell(
+                              onTap: () => _showDetailBottomSheet(record),
+                              child: Padding(
+                                padding: const EdgeInsets.all(12),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Container(
+                                      width: 60,
+                                      height: 60,
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey[200],
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child:
+                                          record['base64Image'] != null &&
+                                                  record['base64Image']
+                                                      .toString()
+                                                      .isNotEmpty
+                                              ? _buildImageFromBase64(
+                                                record['base64Image'],
+                                              )
+                                              : const Icon(
+                                                Icons.text_fields,
+                                                color: Colors.grey,
+                                                size: 24,
+                                              ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            record['imageName'] ??
+                                                'Unnamed food',
+                                            style: const TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                            ),
                                           ),
-                                ),
-                                const SizedBox(width: 12),
-                                // 文字資訊區域
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        record['imageName'] ?? 'Unnamed food',
-                                        style: const TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                        ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            'Calories: ${record['calories']} kcal',
+                                            style: TextStyle(
+                                              color: Colors.black,
+                                            ),
+                                          ),
+                                          Text(
+                                            'Protein: ${record['protein']}g | Carbs: ${record['carbohydrate']}g | Fat: ${record['fat']}g',
+                                            style: TextStyle(
+                                              color: Colors.black,
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        'Calories: ${record['calories']} kcal',
-                                      ),
-                                      Text(
-                                        'Protein: ${record['protein']}g | Carbs: ${record['carbohydrate']}g | Fat: ${record['fat']}g',
-                                      ),
-                                    ],
-                                  ),
+                                    ),
+                                    Icon(
+                                      record['source'] == 'image_input'
+                                          ? Icons.image
+                                          : Icons.text_fields,
+                                      color: Colors.grey,
+                                    ),
+                                  ],
                                 ),
-                                // 輸入方式圖標
-                                Icon(
-                                  record['source'] == 'image_input'
-                                      ? Icons.image
-                                      : Icons.text_fields,
-                                  color: Colors.grey,
-                                ),
-                              ],
+                              ),
                             ),
                           ),
                         );

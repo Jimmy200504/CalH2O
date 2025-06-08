@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-
 class ProfileSetupPage extends StatefulWidget {
   const ProfileSetupPage({super.key});
 
@@ -29,7 +28,7 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: const BackButton(),
+        // leading: const BackButton(),
         title: const Text(""),
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
@@ -142,11 +141,11 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
                                   await prefs.setString('name', _name);
                                   await prefs.setString('gender', _gender);
                                   await prefs.setString('birthday', _birthday);
-
+                                  final account = prefs.getString('account');
                                   try {
                                     await FirebaseFirestore.instance
                                         .collection('users')
-                                        .doc(_name)
+                                        .doc(account)
                                         .set({
                                           'name': _name,
                                           'gender': _gender,

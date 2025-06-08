@@ -52,11 +52,11 @@ class _GoalSelectionPageState extends State<GoalSelectionPage>
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('goal', _selectedGoal);
 
-    final name = prefs.getString('name');
+    final account = prefs.getString('account');
 
-    if (name != null && name.isNotEmpty) {
+    if (account != null && account.isNotEmpty) {
       try {
-        await FirebaseFirestore.instance.collection('users').doc(name).set({
+        await FirebaseFirestore.instance.collection('users').doc(account).set({
           'goal': _selectedGoal,
         }, SetOptions(merge: true));
       } catch (e) {
@@ -67,11 +67,18 @@ class _GoalSelectionPageState extends State<GoalSelectionPage>
 
       // 讀取 Profile (略去 dailyNeeds，如需要可以補上)
       try {
-        final doc = await FirebaseFirestore.instance
-            .collection('users')
-            .doc(name)
-            .get();
+        final doc =
+            await FirebaseFirestore.instance
+                .collection('users')
+                .doc(account)
+                .get();
         final data = doc.data()!;
+        userId = account;
+        gender = data['gender'] as String;
+        birthday = data['birthday'] as String;
+        activityLevel = data['activityLevel'] as String;
+        height = (data['height'] as num).toInt();
+        weight = (data['weight'] as num).toInt();
       } catch (e) {
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text('讀取 Profile 失敗: $e')));
