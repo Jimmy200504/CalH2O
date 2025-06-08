@@ -183,7 +183,7 @@ class _MainPageState extends State<MainPage> {
           TargetContent(
             align: ContentAlign.bottom,
             builder: (context, controllerTarget) {
-              Future.delayed(const Duration(seconds: 3), () {
+              Future.delayed(const Duration(seconds: 1), () {
                 controllerTarget.next();
               });
               return Column(
@@ -207,7 +207,7 @@ class _MainPageState extends State<MainPage> {
           TargetContent(
             align: ContentAlign.top,
             builder: (context, controllerTarget) {
-              Future.delayed(const Duration(seconds: 3), () {
+              Future.delayed(const Duration(seconds: 1), () {
                 controllerTarget.next();
               });
               return const Text(
@@ -225,7 +225,7 @@ class _MainPageState extends State<MainPage> {
           TargetContent(
             align: ContentAlign.top,
             builder: (context, controllerTarget) {
-              Future.delayed(const Duration(seconds: 3), () {
+              Future.delayed(const Duration(seconds: 1), () {
                 controllerTarget.next();
               });
               return Column(
@@ -249,7 +249,7 @@ class _MainPageState extends State<MainPage> {
           TargetContent(
             align: ContentAlign.top,
             builder: (context, controllerTarget) {
-              Future.delayed(const Duration(seconds: 3), () {
+              Future.delayed(const Duration(seconds: 1), () {
                 controllerTarget.next();
               });
               return Column(
@@ -273,7 +273,7 @@ class _MainPageState extends State<MainPage> {
           TargetContent(
             align: ContentAlign.top,
             builder: (context, controllerTarget) {
-              Future.delayed(const Duration(seconds: 3), () {
+              Future.delayed(const Duration(seconds: 1), () {
                 controllerTarget.skip();
               });
               return const Text(
