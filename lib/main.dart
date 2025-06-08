@@ -87,10 +87,22 @@ class MyApp extends StatelessWidget {
       title: 'CalH2O',
 
       theme: ThemeData(
+        // 設置主
         fontFamily: 'Mononoki',
+        // primarySwatch: Colors.blue,
+        // // 設置文字主題
+        // textTheme: Theme.of(
+        //   context,
+        // ).textTheme.apply(bodyColor: Colors.black, displayColor: Colors.black),
+        // // 設置輸入框主題
+        // inputDecorationTheme: InputDecorationTheme(
+        //   border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+        //   contentPadding: const EdgeInsets.symmetric(
+        //     horizontal: 16,
+        //     vertical: 12,
+        //   ),
+        // ),
       ),
-
-      initialRoute: startFromMainPage ? '/main' : '/logo',
       builder: (context, child) {
         // 獲取設備的尺寸信息
         final mediaQuery = MediaQuery.of(context);
@@ -104,22 +116,7 @@ class MyApp extends StatelessWidget {
           child: child!,
         );
       },
-      theme: ThemeData(
-        // 設置主題
-        primarySwatch: Colors.blue,
-        // 設置文字主題
-        textTheme: Theme.of(
-          context,
-        ).textTheme.apply(bodyColor: Colors.black, displayColor: Colors.black),
-        // 設置輸入框主題
-        inputDecorationTheme: InputDecorationTheme(
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 12,
-          ),
-        ),
-      ),
+      initialRoute: startFromMainPage ? '/main' : '/logo',
       routes: {
         '/logo': (_) => const LogoPage(),
         '/welcome': (_) => const WelcomePage(),
