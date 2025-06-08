@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:provider/provider.dart';
 import 'package:flutter/rendering.dart';
 
 import '../widgets/main_page/main_progress_bar.dart';
@@ -8,6 +9,8 @@ import '../widgets/main_page/loading_overlay.dart';
 import '../widgets/animation.dart';
 import '../services/cloud_function_fetch/get_nutrition_from_photo.dart';
 import '../services/image_upload_service.dart';
+import '../model/nutrition_draft.dart';
+import '../main.dart';
 
 import '../pages/setting_page.dart';
 import '../pages/history_page.dart';
@@ -148,11 +151,21 @@ class _MainPageState extends State<MainPage> {
       // 分析營養成分
       final nutritionResult = await getNutritionFromPhoto(result);
 
-      // 上傳到資料庫
-      await ImageUploadService.saveNutritionResult(
-        base64Image: result,
-        comment: '',
-        nutritionResult: nutritionResult,
+      // 暫存到 Provider
+      final draft = context.read<NutritionDraft>();
+      draft.setDraft(image: result, result: nutritionResult);
+
+      // 3. 全域通知 (SnackBar + 前往文字頁按鈕)
+      rootScaffoldMessengerKey.currentState!.showSnackBar(
+        SnackBar(
+          content: const Text('營養分析完成，請到文字頁確認並儲存'),
+          action: SnackBarAction(
+            label: '前往文字頁',
+            onPressed: () {
+              Navigator.of(context).pushNamed('/text');
+            },
+          ),
+        ),
       );
     } catch (e) {
       debugPrint('Error processing image: $e');
