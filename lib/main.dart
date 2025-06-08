@@ -82,7 +82,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       scaffoldMessengerKey: rootScaffoldMessengerKey,
       title: 'CalH2O',
-      initialRoute: startFromMainPage ? '/main' : '/welcome',
+      initialRoute: '/welcome',
       routes: {
         '/welcome': (_) => const WelcomePage(),
         '/login': (_) => const LoginPage(),

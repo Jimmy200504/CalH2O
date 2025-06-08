@@ -88,6 +88,9 @@ class _LoginPageState extends State<LoginPage> {
                     labelText: 'Username',
                     border: OutlineInputBorder(),
                   ),
+                  autofillHints: null,
+                  enableSuggestions: false,
+                  autocorrect: false,
                   onSaved: (value) => _account = value!.trim(),
                   validator:
                       (value) =>
@@ -98,9 +101,13 @@ class _LoginPageState extends State<LoginPage> {
                 const SizedBox(height: 16),
                 TextFormField(
                   decoration: const InputDecoration(
-                    labelText: 'password',
+                    labelText: 'Password',
                     border: OutlineInputBorder(),
                   ),
+                  obscureText: true,
+                  autofillHints: null,
+                  enableSuggestions: false,
+                  autocorrect: false,
                   onSaved: (value) => _password = value!.trim(),
                   validator:
                       (value) =>

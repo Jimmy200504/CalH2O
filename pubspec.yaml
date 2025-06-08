@@ -49,6 +49,7 @@ dependencies:
   font_awesome_flutter: ^10.4.0
   camera: ^0.11.1
   provider: ^6.0.5
+  tutorial_coach_mark: ^1.2.6
 
 dev_dependencies:
   flutter_test:
