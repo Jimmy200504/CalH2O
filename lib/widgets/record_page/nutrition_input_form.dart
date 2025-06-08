@@ -13,11 +13,11 @@ class NutritionInputForm extends StatefulWidget {
   final ValueChanged<String> onCommentChanged;
 
   const NutritionInputForm({
-    Key? key,
+    super.key,
     required this.initial,
     required this.onChanged,
     required this.onCommentChanged,
-  }) : super(key: key);
+  });
 
   @override
   _NutritionInputFormState createState() => _NutritionInputFormState();

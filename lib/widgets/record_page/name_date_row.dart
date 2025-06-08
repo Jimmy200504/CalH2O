@@ -25,14 +25,14 @@ class NameDateRow extends StatefulWidget {
   final String? initialImage;
 
   const NameDateRow({
-    Key? key,
+    super.key,
     required this.initialName,
     required this.onNameChanged,
     required this.onDateChanged,
     required this.onTimeChanged,
     required this.onImageCaptured,
     this.initialImage,
-  }) : super(key: key);
+  });
 
   @override
   _NameDateRowState createState() => _NameDateRowState();

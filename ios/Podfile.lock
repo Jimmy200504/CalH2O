@@ -1004,15 +1004,8 @@ PODS:
   - Firebase/Functions (10.25.0):
     - Firebase/CoreOnly
     - FirebaseFunctions (~> 10.25.0)
-  - Firebase/Storage (10.25.0):
-    - Firebase/CoreOnly
-    - FirebaseStorage (~> 10.25.0)
   - firebase_core (2.32.0):
     - Firebase/CoreOnly (= 10.25.0)
-    - Flutter
-  - firebase_storage (11.6.5):
-    - Firebase/Storage (= 10.25.0)
-    - firebase_core
     - Flutter
   - FirebaseAppCheckInterop (10.29.0)
   - FirebaseAuthInterop (10.29.0)
@@ -1054,13 +1047,6 @@ PODS:
     - GTMSessionFetcher/Core (< 4.0, >= 2.1)
   - FirebaseMessagingInterop (10.29.0)
   - FirebaseSharedSwift (10.29.0)
-  - FirebaseStorage (10.25.0):
-    - FirebaseAppCheckInterop (~> 10.0)
-    - FirebaseAuthInterop (~> 10.25)
-    - FirebaseCore (~> 10.0)
-    - FirebaseCoreExtension (~> 10.0)
-    - GoogleUtilities/Environment (~> 7.12)
-    - GTMSessionFetcher/Core (< 4.0, >= 2.1)
   - Flutter (1.0.0)
   - GoogleUtilities/Environment (7.13.3):
     - GoogleUtilities/Privacy
@@ -1176,7 +1162,6 @@ DEPENDENCIES:
   - cloud_functions (from `.symlinks/plugins/cloud_functions/ios`)
   - file_picker (from `.symlinks/plugins/file_picker/ios`)
   - firebase_core (from `.symlinks/plugins/firebase_core/ios`)
-  - firebase_storage (from `.symlinks/plugins/firebase_storage/ios`)
   - Flutter (from `Flutter`)
   - path_provider_foundation (from `.symlinks/plugins/path_provider_foundation/darwin`)
   - permission_handler_apple (from `.symlinks/plugins/permission_handler_apple/ios`)
@@ -1199,7 +1184,6 @@ SPEC REPOS:
     - FirebaseFunctions
     - FirebaseMessagingInterop
     - FirebaseSharedSwift
-    - FirebaseStorage
     - GoogleUtilities
     - "gRPC-C++"
     - gRPC-Core
@@ -1221,8 +1205,6 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/file_picker/ios"
   firebase_core:
     :path: ".symlinks/plugins/firebase_core/ios"
-  firebase_storage:
-    :path: ".symlinks/plugins/firebase_storage/ios"
   Flutter:
     :path: Flutter
   path_provider_foundation:
@@ -1243,7 +1225,6 @@ SPEC CHECKSUMS:
   file_picker: a0560bc09d61de87f12d246fc47d2119e6ef37be
   Firebase: 0312a2352584f782ea56f66d91606891d4607f06
   firebase_core: 3b49a055ff54114cae400581c13671fe53936c36
-  firebase_storage: ac5c6a367774953fdec3231679088b35bab045b3
   FirebaseAppCheckInterop: 6a1757cfd4067d8e00fccd14fcc1b8fd78cfac07
   FirebaseAuthInterop: 17db81e9b198afb0f95ce48c133825727eed55d3
   FirebaseCore: 7ec4d0484817f12c3373955bc87762d96842d483
@@ -1254,7 +1235,6 @@ SPEC CHECKSUMS:
   FirebaseFunctions: 93b1c7f352aec3922925a0e856cb1d6a09197083
   FirebaseMessagingInterop: afa5a4da1d615d109cf9fcf37479af96f6c3623a
   FirebaseSharedSwift: 20530f495084b8d840f78a100d8c5ee613375f6e
-  FirebaseStorage: 44f4e25073f6fa0d4d8c09f5bec299ee9e4eb985
   Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
   GoogleUtilities: ea963c370a38a8069cc5f7ba4ca849a60b6d7d15
   "gRPC-C++": e725ef63c4475d7cdb7e2cf16eb0fde84bd9ee51

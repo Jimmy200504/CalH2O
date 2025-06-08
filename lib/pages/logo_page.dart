@@ -53,7 +53,7 @@ class _LogoPageState extends State<LogoPage> with TickerProviderStateMixin {
             ? FadeTransition(
                 opacity: _fadeAnimation,
                 child: const Text(
-                  'CALH2O',
+                  'CalH2O',
                   style: TextStyle(
                     fontSize: 48,
                     fontWeight: FontWeight.bold,
@@ -64,7 +64,7 @@ class _LogoPageState extends State<LogoPage> with TickerProviderStateMixin {
             : AnimatedTextKit(
                 animatedTexts: [
                   TyperAnimatedText(
-                    'CALH2O',
+                    'CalH2O',
                     textStyle: const TextStyle(
                       fontSize: 48,
                       fontWeight: FontWeight.bold,

@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../model/nutrition_result.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ImageUploadService {
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -12,22 +13,31 @@ class ImageUploadService {
     final String? tag,
   }) async {
     try {
-      // Save the nutrition result and base64 image to Firestore
-      await _firestore.collection('nutrition_records').add({
-        'tag' : tag ?? 'default',
-        'timestamp': time ?? FieldValue.serverTimestamp(),
-        'base64Image': base64Image, // Store base64 image data
-        'imageName': nutritionResult.imageName,
-        'calories': nutritionResult.calories,
-        'protein': nutritionResult.protein,
-        'carbohydrate': nutritionResult.carbohydrate,
-        'fat': nutritionResult.fat,
-        'comment': comment,
-        'source':
-            base64Image.isEmpty
-                ? 'text_input'
-                : 'image_input', // Set source based on base64Image
-      });
+      // Get user account from SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      final account = prefs.getString('account');
+
+      if (account == null) {
+        throw Exception('User not logged in');
+      }
+
+      // Save the nutrition result and base64 image to user's document
+      await _firestore
+          .collection('users')
+          .doc(account)
+          .collection('nutrition_records')
+          .add({
+            'tag': tag ?? 'default',
+            'timestamp': time ?? FieldValue.serverTimestamp(),
+            'base64Image': base64Image,
+            'imageName': nutritionResult.imageName,
+            'calories': nutritionResult.calories,
+            'protein': nutritionResult.protein,
+            'carbohydrate': nutritionResult.carbohydrate,
+            'fat': nutritionResult.fat,
+            'comment': comment,
+            'source': base64Image.isEmpty ? 'text_input' : 'image_input',
+          });
     } catch (e) {
       throw Exception('Failed to save nutrition result: $e');
     }

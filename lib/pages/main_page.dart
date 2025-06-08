@@ -2,12 +2,14 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
 import '../widgets/main_page/main_progress_bar.dart';
 import '../widgets/main_page/nutrition_card.dart';
 import '../widgets/main_page/loading_overlay.dart';
 import '../widgets/animation.dart';
 import '../services/cloud_function_fetch/get_nutrition_from_photo.dart';
+import '../services/image_upload_service.dart';
 import '../model/nutrition_draft.dart';
 import '../main.dart';
 import '../services/water_upload_service.dart';
@@ -24,31 +26,33 @@ class MainPage extends StatefulWidget {
   State<MainPage> createState() => _MainPageState();
 }
 
-class _MainPageState extends State<MainPage>{
-  double _caloriesProgress = 0.0;
-  double _waterProgress = 0.0;
-  bool _isProcessing = false;
 
-  // Nutrition variables
-  int _water = 0;
+class _MainPageState extends State<MainPage> {
   int _calories = 0;
   int _protein = 0;
   int _carbs = 0;
   int _fats = 0;
   int _initialWater = 0;
+  int _water = 0;
 
-  // Nutrition targets
-  final int _waterTarget = 2500; // 2500ml water target
-  final int _caloriesTarget = 2000; // 2000kcal calories target
-  final int _proteinTarget = 50; // 50g protein target
-  final int _carbsTarget = 250; // 250g carbs target
-  final int _fatsTarget = 65; // 65g fats target
+  int _caloriesTarget = 2000;
+  int _proteinTarget = 50;
+  int _carbsTarget = 250;
+  int _fatsTarget = 65;
+  int _waterTarget = 2000;
+
+  double _caloriesProgress = 0.0;
+  double _proteinProgress = 0.0;
+  double _carbsProgress = 0.0;
+  double _fatsProgress = 0.0;
+  double _waterProgress = 0.0;
 
   bool _showSubButtons = false;
+  bool _isProcessing = false;
 
-  final GlobalKey _comboKey = GlobalKey();
   final GlobalKey _addKey = GlobalKey();
   final GlobalKey _historyKey = GlobalKey();
+  final GlobalKey _comboKey = GlobalKey();
   final GlobalKey _editNoteKey = GlobalKey();
   final GlobalKey _cameraAltKey = GlobalKey();
 
@@ -63,10 +67,45 @@ class _MainPageState extends State<MainPage>{
         _waterProgress = (_water / _waterTarget).clamp(0.0, 1.0);
       });
     });
+    _loadTargets();
     _setupNutritionListener();
   }
 
-  void _setupNutritionListener() {
+  Future<void> _loadTargets() async {
+    // 1. 拿到使用者 ID
+    final prefs = await SharedPreferences.getInstance();
+    final account = prefs.getString('account');
+    if (account == null) return;
+
+    // 2. 直接從 Firestore 抓 doc 一次
+    final doc =
+        await FirebaseFirestore.instance.collection('users').doc(account).get();
+    final data = doc.data();
+    if (data == null) return;
+
+    // 3. 讀欄位並存進變數
+    final int caloriesTarget = (data['calories'] as num).toInt();
+    final int waterTarget = (data['water'] as num).toInt();
+    final int proteinTarget = (data['proteinTarget'] as num).toInt();
+    final int carbsTarget = (data['carbsTarget'] as num).toInt();
+    final int fatsTarget = (data['fatsTarget'] as num).toInt();
+
+    // 4. 把它們存到 State 裡
+    setState(() {
+      _caloriesTarget = caloriesTarget;
+      _waterTarget = waterTarget;
+      _proteinTarget = proteinTarget;
+      _carbsTarget = carbsTarget;
+      _fatsTarget = fatsTarget;
+    });
+  }
+
+  void _setupNutritionListener() async {
+    // Get user account
+    final prefs = await SharedPreferences.getInstance();
+    final account = prefs.getString('account');
+    if (account == null) return;
+
     // Get today's start and end timestamps
     final now = DateTime.now();
     final startOfDay = DateTime(now.year, now.month, now.day);
@@ -74,9 +113,14 @@ class _MainPageState extends State<MainPage>{
 
     // Listen to Firestore for real-time updates
     FirebaseFirestore.instance
+        .collection('users')
+        .doc(account)
         .collection('nutrition_records')
-        .where('timestamp', isGreaterThanOrEqualTo: startOfDay)
-        .where('timestamp', isLessThan: endOfDay)
+        .where(
+          'timestamp',
+          isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay),
+        )
+        .where('timestamp', isLessThan: Timestamp.fromDate(endOfDay))
         .snapshots()
         .listen((snapshot) {
           // Reset values
@@ -89,17 +133,21 @@ class _MainPageState extends State<MainPage>{
 
           // Sum up all nutrition values
           for (var doc in snapshot.docs) {
+            final data = doc.data();
             setState(() {
-              _calories += (doc['calories'] as num).toInt();
-              _protein += (doc['protein'] as num).toInt();
-              _carbs += (doc['carbohydrate'] as num).toInt();
-              _fats += (doc['fat'] as num).toInt();
+              _calories += (data['calories'] as num).toInt();
+              _protein += (data['protein'] as num).toInt();
+              _carbs += (data['carbohydrate'] as num).toInt();
+              _fats += (data['fat'] as num).toInt();
             });
           }
 
           // Update progress values
           setState(() {
             _caloriesProgress = (_calories / _caloriesTarget).clamp(0.0, 1.0);
+            _proteinProgress = (_protein / _proteinTarget).clamp(0.0, 1.0);
+            _carbsProgress = (_carbs / _carbsTarget).clamp(0.0, 1.0);
+            _fatsProgress = (_fats / _fatsTarget).clamp(0.0, 1.0);
           });
         });
   }
@@ -441,7 +489,8 @@ class _MainPageState extends State<MainPage>{
                         color: Colors.grey[300],
                         borderRadius: BorderRadius.circular(24),
                       ),
-                      child: Text(//
+                      child: Text(
+                        //
                         'combo',
                         style: TextStyle(fontSize: 20, color: Colors.black54),
                       ),
