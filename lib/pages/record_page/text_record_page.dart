@@ -1,4 +1,3 @@
-import 'package:calh2o/services/cloud_function_fetch/message_sent.dart';
 import 'package:calh2o/services/image_upload_service.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -11,7 +10,6 @@ import '../../widgets/record_page/name_date_row.dart';
 import '../../widgets/record_page/nutrition_input_form.dart';
 import '../../widgets/record_page/generate_nutrition_button.dart';
 import 'nutrition_chat_page.dart';
-import '../../main.dart'; // for rootScaffoldMessengerKey
 import '../../model/nutrition_draft.dart';
 
 class TextRecordPage extends StatefulWidget {
@@ -30,9 +28,6 @@ class _TextRecordPageState extends State<TextRecordPage> {
       isUser: false,
     ),
   ];
-
-  final TextEditingController _textController = TextEditingController();
-  bool _isGeneratingNutrition = false;
 
   // 營養狀態
   NutritionResult _nutritionResult = NutritionResult(
@@ -274,19 +269,29 @@ class _TextRecordPageState extends State<TextRecordPage> {
             },
           ),
 
+          const SizedBox(height: 10),
           // Generate Nutrition Button
-          GenerateNutritionButton(
-            nutritionResult: _nutritionResult,
-            onNutritionGenerated: (newNutrition) {
-              setState(() {
-                _nutritionResult = newNutrition;
-              });
-            },
+          SizedBox(
+            // 靠在畫面右邊
+            height: 50,
+            width: 500,
+            child: Align(
+              alignment: Alignment.centerRight,
+
+              child: GenerateNutritionButton(
+                nutritionResult: _nutritionResult,
+                onNutritionGenerated: (newNutrition) {
+                  setState(() {
+                    _nutritionResult = newNutrition;
+                  });
+                },
+              ),
+            ),
           ),
 
           // 第三部(flex : 4)：營養數據
           Expanded(
-            flex: 4,
+            flex: 3,
             child: NutritionInputForm(
               initial: _nutritionResult,
               onChanged:
