@@ -12,10 +12,10 @@ class NutritionChatPage extends StatefulWidget {
   final List<Message> initialMessages;
 
   const NutritionChatPage({
-    Key? key,
+    super.key,
     required this.initial,
     required this.initialMessages,
-  }) : super(key: key);
+  });
 
   @override
   _NutritionChatPageState createState() => _NutritionChatPageState();

@@ -5,8 +5,7 @@ import '../../services/camera_service.dart';
 class CameraPreviewWidget extends StatelessWidget {
   final CameraService cameraService;
 
-  const CameraPreviewWidget({Key? key, required this.cameraService})
-    : super(key: key);
+  const CameraPreviewWidget({super.key, required this.cameraService});
 
   @override
   Widget build(BuildContext context) {

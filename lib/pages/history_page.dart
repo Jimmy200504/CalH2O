@@ -267,8 +267,9 @@ class _HistoryPageState extends State<HistoryPage> {
                       itemCount: _dailyRecords.length,
                       itemBuilder: (context, index) {
                         final dayData = _dailyRecords[index];
-                        if (dayData['date'] == null)
+                        if (dayData['date'] == null) {
                           return const SizedBox.shrink();
+                        }
 
                         return Card(
                           margin: const EdgeInsets.symmetric(
