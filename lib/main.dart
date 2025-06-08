@@ -86,6 +86,35 @@ class MyApp extends StatelessWidget {
       scaffoldMessengerKey: rootScaffoldMessengerKey,
       title: 'CalH2O',
       initialRoute: startFromMainPage ? '/main' : '/logo',
+      builder: (context, child) {
+        // 獲取設備的尺寸信息
+        final mediaQuery = MediaQuery.of(context);
+
+        // 設置文字縮放比例
+        final textScaleFactor = mediaQuery.textScaleFactor.clamp(0.8, 1.2);
+
+        return MediaQuery(
+          // 使用調整後的文字縮放比例
+          data: mediaQuery.copyWith(textScaleFactor: textScaleFactor),
+          child: child!,
+        );
+      },
+      theme: ThemeData(
+        // 設置主題
+        primarySwatch: Colors.blue,
+        // 設置文字主題
+        textTheme: Theme.of(
+          context,
+        ).textTheme.apply(bodyColor: Colors.black, displayColor: Colors.black),
+        // 設置輸入框主題
+        inputDecorationTheme: InputDecorationTheme(
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 12,
+          ),
+        ),
+      ),
       routes: {
         '/logo': (_) => const LogoPage(),
         '/welcome': (_) => const WelcomePage(),
