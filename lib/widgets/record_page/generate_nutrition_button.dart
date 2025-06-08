@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:calh2o/services/cloud_function_fetch/message_sent.dart';
 import 'package:calh2o/model/nutrition_result.dart';
+import 'package:calh2o/model/nutrition_draft.dart';
+import 'package:provider/provider.dart';
 
 class GenerateNutritionButton extends StatefulWidget {
   final NutritionResult nutritionResult;
@@ -43,14 +45,16 @@ class _GenerateNutritionButtonState extends State<GenerateNutritionButton> {
         [],
       );
 
-      widget.onNutritionGenerated(
-        widget.nutritionResult.copyWith(
-          calories: result.nutrition.calories,
-          carbohydrate: result.nutrition.carbohydrate,
-          protein: result.nutrition.protein,
-          fat: result.nutrition.fat,
-        ),
+      final newNutrition = widget.nutritionResult.copyWith(
+        calories: result.nutrition.calories,
+        carbohydrate: result.nutrition.carbohydrate,
+        protein: result.nutrition.protein,
+        fat: result.nutrition.fat,
       );
+
+      // Update both local state and draft
+      widget.onNutritionGenerated(newNutrition);
+      context.read<NutritionDraft>().nutritionResult = newNutrition;
     } finally {
       setState(() => _isGeneratingNutrition = false);
     }

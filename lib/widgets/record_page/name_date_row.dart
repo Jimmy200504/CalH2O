@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../services/camera_service.dart';
-import '../../pages/record_page/image_record.dart';
 import 'dart:convert';
+import '../../pages/record_page/image_record.dart';
 
 /// 名字和日期時間列
 /// 允許使用者輸入名字並回傳給父元件，
@@ -22,6 +21,9 @@ class NameDateRow extends StatefulWidget {
   /// 當使用者拍照時回傳
   final ValueChanged<String>? onImageCaptured;
 
+  /// 初始顯示的圖片
+  final String? initialImage;
+
   const NameDateRow({
     Key? key,
     required this.initialName,
@@ -29,6 +31,7 @@ class NameDateRow extends StatefulWidget {
     required this.onDateChanged,
     required this.onTimeChanged,
     required this.onImageCaptured,
+    this.initialImage,
   }) : super(key: key);
 
   @override
@@ -45,6 +48,7 @@ class _NameDateRowState extends State<NameDateRow> {
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.initialName);
+    _capturedImageBase64 = widget.initialImage;
   }
 
   @override
@@ -52,6 +56,9 @@ class _NameDateRowState extends State<NameDateRow> {
     super.didUpdateWidget(oldWidget);
     if (widget.initialName != oldWidget.initialName) {
       _nameController.text = widget.initialName;
+    }
+    if (widget.initialImage != oldWidget.initialImage) {
+      _capturedImageBase64 = widget.initialImage;
     }
   }
 

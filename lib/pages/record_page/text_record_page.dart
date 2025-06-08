@@ -60,25 +60,11 @@ class _TextRecordPageState extends State<TextRecordPage> {
       _comment = draft.comment;
       _timestamp = draft.timestamp;
       _tag = 'Breakfast';
+      _selectedTagIndex = _getMealTags()
+          .indexWhere((m) => m['label'] == _tag)
+          .clamp(0, _getMealTags().length - 1);
+      _capturedImageBase64 = draft.base64Image;
     }
-  }
-
-  void _resetAll() {
-    setState(() {
-      _textController.clear();
-      _nutritionResult = NutritionResult(
-        foods: [],
-        imageName: '',
-        calories: 0,
-        carbohydrate: 0,
-        protein: 0,
-        fat: 0,
-      );
-      _comment = '';
-      _timestamp = null;
-      _tag = 'Breakfast';
-      _selectedTagIndex = 0;
-    });
   }
 
   List<Map<String, dynamic>> _getMealTags() {
@@ -106,6 +92,7 @@ class _TextRecordPageState extends State<TextRecordPage> {
       _selectedTagIndex = _getMealTags()
           .indexWhere((m) => m['label'] == _tag)
           .clamp(0, _getMealTags().length - 1);
+      _capturedImageBase64 = draft.base64Image;
     }
 
     return Scaffold(
@@ -113,44 +100,78 @@ class _TextRecordPageState extends State<TextRecordPage> {
       appBar: AppBar(
         title: const Text('Record Nutrition'),
         actions: [
-          IconButton(icon: const Icon(Icons.refresh), onPressed: _resetAll),
+          IconButton(
+            iconSize: 30,
+            icon: const Icon(Icons.refresh),
+            onPressed: () {
+              setState(() {
+                _nutritionResult = NutritionResult(
+                  foods: [],
+                  imageName: '',
+                  calories: 0,
+                  carbohydrate: 0,
+                  protein: 0,
+                  fat: 0,
+                );
+                _comment = '';
+                _timestamp = null;
+                _tag = 'Breakfast';
+                _selectedTagIndex = 0;
+                _capturedImageBase64 = null;
+                _messages = [
+                  Message(
+                    text:
+                        'Hello. I can help you track your daily water and nutrition intake. You can tell me what you ate or drank today.',
+                    isUser: false,
+                  ),
+                ];
+              });
+              // Clear the draft
+              context.read<NutritionDraft>().clearDraft();
+            },
+          ),
+          IconButton(
+            iconSize: 30,
+            icon: const Icon(Icons.done),
+            onPressed: () async {
+              if (_nutritionResult.imageName.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Please enter a name')),
+                );
+                return;
+              }
+
+              try {
+                await ImageUploadService.saveNutritionResult(
+                  base64Image: _capturedImageBase64 ?? '',
+                  comment: _comment,
+                  nutritionResult: _nutritionResult,
+                  time: _timestamp,
+                  tag: _tag,
+                );
+
+                // Clear the draft after successful save
+                context.read<NutritionDraft>().clearDraft();
+
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Nutrition record saved')),
+                  );
+                  Navigator.of(context).pop();
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Error saving record: $e')),
+                  );
+                }
+              }
+            },
+          ),
         ],
       ),
       body: Column(
         children: [
-          // 第一部(flex : 1)：名稱與日期
-          NameDateRow(
-            initialName: _nutritionResult.imageName,
-            onNameChanged: (name) {
-              setState(() {
-                _nutritionResult = _nutritionResult.copyWith(imageName: name);
-                draft.nutritionResult = _nutritionResult;
-              });
-            },
-            onDateChanged: (d) {
-              setState(() {
-                final prev = _timestamp?.toDate() ?? DateTime.now();
-                _timestamp = Timestamp.fromDate(
-                  DateTime(d.year, d.month, d.day, prev.hour, prev.minute),
-                );
-                draft.timestamp = _timestamp;
-              });
-            },
-            onTimeChanged: (t) {
-              setState(() {
-                final prev = _timestamp?.toDate() ?? DateTime.now();
-                _timestamp = Timestamp.fromDate(
-                  DateTime(prev.year, prev.month, prev.day, t.hour, t.minute),
-                );
-                draft.timestamp = _timestamp;
-              });
-            },
-            onImageCaptured: (base64Image) {
-              setState(() {
-                _capturedImageBase64 = base64Image;
-              });
-            },
-          ),
           // 第二部(flex : 1)：標籤選擇
           Container(
             height: 100,
@@ -216,6 +237,41 @@ class _TextRecordPageState extends State<TextRecordPage> {
                 );
               },
             ),
+          ),
+          const SizedBox(height: 10),
+          // 第一部(flex : 1)：名稱與日期
+          NameDateRow(
+            initialName: _nutritionResult.imageName,
+            initialImage: _capturedImageBase64,
+            onNameChanged: (name) {
+              setState(() {
+                _nutritionResult = _nutritionResult.copyWith(imageName: name);
+                draft.nutritionResult = _nutritionResult;
+              });
+            },
+            onDateChanged: (d) {
+              setState(() {
+                final prev = _timestamp?.toDate() ?? DateTime.now();
+                _timestamp = Timestamp.fromDate(
+                  DateTime(d.year, d.month, d.day, prev.hour, prev.minute),
+                );
+                draft.timestamp = _timestamp;
+              });
+            },
+            onTimeChanged: (t) {
+              setState(() {
+                final prev = _timestamp?.toDate() ?? DateTime.now();
+                _timestamp = Timestamp.fromDate(
+                  DateTime(prev.year, prev.month, prev.day, t.hour, t.minute),
+                );
+                draft.timestamp = _timestamp;
+              });
+            },
+            onImageCaptured: (base64Image) {
+              setState(() {
+                _capturedImageBase64 = base64Image;
+              });
+            },
           ),
 
           // Generate Nutrition Button
