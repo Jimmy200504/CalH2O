@@ -1,3 +1,4 @@
+import 'package:calh2o/services/cloud_function_fetch/message_sent.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -6,6 +7,7 @@ import '../../model/message.dart';
 import '../../model/nutrition_result.dart';
 import '../../widgets/record_page/name_date_row.dart';
 import '../../widgets/record_page/nutrition_input_form.dart';
+import '../../widgets/record_page/generate_nutrition_button.dart';
 import 'nutrition_chat_page.dart';
 import '../../services/image_upload_service.dart';
 
@@ -27,6 +29,7 @@ class _TextRecordPageState extends State<TextRecordPage_2> {
   ];
 
   final TextEditingController _textController = TextEditingController();
+  bool _isGeneratingNutrition = false;
 
   // 營養狀態
   NutritionResult _nutritionResult = NutritionResult(
@@ -202,6 +205,17 @@ class _TextRecordPageState extends State<TextRecordPage_2> {
               },
             ),
           ),
+
+          // Generate Nutrition Button
+          GenerateNutritionButton(
+            nutritionResult: _nutritionResult,
+            onNutritionGenerated: (newNutrition) {
+              setState(() {
+                _nutritionResult = newNutrition;
+              });
+            },
+          ),
+
           // 第三部(flex : 4)：營養數據
           Expanded(
             flex: 4,
@@ -223,32 +237,32 @@ class _TextRecordPageState extends State<TextRecordPage_2> {
             flex: 1,
             child: Padding(
               padding: const EdgeInsets.all(8),
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
+              child: Align(
+                alignment: Alignment.bottomRight,
+                child: FloatingActionButton(
                   backgroundColor: Colors.amberAccent,
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 12,
-                    horizontal: 24,
+                  onPressed: () async {
+                    final result = await Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder:
+                            (_) => NutritionChatPage(
+                              initial: _nutritionResult,
+                              initialMessages: _messages,
+                            ),
+                      ),
+                    );
+                    if (result != null) {
+                      setState(() {
+                        _nutritionResult = result['nutrition'];
+                        _messages = result['messages'];
+                      });
+                    }
+                  },
+                  child: const Icon(
+                    Icons.chat_bubble_outline,
+                    color: Colors.black87,
                   ),
                 ),
-                onPressed: () async {
-                  final result = await Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder:
-                          (_) => NutritionChatPage(
-                            initial: _nutritionResult,
-                            initialMessages: _messages,
-                          ),
-                    ),
-                  );
-                  if (result != null) {
-                    setState(() {
-                      _nutritionResult = result['nutrition'];
-                      _messages = result['messages'];
-                    });
-                  }
-                },
-                child: const Text('Chat with AI'),
               ),
             ),
           ),
