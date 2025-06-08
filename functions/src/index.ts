@@ -3,6 +3,7 @@ import * as admin from "firebase-admin";
 import { foodPhotoNutritionFlow } from "./flow/foodPhotoToNutritionFlow";
 import { textToNutritionFlow } from "./flow/textToNutritionFlow";
 import { dailyNeedsFlow } from './flow/dailyNeedsFlow';
+import { generateEmotionalBlackmailFlow } from './flow/emotionalBlackmailFlow';
 import { Request, Response } from "express";
 
 // Initialize Admin SDK
@@ -124,5 +125,51 @@ export const dailyNeeds = functionsV1
     } catch (error: any) {
       console.error('dailyNeeds error:', error);
       res.status(500).json({ error: error.message || String(error) });
+    }
+  });
+
+  export const emotionalBlackmail = functionsV1
+  .runWith({ timeoutSeconds: 540 })
+  .https.onRequest(async (req: Request, res: Response) => {
+    // 只接受 POST & JSON
+    if (req.method !== 'POST') {
+      res.status(405).json({ error: 'Method Not Allowed' });
+      return;
+    }
+    if (!req.is('application/json')) {
+      res.status(415).json({ error: 'Content-Type must be application/json' });
+      return;
+    }
+
+    try {
+      const { waterIntake, waterNeed, caloriesIntake, caloriesNeed, EB_Type } = req.body;
+
+      // 基本驗證
+      if (
+        typeof waterIntake !== 'number' ||
+        typeof waterNeed !== 'number' ||
+        typeof caloriesIntake !== 'number' ||
+        typeof caloriesNeed !== 'number' ||
+        !['Friend(polite)', 'Friend(vicious)', 'Mom'].includes(EB_Type)
+      ) {
+        res.status(400).json({ error: 'Missing or invalid fields' });
+        return;
+      }
+
+      // 呼叫 Flow
+      const result = await generateEmotionalBlackmailFlow({
+        waterIntake,
+        waterNeed,
+        caloriesIntake,
+        caloriesNeed,
+        EB_Type: EB_Type as 'Polite' | 'Vicious' ,
+      });
+
+      res.status(200).json(result);
+      return;
+    } catch (e: any) {
+      console.error('emotionalBlackmail error:', e);
+      res.status(500).json({ error: e.message || String(e) });
+      return;
     }
   });

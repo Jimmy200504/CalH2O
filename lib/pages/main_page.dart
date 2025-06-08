@@ -67,7 +67,7 @@ class _MainPageState extends State<MainPage> {
         _waterProgress = (_water / _waterTarget).clamp(0.0, 1.0);
       });
     });
-    _loadTargets();
+    _loadTargets()
     _setupNutritionListener();
   }
 
@@ -125,6 +125,26 @@ class _MainPageState extends State<MainPage> {
     final prefs = await SharedPreferences.getInstance();
     final account = prefs.getString('account');
     if (account == null) return;
+
+//     final doc =
+//         await FirebaseFirestore.instance.collection('users').doc(account).get();
+//     final data = doc.data();
+//     if (data == null) return;
+
+//     final int caloriesTarget = (data['calories'] as num).toInt();
+//     final int waterTarget = (data['water'] as num).toInt();
+//     final int proteinTarget = (data['proteinTarget'] as num).toInt();
+//     final int carbsTarget = (data['carbsTarget'] as num).toInt();
+//     final int fatsTarget = (data['fatsTarget'] as num).toInt();
+
+//     setState(() {
+//       _caloriesTarget = caloriesTarget;
+//       _waterTarget = waterTarget;
+//       _proteinTarget = proteinTarget;
+//       _carbsTarget = carbsTarget;
+//       _fatsTarget = fatsTarget;
+//     });
+//   }
 
     // Get today's start and end timestamps
     final now = DateTime.now();
@@ -188,6 +208,7 @@ class _MainPageState extends State<MainPage> {
     _uploadDelta();
   }
 
+
   String _getLabel(int current, int target, String unit) {
     if (current >= target) {
       return 'Completed';
@@ -208,18 +229,6 @@ class _MainPageState extends State<MainPage> {
       _fats += 7; // 7g fats per increment
     });
   }
-
-  // void _updateNutrition(NutritionResult nutrition) {
-  //   setState(() {
-  //     _calories += nutrition.calories.round();
-  //     _protein += nutrition.protein.round();
-  //     _carbs += nutrition.carbohydrate.round();
-  //     _fats += nutrition.fat.round();
-
-  //     // Update progress values
-  //     _caloriesProgress = (_calories / _caloriesTarget).clamp(0.0, 1.0);
-  //   });
-  // }
 
   Future<void> _incrementWater() async {
     const intake = 250;
