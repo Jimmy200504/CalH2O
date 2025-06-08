@@ -26,7 +26,6 @@ class MainPage extends StatefulWidget {
   State<MainPage> createState() => _MainPageState();
 }
 
-
 class _MainPageState extends State<MainPage> {
   int _calories = 0;
   int _protein = 0;
@@ -72,32 +71,52 @@ class _MainPageState extends State<MainPage> {
   }
 
   Future<void> _loadTargets() async {
-    // 1. 拿到使用者 ID
-    final prefs = await SharedPreferences.getInstance();
-    final account = prefs.getString('account');
-    if (account == null) return;
+    try {
+      // 1. 拿到使用者 ID
+      final prefs = await SharedPreferences.getInstance();
+      final account = prefs.getString('account');
+      if (account == null) return;
 
-    // 2. 直接從 Firestore 抓 doc 一次
-    final doc =
-        await FirebaseFirestore.instance.collection('users').doc(account).get();
-    final data = doc.data();
-    if (data == null) return;
+      // 2. 直接從 Firestore 抓 doc 一次
+      final doc =
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(account)
+              .get();
+      final data = doc.data();
+      if (data == null) return;
 
-    // 3. 讀欄位並存進變數
-    final int caloriesTarget = (data['calories'] as num).toInt();
-    final int waterTarget = (data['water'] as num).toInt();
-    final int proteinTarget = (data['proteinTarget'] as num).toInt();
-    final int carbsTarget = (data['carbsTarget'] as num).toInt();
-    final int fatsTarget = (data['fatsTarget'] as num).toInt();
+      // 3. 讀欄位並存進變數，使用安全轉換
+      setState(() {
+        _caloriesTarget = _safeGetInt(data, 'calories', 2000);
+        _waterTarget = _safeGetInt(data, 'water', 2000);
+        _proteinTarget = _safeGetInt(data, 'proteinTarget', 50);
+        _carbsTarget = _safeGetInt(data, 'carbsTarget', 250);
+        _fatsTarget = _safeGetInt(data, 'fatsTarget', 65);
+      });
+    } catch (e) {
+      print('Error loading targets: $e');
+      // 如果出錯，使用默認值
+      setState(() {
+        _caloriesTarget = 2000;
+        _waterTarget = 2000;
+        _proteinTarget = 50;
+        _carbsTarget = 250;
+        _fatsTarget = 65;
+      });
+    }
+  }
 
-    // 4. 把它們存到 State 裡
-    setState(() {
-      _caloriesTarget = caloriesTarget;
-      _waterTarget = waterTarget;
-      _proteinTarget = proteinTarget;
-      _carbsTarget = carbsTarget;
-      _fatsTarget = fatsTarget;
-    });
+  int _safeGetInt(Map<String, dynamic> data, String key, int defaultValue) {
+    try {
+      final value = data[key];
+      if (value == null) return defaultValue;
+      if (value is num) return value.toInt();
+      if (value is String) return int.tryParse(value) ?? defaultValue;
+      return defaultValue;
+    } catch (e) {
+      return defaultValue;
+    }
   }
 
   void _setupNutritionListener() async {
@@ -157,7 +176,7 @@ class _MainPageState extends State<MainPage> {
     final delta = _water - _initialWater;
     if (delta != 0) {
       WaterUploadService.saveTodayWaterIntake(delta);
-      _initialWater = _water;        // 重置基準
+      _initialWater = _water; // 重置基準
     }
   }
 

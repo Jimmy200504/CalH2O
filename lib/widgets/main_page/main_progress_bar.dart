@@ -192,9 +192,6 @@ class _WaveClipperLeftGravity extends CustomClipper<Path> {
   }
 }
 
-
-
-
 class MainProgressBar extends StatelessWidget {
   final Color color;
   final String label;
