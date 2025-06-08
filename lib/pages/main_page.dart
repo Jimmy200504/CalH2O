@@ -1,14 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter/rendering.dart';
-
 import '../widgets/main_page/main_progress_bar.dart';
 import '../widgets/main_page/nutrition_card.dart';
 import '../widgets/main_page/loading_overlay.dart';
 import '../widgets/animation.dart';
 import '../services/cloud_function_fetch/get_nutrition_from_photo.dart';
-import '../services/image_upload_service.dart';
 import '../model/nutrition_draft.dart';
 import '../main.dart';
 
