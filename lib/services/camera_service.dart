@@ -159,6 +159,16 @@ class CameraService {
     await initializeCamera();
   }
 
+  Future<void> forceRefresh() async {
+    if (_isDisposed) {
+      debugPrint("Cannot force refresh: CameraService is disposed");
+      return;
+    }
+    _setInitialized(false);
+    await _controller!.dispose();
+    await initializeCamera();
+  }
+
   Future<void> pause() async {
     if (_isDisposed) return;
     if (_controller != null && _controller!.value.isInitialized) {
