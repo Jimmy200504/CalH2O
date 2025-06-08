@@ -55,7 +55,6 @@ class _SpeechBubbleState extends State<SpeechBubble> {
     super.dispose();
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Stack(
@@ -63,6 +62,7 @@ class _SpeechBubbleState extends State<SpeechBubble> {
         BarrageWall(
           controller: _barrageController,
           speed: 6,
+          debug: false,
           child: Container(),
         ),
         // 你可以在 Stack 內加上其他 Widget，
