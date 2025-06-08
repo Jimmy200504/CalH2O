@@ -153,30 +153,49 @@ class _ImageRecordPageState extends State<ImageRecordPage>
     debugPrint("Picking image");
     setState(() => _isProcessing = true);
     try {
-      // Pause camera before processing image
-      await _cameraService.pause();
-
       final file = await ImagePickerService.pickAndSaveImage();
       if (file != null && mounted && !_isDisposed) {
         debugPrint("Image picked, compressing and converting to base64");
+        // Pause camera before processing image
+        await _cameraService.pause();
         final bytes = await file.readAsBytes();
         final base64Image = await _compressAndEncodeImage(bytes);
         await _handleNavigation(base64Image);
       } else {
-        // 如果選擇圖片失敗或取消，恢復相機預覽
+        // 如果選擇圖片失敗或取消，確保相機是運作狀態
         debugPrint("Image picking cancelled or failed, staying on camera page");
         if (mounted && !_isDisposed) {
-          await _cameraService.resume();
+          await _ensureCameraRunning();
           setState(() => _isProcessing = false);
         }
       }
     } catch (e) {
       debugPrint("Error picking image: $e");
-      // 發生錯誤時恢復相機預覽
       if (mounted && !_isDisposed) {
-        await _cameraService.resume();
+        await _ensureCameraRunning();
         setState(() => _isProcessing = false);
       }
+    }
+  }
+
+  Future<void> _ensureCameraRunning() async {
+    debugPrint("Ensuring camera is running...");
+    try {
+      if (_cameraService.controller == null) {
+        debugPrint("Camera controller is null, initializing...");
+        await _initializeCamera();
+      } else if (!_cameraService.controller!.value.isInitialized) {
+        debugPrint("Camera not initialized, initializing...");
+        await _initializeCamera();
+      } else {
+        debugPrint("Camera is initialized, forcing preview refresh...");
+        await _cameraService.forceRefresh();
+      }
+      debugPrint("Camera state check completed");
+    } catch (e) {
+      debugPrint("Error ensuring camera is running: $e");
+      // 如果出現錯誤，嘗試重新初始化相機
+      await _initializeCamera();
     }
   }
 
