@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
@@ -8,6 +10,7 @@ import '../widgets/animation.dart';
 import '../services/cloud_function_fetch/get_nutrition_from_photo.dart';
 import '../model/nutrition_draft.dart';
 import '../main.dart';
+import '../services/water_upload_service.dart';
 
 import '../pages/setting_page.dart';
 import '../pages/history_page.dart';
@@ -21,7 +24,7 @@ class MainPage extends StatefulWidget {
   State<MainPage> createState() => _MainPageState();
 }
 
-class _MainPageState extends State<MainPage> {
+class _MainPageState extends State<MainPage>{
   double _caloriesProgress = 0.0;
   double _waterProgress = 0.0;
   bool _isProcessing = false;
@@ -32,6 +35,7 @@ class _MainPageState extends State<MainPage> {
   int _protein = 0;
   int _carbs = 0;
   int _fats = 0;
+  int _initialWater = 0;
 
   // Nutrition targets
   final int _waterTarget = 2500; // 2500ml water target
@@ -51,6 +55,14 @@ class _MainPageState extends State<MainPage> {
   @override
   void initState() {
     super.initState();
+    // 一次性抓 OR 初始化
+    WaterUploadService.fetchOrInitTodayWater().then((ml) {
+      setState(() {
+        _water = ml;
+        _initialWater = ml;
+        _waterProgress = (_water / _waterTarget).clamp(0.0, 1.0);
+      });
+    });
     _setupNutritionListener();
   }
 
@@ -92,6 +104,22 @@ class _MainPageState extends State<MainPage> {
         });
   }
 
+  /// 計算並上傳這段期間的水量差
+  void _uploadDelta() {
+    final delta = _water - _initialWater;
+    if (delta != 0) {
+      WaterUploadService.saveTodayWaterIntake(delta);
+      _initialWater = _water;        // 重置基準
+    }
+  }
+
+  /// 導航到命名路由 [routeName]，回來後自動呼 _uploadDelta
+  Future<void> _navigateNamed(String routeName) async {
+    _uploadDelta();
+    await Navigator.of(context).pushNamed(routeName);
+    _uploadDelta();
+  }
+
   String _getLabel(int current, int target, String unit) {
     if (current >= target) {
       return 'Completed';
@@ -125,11 +153,18 @@ class _MainPageState extends State<MainPage> {
   //   });
   // }
 
-  void _incrementWater() {
+  Future<void> _incrementWater() async {
+    const intake = 250;
     setState(() {
-      if (_water >= _waterTarget) return;
+      _water += intake;
+      _waterProgress = (_water / _waterTarget).clamp(0.0, 1.0);
+    });
+  }
 
-      _water += 250;
+  Future<void> _decrementWater() async {
+    const intake = 250;
+    setState(() {
+      _water = max(0, _water - intake);
       _waterProgress = (_water / _waterTarget).clamp(0.0, 1.0);
     });
   }
@@ -159,7 +194,7 @@ class _MainPageState extends State<MainPage> {
           action: SnackBarAction(
             label: '前往文字頁',
             onPressed: () {
-              Navigator.of(context).pushNamed('/text');
+              _navigateNamed('/text');
             },
           ),
         ),
@@ -353,11 +388,11 @@ class _MainPageState extends State<MainPage> {
                   onIncrement: _incrementCalories,
                   additionalInfo: 'Total Calories: $_calories kcal',
                 ),
-                MainProgressBar(
-                  color: Colors.blue,
+                WaveProgressBar(
                   label: _getLabel(_water, _waterTarget, ' ml Water'),
                   value: _waterProgress,
                   onIncrement: _incrementWater,
+                  onDecrement: _decrementWater,
                   additionalInfo: 'Total Water: $_water ml',
                 ),
                 // SizedBox(height: 24),
@@ -443,12 +478,7 @@ class _MainPageState extends State<MainPage> {
                         key: _historyKey,
                         icon: const Icon(Icons.access_time, size: 40),
                         onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const HistoryPage(),
-                            ),
-                          );
+                          _navigateNamed('/history');
                         },
                       ),
                     ],
@@ -487,7 +517,7 @@ class _MainPageState extends State<MainPage> {
                       key: _editNoteKey,
                       icon: const Icon(Icons.edit_note, size: 40),
                       onPressed: () {
-                        Navigator.pushNamed(context, '/text');
+                        _navigateNamed('/text');
                         _toggleSubButtons();
                       },
                     ),
