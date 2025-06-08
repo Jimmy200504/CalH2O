@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../model/message.dart';
-import '../model/nutrition_result.dart';
-import '../services/message_sent.dart';
+import '../../model/message.dart';
+import '../../model/nutrition_result.dart';
+import '../../services/cloud_function_fetch/message_sent.dart';
 
 /// 與 AI 聊天並更新營養數值的頁面
 class NutritionChatPage extends StatefulWidget {

@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import '../model/nutrition_result.dart';
+import '../../model/nutrition_result.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 

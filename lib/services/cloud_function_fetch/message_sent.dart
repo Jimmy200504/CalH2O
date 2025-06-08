@@ -1,5 +1,5 @@
-import '../model/message_with_nutrition.dart';
-import '../model/nutrition_result.dart';
+import '../../model/message_with_nutrition.dart';
+import '../../model/nutrition_result.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';

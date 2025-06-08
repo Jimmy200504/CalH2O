@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/services.dart'; // 為了 digitsOnly formatter
 
 class SettingPage extends StatefulWidget {
   const SettingPage({super.key});
@@ -35,8 +36,8 @@ class _SettingPageState extends State<SettingPage> {
         if (doc.exists) {
           final data = doc.data()!;
           setState(() {
-            _heightController.text = data['height'] ?? '';
-            _weightController.text = data['weight'] ?? '';
+            _heightController.text = (data['height'] ?? '').toString();
+            _weightController.text = (data['weight'] ?? '').toString();
             _targetController.text = data['goal'] ?? '';
           });
         }
@@ -55,8 +56,8 @@ class _SettingPageState extends State<SettingPage> {
     if (name != null && name.isNotEmpty) {
       try {
         await FirebaseFirestore.instance.collection('users').doc(name).update({
-          'height': _heightController.text,
-          'weight': _weightController.text,
+          'height': int.tryParse(_heightController.text) ?? 0,
+          'weight': int.tryParse(_weightController.text) ?? 0,
           'goal': _targetController.text,
         });
 
@@ -66,7 +67,7 @@ class _SettingPageState extends State<SettingPage> {
       } catch (e) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('更新失敗：$e')));
+        ).showSnackBar(SnackBar(content: Text('update failed: $e')));
       }
     }
   }
@@ -91,7 +92,7 @@ class _SettingPageState extends State<SettingPage> {
                 IconButton(
                   icon: const Icon(Icons.arrow_back),
                   onPressed: () async {
-                    await _saveUserData(); // ← 點圖示返回也儲存
+                    await _saveUserData();
                     Navigator.pop(context);
                   },
                 ),
@@ -111,19 +112,21 @@ class _SettingPageState extends State<SettingPage> {
                 TextField(
                   controller: _heightController,
                   keyboardType: TextInputType.number,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 ),
                 const SizedBox(height: 8),
                 const Text('Weight'),
                 TextField(
                   controller: _weightController,
                   keyboardType: TextInputType.number,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 ),
                 const SizedBox(height: 8),
                 const Text('Target'),
                 TextField(
                   controller: _targetController,
                   keyboardType: TextInputType.multiline,
-                  maxLines: 2,
+                  maxLines: 1,
                 ),
               ],
             ),

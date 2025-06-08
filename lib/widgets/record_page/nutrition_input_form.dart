@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../model/nutrition_result.dart';
+import '../../model/nutrition_result.dart';
 
 /// 可輸入營養數值(熱量、蛋白質、碳水、脂肪)及備註的表單
 class NutritionInputForm extends StatefulWidget {
