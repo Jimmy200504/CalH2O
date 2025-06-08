@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../services/camera_service.dart';
-import '../../pages/record_page/image_record.dart';
 import 'dart:convert';
+import '../../pages/record_page/image_record.dart';
 
 /// 名字和日期時間列
 /// 允許使用者輸入名字並回傳給父元件，
@@ -22,14 +21,18 @@ class NameDateRow extends StatefulWidget {
   /// 當使用者拍照時回傳
   final ValueChanged<String>? onImageCaptured;
 
+  /// 初始顯示的圖片
+  final String? initialImage;
+
   const NameDateRow({
-    Key? key,
+    super.key,
     required this.initialName,
     required this.onNameChanged,
     required this.onDateChanged,
     required this.onTimeChanged,
     required this.onImageCaptured,
-  }) : super(key: key);
+    this.initialImage,
+  });
 
   @override
   _NameDateRowState createState() => _NameDateRowState();
@@ -45,6 +48,7 @@ class _NameDateRowState extends State<NameDateRow> {
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.initialName);
+    _capturedImageBase64 = widget.initialImage;
   }
 
   @override
@@ -52,6 +56,9 @@ class _NameDateRowState extends State<NameDateRow> {
     super.didUpdateWidget(oldWidget);
     if (widget.initialName != oldWidget.initialName) {
       _nameController.text = widget.initialName;
+    }
+    if (widget.initialImage != oldWidget.initialImage) {
+      _capturedImageBase64 = widget.initialImage;
     }
   }
 
@@ -108,79 +115,78 @@ class _NameDateRowState extends State<NameDateRow> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Expanded(
-            flex: 1,
-            child: Center(
-              child: GestureDetector(
-                onTap: _openCamera,
-                child: Container(
-                  width: 150,
-                  height: 150,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[200],
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.grey[400]!, width: 2),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        spreadRadius: 1,
-                        blurRadius: 4,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Stack(
-                    children: [
-                      _capturedImageBase64 != null
-                          ? ClipRRect(
-                            borderRadius: BorderRadius.circular(14),
-                            child: Image.memory(
-                              base64Decode(_capturedImageBase64!.split(',')[1]),
-                              fit: BoxFit.cover,
-                              width: double.infinity,
-                              height: double.infinity,
-                            ),
-                          )
-                          : Center(
-                            child: Icon(
-                              Icons.camera_alt,
-                              size: 70,
-                              color: Colors.grey[700],
-                            ),
+          // 左側圖片區塊，固定寬高
+          SizedBox(
+            width: 120,
+            height: 120,
+            child: GestureDetector(
+              onTap: _openCamera,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.grey[200],
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.grey[400]!, width: 2),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      spreadRadius: 1,
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Stack(
+                  children: [
+                    _capturedImageBase64 != null
+                        ? ClipRRect(
+                          borderRadius: BorderRadius.circular(14),
+                          child: Image.memory(
+                            base64Decode(_capturedImageBase64!.split(',')[1]),
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                            height: double.infinity,
                           ),
-                      if (_capturedImageBase64 != null)
-                        Positioned(
-                          right: 6,
-                          top: 6,
-                          child: Container(
-                            padding: const EdgeInsets.all(6),
-                            decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(0.5),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Icons.camera_alt,
-                              color: Colors.white,
-                              size: 20,
-                            ),
+                        )
+                        : Center(
+                          child: Icon(
+                            Icons.camera_alt,
+                            size: 70,
+                            color: Colors.grey[700],
                           ),
                         ),
-                    ],
-                  ),
+                    if (_capturedImageBase64 != null)
+                      Positioned(
+                        right: 6,
+                        top: 6,
+                        child: Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.5),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.camera_alt,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
               ),
             ),
           ),
+          const SizedBox(width: 20),
+          // 右側表單區塊
           Expanded(
-            flex: 1,
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 TextField(
                   controller: _nameController,
                   decoration: const InputDecoration(
-                    labelText: '名字',
+                    labelText: 'Name',
                     border: OutlineInputBorder(),
                     isDense: true,
                   ),
@@ -219,8 +225,7 @@ class _NameDateRowState extends State<NameDateRow> {
                         onPressed: _pickTime,
                         icon: const Icon(Icons.access_time, size: 20),
                         label: Text(
-                          '${_selectedTime.hour.toString().padLeft(2, '0')}:'
-                          '${_selectedTime.minute.toString().padLeft(2, '0')}',
+                          '${_selectedTime.hour.toString().padLeft(2, '0')}:${_selectedTime.minute.toString().padLeft(2, '0')}',
                         ),
                         style: TextButton.styleFrom(
                           minimumSize: Size.zero,

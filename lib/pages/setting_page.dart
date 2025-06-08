@@ -177,19 +177,40 @@ class _SettingPageState extends State<SettingPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        leading: BackButton(
-          onPressed: () {
-            _saveUserData();
-            Navigator.pop(context);
-          },
-        ),
-        title: const Text('Settings'),
-      ),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.arrow_back),
+                  onPressed: () async {
+                    Navigator.pop(context);
+                  },
+                ),
+                const Text(
+                  'Settings',
+                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.logout),
+                  onPressed: () async {
+                    final prefs = await SharedPreferences.getInstance();
+                    await prefs.setBool('isLoggedIn', false);
+                    await prefs.remove('account');
+                    Navigator.pushNamedAndRemoveUntil(
+                      context,
+                      '/login',
+                      (r) => false,
+                    );
+                  },
+                  tooltip: 'Log out',
+                ),
+              ],
+            ),
+
             _buildDropdown(
               label: 'Gender',
               value: _gender,
