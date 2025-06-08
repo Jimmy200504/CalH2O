@@ -11,6 +11,9 @@ class LoginPage extends StatefulWidget {
   State<LoginPage> createState() => _LoginPageState();
 }
 
+final TextEditingController _passwordController = TextEditingController();
+final TextEditingController _accountController = TextEditingController();
+
 class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   String _account = '';
@@ -84,29 +87,27 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 const SizedBox(height: 24),
                 TextFormField(
+                  controller: _accountController,
+                  readOnly: true,
+                  showCursor: true,
+                  obscureText: true,
                   decoration: const InputDecoration(
-                    labelText: 'Username',
+                    labelText: 'UserID',
                     border: OutlineInputBorder(),
                   ),
-                  onSaved: (value) => _account = value!.trim(),
-                  validator:
-                      (value) =>
-                          value == null || value.isEmpty
-                              ? 'Enter username'
-                              : null,
+                  onTap: () {},
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
+                  controller: _passwordController,
+                  readOnly: true,
+                  showCursor: true,
+                  obscureText: true,
                   decoration: const InputDecoration(
-                    labelText: 'password',
+                    labelText: 'Password',
                     border: OutlineInputBorder(),
                   ),
-                  onSaved: (value) => _password = value!.trim(),
-                  validator:
-                      (value) =>
-                          value == null || value.isEmpty
-                              ? 'Enter password'
-                              : null,
+                  onTap: () {},
                 ),
                 const SizedBox(height: 24),
                 SizedBox(
