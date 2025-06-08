@@ -12,8 +12,12 @@ import '../model/nutrition_draft.dart';
 import '../main.dart';
 import '../pages/setting_page.dart';
 import '../pages/history_page.dart';
-
+import '../widgets/main_page/speech_bubble.dart';
+import 'dart:async';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
+import 'package:flutter_barrage/flutter_barrage.dart';
+
+
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -22,7 +26,7 @@ class MainPage extends StatefulWidget {
   State<MainPage> createState() => _MainPageState();
 }
 
-class _MainPageState extends State<MainPage> {
+class _MainPageState extends State<MainPage> with SingleTickerProviderStateMixin {
   double _caloriesProgress = 0.0;
   double _waterProgress = 0.0;
   bool _isProcessing = false;
@@ -48,13 +52,17 @@ class _MainPageState extends State<MainPage> {
   final GlobalKey _historyKey = GlobalKey();
   final GlobalKey _editNoteKey = GlobalKey();
   final GlobalKey _cameraAltKey = GlobalKey();
+  final GlobalKey _petKey = GlobalKey();
 
-  @override
+  
+  
+@override
   void initState() {
     super.initState();
     _loadTargets();
     // _setupNutritionListener();
   }
+
 
   Future<void> _loadTargets() async {
     // 1. 拿到使用者 ID
@@ -305,11 +313,35 @@ class _MainPageState extends State<MainPage> {
             align: ContentAlign.top,
             builder: (context, controllerTarget) {
               Future.delayed(const Duration(seconds: 1), () {
-                controllerTarget.skip();
+                controllerTarget.next();
               });
               return const Text(
                 "Check the history",
                 style: TextStyle(color: Colors.white, fontSize: 20),
+              );
+            },
+          ),
+        ],
+      ),
+      TargetFocus(
+        identify: "Pet",
+        keyTarget: _petKey,
+        contents: [
+          TargetContent(
+            align: ContentAlign.top,
+            builder: (context, controllerTarget) {
+              Future.delayed(const Duration(seconds: 1), () {
+                controllerTarget.next();
+              });
+              return const Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    "The pet in the middle shows your health status.\nPlease pay attention to your diet.",
+                    style: TextStyle(color: Colors.white, fontSize: 20),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
               );
             },
           ),
@@ -349,14 +381,8 @@ class _MainPageState extends State<MainPage> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       IconButton(
-                        icon: Icon(Icons.settings, size: 40),
-                        onPressed: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => const SettingPage(),
-                            ),
-                          );
-                        },
+                        icon: const Icon(Icons.info, size: 40),
+                        onPressed: _showTutorial,
                       ),
                       Text(
                         'CalH2O',
@@ -367,8 +393,14 @@ class _MainPageState extends State<MainPage> {
                         ),
                       ),
                       IconButton(
-                        icon: const Icon(Icons.info, size: 40),
-                        onPressed: _showTutorial,
+                        icon: Icon(Icons.settings, size: 40),
+                        onPressed: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => const SettingPage(),
+                            ),
+                          );
+                        },
                       ),
                     ],
                   ),
@@ -444,15 +476,29 @@ class _MainPageState extends State<MainPage> {
                     ),
                   ],
                 ),
+
                 SizedBox(height: 8),
-                Expanded(
-                  child: Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [const FrameAnimationWidget(size: 200)],
-                    ),
+                Flexible(
+                  fit: FlexFit.loose,
+                  child: Stack(
+                    children: [
+                      // 先放彈幕
+                      const SpeechBubble(),
+
+                      // 再放動畫
+                      Center(
+                        child: FittedBox(
+                          fit: BoxFit.contain,
+                          key: _petKey,
+                          child: const FrameAnimationWidget(size: 200),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
+
+
+
                 Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 32.0,
@@ -569,3 +615,4 @@ class _MainPageState extends State<MainPage> {
     );
   }
 }
+
