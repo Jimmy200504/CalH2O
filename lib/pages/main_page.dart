@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/rendering.dart';
 
 import '../widgets/main_page/main_progress_bar.dart';
 import '../widgets/main_page/nutrition_card.dart';
@@ -10,6 +11,8 @@ import '../services/image_upload_service.dart';
 
 import '../pages/setting_page.dart';
 import '../pages/history_page.dart';
+
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -38,6 +41,12 @@ class _MainPageState extends State<MainPage> {
   final int _fatsTarget = 65; // 65g fats target
 
   bool _showSubButtons = false;
+
+  final GlobalKey _comboKey = GlobalKey();
+  final GlobalKey _addKey = GlobalKey();
+  final GlobalKey _historyKey = GlobalKey();
+  final GlobalKey _editNoteKey = GlobalKey();
+  final GlobalKey _cameraAltKey = GlobalKey();
 
   @override
   void initState() {
@@ -153,6 +162,134 @@ class _MainPageState extends State<MainPage> {
     }
   }
 
+  List<TargetFocus> targets = [];
+
+  void _initTargets() {
+    targets = [
+      TargetFocus(
+        identify: "Combo",
+        keyTarget: _comboKey,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (context, controllerTarget) {
+              Future.delayed(const Duration(seconds: 3), () {
+                controllerTarget.next();
+              });
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: const [
+                  SizedBox(height: 50),
+                  Text(
+                    "This shows your combo streak of daily records!",
+                    style: TextStyle(color: Colors.white, fontSize: 20),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+      TargetFocus(
+        identify: "Add",
+        keyTarget: _addKey,
+        contents: [
+          TargetContent(
+            align: ContentAlign.top,
+            builder: (context, controllerTarget) {
+              Future.delayed(const Duration(seconds: 3), () {
+                controllerTarget.next();
+              });
+              return const Text(
+                "Add a new record",
+                style: TextStyle(color: Colors.white, fontSize: 20),
+              );
+            },
+          ),
+        ],
+      ),
+      TargetFocus(
+        identify: "EditNote",
+        keyTarget: _editNoteKey,
+        contents: [
+          TargetContent(
+            align: ContentAlign.top,
+            builder: (context, controllerTarget) {
+              Future.delayed(const Duration(seconds: 3), () {
+                controllerTarget.next();
+              });
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: const [
+                  SizedBox(height: 8),
+                  Text(
+                    "Add notes to your entry",
+                    style: TextStyle(color: Colors.white, fontSize: 20),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+      TargetFocus(
+        identify: "Camera",
+        keyTarget: _cameraAltKey,
+        contents: [
+          TargetContent(
+            align: ContentAlign.top,
+            builder: (context, controllerTarget) {
+              Future.delayed(const Duration(seconds: 3), () {
+                controllerTarget.next();
+              });
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: const [
+                  SizedBox(height: 8),
+                  Text(
+                    "Use the camera to scan food",
+                    style: TextStyle(color: Colors.white, fontSize: 20),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+      TargetFocus(
+        identify: "History",
+        keyTarget: _historyKey,
+        contents: [
+          TargetContent(
+            align: ContentAlign.top,
+            builder: (context, controllerTarget) {
+              Future.delayed(const Duration(seconds: 3), () {
+                controllerTarget.skip();
+              });
+              return const Text(
+                "Check the history",
+                style: TextStyle(color: Colors.white, fontSize: 20),
+              );
+            },
+          ),
+        ],
+      ),
+    ];
+  }
+
+  void _showTutorial() {
+    setState(() {
+      _showSubButtons = true;
+    });
+    _initTargets();
+    TutorialCoachMark(
+      targets: targets,
+      colorShadow: Colors.black,
+      textSkip: "SKIP",
+      onFinish: () => print("Tutorial finished"),
+    ).show(context: context);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -188,7 +325,10 @@ class _MainPageState extends State<MainPage> {
                           letterSpacing: 1,
                         ),
                       ),
-                      Icon(Icons.info, size: 40),
+                      IconButton(
+                        icon: const Icon(Icons.info, size: 40),
+                        onPressed: _showTutorial,
+                      ),
                     ],
                   ),
                 ),
@@ -246,6 +386,7 @@ class _MainPageState extends State<MainPage> {
                         child: LoadingOverlay(),
                       ),
                     Container(
+                      key: _comboKey,
                       margin: const EdgeInsets.only(top: 16, right: 24),
                       padding: const EdgeInsets.symmetric(
                         horizontal: 20,
@@ -280,7 +421,7 @@ class _MainPageState extends State<MainPage> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       IconButton(
-                        //跳到 upload page
+                        key: _addKey,
                         icon: Icon(
                           Icons.lunch_dining,
                           size: 40,
@@ -289,6 +430,7 @@ class _MainPageState extends State<MainPage> {
                         onPressed: _toggleSubButtons,
                       ),
                       IconButton(
+                        key: _historyKey,
                         icon: const Icon(Icons.access_time, size: 40),
                         onPressed: () {
                           Navigator.push(
@@ -332,6 +474,7 @@ class _MainPageState extends State<MainPage> {
                   children: [
                     // 文字輸入按鈕（上方）
                     IconButton(
+                      key: _editNoteKey,
                       icon: const Icon(Icons.edit_note, size: 40),
                       onPressed: () {
                         Navigator.pushNamed(context, '/text');
@@ -362,6 +505,7 @@ class _MainPageState extends State<MainPage> {
                     const SizedBox(width: 40), // 佔位，保持對齊
                     // 圖片輸入按鈕（右方）
                     IconButton(
+                      key: _cameraAltKey,
                       icon: const Icon(Icons.camera_alt, size: 40),
                       onPressed: () async {
                         final result = await Navigator.pushNamed(

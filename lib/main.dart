@@ -71,7 +71,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'CalH2O',
-      initialRoute: startFromMainPage ? '/main' : '/welcome',
+      initialRoute: '/welcome',
       routes: {
         '/welcome': (_) => const WelcomePage(),
         '/login': (_) => const LoginPage(),
