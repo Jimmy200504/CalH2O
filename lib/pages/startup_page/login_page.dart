@@ -31,7 +31,7 @@ class _LoginPageState extends State<LoginPage> {
               .get();
 
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('name', _account);
+      await prefs.setString('account', _account);
 
       if (userDoc.exists) {
         final data = userDoc.data()!;

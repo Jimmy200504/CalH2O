@@ -23,7 +23,7 @@ class _SettingPageState extends State<SettingPage> {
 
   Future<void> _loadUserData() async {
     final prefs = await SharedPreferences.getInstance();
-    final name = prefs.getString('name');
+    final name = prefs.getString('account');
 
     if (name != null && name.isNotEmpty) {
       try {
@@ -44,14 +44,14 @@ class _SettingPageState extends State<SettingPage> {
       } catch (e) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('讀取資料失敗：$e')));
+        ).showSnackBar(SnackBar(content: Text('fail:$e')));
       }
     }
   }
 
   Future<void> _saveUserData() async {
     final prefs = await SharedPreferences.getInstance();
-    final name = prefs.getString('name');
+    final name = prefs.getString('account');
 
     if (name != null && name.isNotEmpty) {
       try {
@@ -88,20 +88,32 @@ class _SettingPageState extends State<SettingPage> {
           padding: const EdgeInsets.all(16),
           children: [
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 IconButton(
                   icon: const Icon(Icons.arrow_back),
                   onPressed: () async {
-                    await _saveUserData();
                     Navigator.pop(context);
                   },
                 ),
-                const Spacer(),
                 const Text(
-                  'Setting',
+                  'Settings',
                   style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
                 ),
-                const Spacer(flex: 2),
+                IconButton(
+                  icon: const Icon(Icons.logout),
+                  onPressed: () async {
+                    final prefs = await SharedPreferences.getInstance();
+                    await prefs.setBool('isLoggedIn', false);
+                    await prefs.remove('account');
+                    Navigator.pushNamedAndRemoveUntil(
+                      context,
+                      '/login',
+                      (r) => false,
+                    );
+                  },
+                  tooltip: 'Log out',
+                ),
               ],
             ),
             const SizedBox(height: 16),
@@ -141,6 +153,7 @@ class _SettingPageState extends State<SettingPage> {
               ),
               child: const Text('Save Changes', style: TextStyle(fontSize: 18)),
             ),
+            const SizedBox(height: 24),
           ],
         ),
       ),

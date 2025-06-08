@@ -60,14 +60,14 @@ void main() async {
   // Initialize cameras
   await initializeCameras();
 
-  // Check user profile
+  // Check login status
   final prefs = await SharedPreferences.getInstance();
-  final hasProfile = prefs.containsKey('name');
-
+  final isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
+  
   runApp(
     ChangeNotifierProvider(
       create: (_) => NutritionDraft(),
-      child: MyApp(startFromMainPage: hasProfile),
+      child: MyApp(startFromMainPage: isLoggedIn),
     ),
   );
 }
@@ -82,7 +82,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       scaffoldMessengerKey: rootScaffoldMessengerKey,
       title: 'CalH2O',
-      initialRoute: '/welcome',
+      initialRoute: startFromMainPage ? '/main' : '/welcome',
       routes: {
         '/welcome': (_) => const WelcomePage(),
         '/login': (_) => const LoginPage(),
