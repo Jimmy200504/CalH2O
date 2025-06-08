@@ -452,10 +452,10 @@ class _MainPageState extends State<MainPage> {
 
           // 子按鈕
           AnimatedPositioned(
-            duration: const Duration(milliseconds: 300),
+            duration: const Duration(milliseconds: 400),
             curve: Curves.easeOutBack,
-            bottom: _showSubButtons ? screenHeight * 0.2 : screenHeight * 0.12,
-            left: _showSubButtons ? 0 : -screenWidth,
+            bottom: _showSubButtons ? screenHeight * 0.2 : 100,
+            left: _showSubButtons ? 0 : -100,
             right: _showSubButtons ? screenWidth * 0.25 : 0,
             child: AnimatedOpacity(
               duration: const Duration(milliseconds: 200),
@@ -469,8 +469,8 @@ class _MainPageState extends State<MainPage> {
                       key: _editNoteKey,
                       icon: Icon(Icons.edit_note, size: iconSize),
                       onPressed: () {
+                        setState(() => _showSubButtons = false);
                         Navigator.pushNamed(context, '/text');
-                        _toggleSubButtons();
                       },
                     ),
                     SizedBox(width: screenWidth * 0.1),
@@ -481,7 +481,7 @@ class _MainPageState extends State<MainPage> {
           ),
 
           AnimatedPositioned(
-            duration: const Duration(milliseconds: 300),
+            duration: const Duration(milliseconds: 400),
             curve: Curves.easeOutBack,
             bottom: _showSubButtons ? screenHeight * 0.12 : screenHeight * 0.1,
             left: _showSubButtons ? -screenWidth : -screenWidth,
@@ -499,6 +499,7 @@ class _MainPageState extends State<MainPage> {
                       key: _cameraAltKey,
                       icon: Icon(Icons.camera_alt, size: iconSize),
                       onPressed: () async {
+                        setState(() => _showSubButtons = false);
                         final result = await Navigator.pushNamed(
                           context,
                           '/image',
@@ -506,7 +507,6 @@ class _MainPageState extends State<MainPage> {
                         if (result != null) {
                           await _handleImageResult(result as String);
                         }
-                        _toggleSubButtons();
                       },
                     ),
                   ],
