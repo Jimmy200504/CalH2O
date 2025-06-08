@@ -1,5 +1,4 @@
 import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -13,7 +12,6 @@ import '../services/image_upload_service.dart';
 import '../model/nutrition_draft.dart';
 import '../main.dart';
 import '../services/water_upload_service.dart';
-
 import '../pages/setting_page.dart';
 import '../pages/history_page.dart';
 
@@ -73,12 +71,10 @@ class _MainPageState extends State<MainPage> {
 
   Future<void> _loadTargets() async {
     try {
-      // 1. 拿到使用者 ID
       final prefs = await SharedPreferences.getInstance();
       final account = prefs.getString('account');
       if (account == null) return;
 
-      // 2. 直接從 Firestore 抓 doc 一次
       final doc =
           await FirebaseFirestore.instance
               .collection('users')
@@ -87,23 +83,41 @@ class _MainPageState extends State<MainPage> {
       final data = doc.data();
       if (data == null) return;
 
-      // 3. 讀欄位並存進變數，使用安全轉換
+      // 把目標撈回來
+      final newCalTarget = _safeGetInt(data, 'calories', 2000);
+      final newWaterTarget = _safeGetInt(data, 'water', 2000);
+      final newProTarget = _safeGetInt(data, 'proteinTarget', 50);
+      final newCarbTarget = _safeGetInt(data, 'carbsTarget', 250);
+      final newFatTarget = _safeGetInt(data, 'fatsTarget', 65);
+
       setState(() {
-        _caloriesTarget = _safeGetInt(data, 'calories', 2000);
-        _waterTarget = _safeGetInt(data, 'water', 2000);
-        _proteinTarget = _safeGetInt(data, 'proteinTarget', 50);
-        _carbsTarget = _safeGetInt(data, 'carbsTarget', 250);
-        _fatsTarget = _safeGetInt(data, 'fatsTarget', 65);
+        _caloriesTarget = newCalTarget;
+        _waterTarget = newWaterTarget;
+        _proteinTarget = newProTarget;
+        _carbsTarget = newCarbTarget;
+        _fatsTarget = newFatTarget;
+
+        // **重算進度**：載入完新目標後，馬上把目前數值除以目標，算出 ProgressBar
+        _caloriesProgress = (_calories / _caloriesTarget).clamp(0.0, 1.0);
+        _waterProgress = (_water / _waterTarget).clamp(0.0, 1.0);
+        _proteinProgress = (_protein / _proteinTarget).clamp(0.0, 1.0);
+        _carbsProgress = (_carbs / _carbsTarget).clamp(0.0, 1.0);
+        _fatsProgress = (_fats / _fatsTarget).clamp(0.0, 1.0);
       });
     } catch (e) {
       print('Error loading targets: $e');
-      // 如果出錯，使用默認值
+      // 可保留原本的預設值，也要重算一次進度
       setState(() {
         _caloriesTarget = 2000;
         _waterTarget = 2000;
         _proteinTarget = 50;
         _carbsTarget = 250;
         _fatsTarget = 65;
+        _caloriesProgress = (_calories / _caloriesTarget).clamp(0.0, 1.0);
+        _waterProgress = (_water / _waterTarget).clamp(0.0, 1.0);
+        _proteinProgress = (_protein / _proteinTarget).clamp(0.0, 1.0);
+        _carbsProgress = (_carbs / _carbsTarget).clamp(0.0, 1.0);
+        _fatsProgress = (_fats / _fatsTarget).clamp(0.0, 1.0);
       });
     }
   }
@@ -468,12 +482,12 @@ class _MainPageState extends State<MainPage> {
 
                 MainProgressBar(
                   color: Colors.orange,
-                  label: 'Calories $_calories kcal',
+                  label: 'Calories $_calories kcal (${_getLabel(_calories,_caloriesTarget,' kcal')})',
                   value: _caloriesProgress,
                   onIncrement: _incrementCalories,
                 ),
                 WaveProgressBar(
-                  label: 'Water $_water ml',
+                  label: 'Water $_water ml (${_getLabel(_water, _waterTarget, ' ml')})',
                   value: _waterProgress,
                   onIncrement: _incrementWater,
                   onDecrement: _decrementWater,
