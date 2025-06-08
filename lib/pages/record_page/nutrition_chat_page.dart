@@ -61,7 +61,7 @@ class _NutritionChatPageState extends State<NutritionChatPage> {
         _messages.map((e) => e.isUser ? 'User: \${e.text}' : 'AI: \${e.text}').toList(),
       );
       setState(() {
-        _nutritionResult = result.nutrition;
+        _nutritionResult = result.nutrition.copyWith(imageName: _nutritionResult.imageName);
         // AI 原始回覆
         _messages.add(Message(text: result.text, isUser: false));
         // 顯示更新後的營養資訊

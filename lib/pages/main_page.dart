@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-import '../model/nutrition_result.dart';
 import '../widgets/main_page/main_progress_bar.dart';
 import '../widgets/main_page/nutrition_card.dart';
 import '../widgets/main_page/loading_overlay.dart';
