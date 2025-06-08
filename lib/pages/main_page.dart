@@ -14,8 +14,12 @@ import '../main.dart';
 import '../services/water_upload_service.dart';
 import '../pages/setting_page.dart';
 import '../pages/history_page.dart';
-
+import '../widgets/main_page/speech_bubble.dart';
+import 'dart:async';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
+import 'package:flutter_barrage/flutter_barrage.dart';
+
+
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -53,8 +57,11 @@ class _MainPageState extends State<MainPage> {
   final GlobalKey _comboKey = GlobalKey();
   final GlobalKey _editNoteKey = GlobalKey();
   final GlobalKey _cameraAltKey = GlobalKey();
+  final GlobalKey _petKey = GlobalKey();
 
-  @override
+  
+  
+@override
   void initState() {
     super.initState();
     // 一次性抓 OR 初始化
@@ -68,6 +75,7 @@ class _MainPageState extends State<MainPage> {
     _loadTargets();
     _setupNutritionListener();
   }
+
 
   Future<void> _loadTargets() async {
     try {
@@ -399,11 +407,35 @@ class _MainPageState extends State<MainPage> {
             align: ContentAlign.top,
             builder: (context, controllerTarget) {
               Future.delayed(const Duration(seconds: 1), () {
-                controllerTarget.skip();
+                controllerTarget.next();
               });
               return const Text(
                 "Check the history",
                 style: TextStyle(color: Colors.white, fontSize: 20),
+              );
+            },
+          ),
+        ],
+      ),
+      TargetFocus(
+        identify: "Pet",
+        keyTarget: _petKey,
+        contents: [
+          TargetContent(
+            align: ContentAlign.top,
+            builder: (context, controllerTarget) {
+              Future.delayed(const Duration(seconds: 1), () {
+                controllerTarget.next();
+              });
+              return const Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    "The pet in the middle shows your health status.\nPlease pay attention to your diet.",
+                    style: TextStyle(color: Colors.white, fontSize: 20),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
               );
             },
           ),
@@ -455,14 +487,8 @@ class _MainPageState extends State<MainPage> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       IconButton(
-                        icon: Icon(Icons.settings, size: iconSize),
-                        onPressed: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => const SettingPage(),
-                            ),
-                          );
-                        },
+                        icon: const Icon(Icons.info, size: 40),
+                        onPressed: _showTutorial,
                       ),
                       Text(
                         'CalH2O',
@@ -473,8 +499,14 @@ class _MainPageState extends State<MainPage> {
                         ),
                       ),
                       IconButton(
-                        icon: Icon(Icons.info, size: iconSize),
-                        onPressed: _showTutorial,
+                        icon: Icon(Icons.settings, size: 40),
+                        onPressed: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => const SettingPage(),
+                            ),
+                          );
+                        },
                       ),
                     ],
                   ),
@@ -559,19 +591,29 @@ class _MainPageState extends State<MainPage> {
                     ),
                   ],
                 ),
-                SizedBox(height: screenHeight * 0.01),
-                Expanded(
-                  child: Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        FrameAnimationWidget(
-                          size: screenWidth * 0.5, // 動畫大小為螢幕寬度的一半
+
+                SizedBox(height: 8),
+                Flexible(
+                  fit: FlexFit.loose,
+                  child: Stack(
+                    children: [
+                      // 先放彈幕
+                      const SpeechBubble(),
+
+                      // 再放動畫
+                      Center(
+                        child: FittedBox(
+                          fit: BoxFit.contain,
+                          key: _petKey,
+                          child: const FrameAnimationWidget(size: 200),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
+
+
+
                 Padding(
                   padding: EdgeInsets.symmetric(
                     horizontal: screenWidth * 0.08,
@@ -684,3 +726,4 @@ class _MainPageState extends State<MainPage> {
     );
   }
 }
+
