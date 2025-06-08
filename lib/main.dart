@@ -10,6 +10,7 @@ import 'package:provider/provider.dart';
 
 import 'pages/record_page/image_record.dart';
 import 'pages/history_page.dart';
+import 'pages/analyze_page.dart';
 
 import 'package:calh2o/pages/logo_page.dart';
 
@@ -94,6 +95,7 @@ class MyApp extends StatelessWidget {
         '/image': (_) => const ImageRecordPage(),
         '/text': (_) => const TextRecordPage(),
         '/history': (_) => const HistoryPage(),
+        '/analyze': (_) => const AnalyzePage(),
       },
     );
   }

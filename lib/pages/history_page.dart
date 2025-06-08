@@ -202,9 +202,16 @@ class _HistoryPageState extends State<HistoryPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
+        backgroundColor: Colors.white,
         title: Text(_isMonthView ? 'Monthly History' : 'Daily History'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.bar_chart, color: Colors.black),
+            tooltip: '分析',
+            onPressed: () => Navigator.pushNamed(context, '/analyze'),
+          ),
           IconButton(
             icon: Icon(
               _isMonthView ? Icons.calendar_today : Icons.calendar_month,
