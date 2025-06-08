@@ -1,34 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:provider/provider.dart';
 
 import '../../model/message.dart';
 import '../../model/nutrition_result.dart';
 import '../../widgets/record_page/text_container.dart';
 import '../../widgets/record_page/nutrition_input_form.dart';
 import 'nutrition_chat_page.dart';
-import '../../services/image_upload_service.dart';
+import '../../main.dart'; // for rootScaffoldMessengerKey
+import '../../model/nutrition_draft.dart';
 
-class TextRecordPage_2 extends StatefulWidget {
-  const TextRecordPage_2({super.key});
+class TextRecordPage extends StatefulWidget {
+  const TextRecordPage({super.key});
 
   @override
   _TextRecordPageState createState() => _TextRecordPageState();
 }
 
-class _TextRecordPageState extends State<TextRecordPage_2> {
-  // 聊天狀態
-  final List<Message> _messages = [
-    Message(
-      text:
-          'Hello. I can help you track your daily water and nutrition intake. You can tell me what you ate or drank today.',
-      isUser: false,
-    ),
-  ];
-
+class _TextRecordPageState extends State<TextRecordPage> {
+  // 本地顯示狀態
   final TextEditingController _textController = TextEditingController();
-
-  // 營養狀態
   NutritionResult _nutritionResult = NutritionResult(
     foods: [],
     imageName: '',
@@ -37,24 +29,26 @@ class _TextRecordPageState extends State<TextRecordPage_2> {
     protein: 0,
     fat: 0,
   );
-
-  // 紀錄備註
   String _comment = '';
   Timestamp? _timestamp;
-  String _tag = ''; 
+  String _tag = 'Breakfast';
   int _selectedTagIndex = 0;
 
+  @override
+  void initState() {
+    super.initState();
+    // 從 Provider 讀取 Draft
+    final draft = context.read<NutritionDraft>();
+    if (draft.nutritionResult != null) {
+      _nutritionResult = draft.nutritionResult!;
+      _comment = draft.comment;
+      _timestamp = draft.timestamp;
+      _tag = 'Breakfast';
+    }
+  }
 
   void _resetAll() {
     setState(() {
-      _messages.clear();
-      _messages.add(
-        Message(
-          text:
-              'Hello. I can help you track your daily water and nutrition intake. You can tell me what you ate or drank today.',
-          isUser: false,
-        ),
-      );
       _textController.clear();
       _nutritionResult = NutritionResult(
         foods: [],
@@ -64,20 +58,28 @@ class _TextRecordPageState extends State<TextRecordPage_2> {
         protein: 0,
         fat: 0,
       );
+      _comment = '';
+      _timestamp = null;
+      _tag = '';
+      _selectedTagIndex = 0;
+      // 同步清除 Draft
+      context.read<NutritionDraft>().clearDraft();
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    // 標籤資料：icon 與文字
-    final List<Map<String, dynamic>> _mealTags = [
-      {'icon': Icons.breakfast_dining, 'label': 'Breakfast'},
-      {'icon': Icons.lunch_dining, 'label': 'Lunch'},
-      {'icon': Icons.dinner_dining, 'label': 'Dinner'},
-      {'icon': Icons.icecream, 'label': 'Dessert'},
-      {'icon': Icons.local_cafe, 'label': 'Snack'},
-      {'icon': FontAwesomeIcons.ghost, 'label': 'Midnight'},
-    ];
+    // 監聽 Draft
+    final draft = context.watch<NutritionDraft>();
+    // 如果 Draft 更新且本地未同步，先同步一次
+    if (draft.nutritionResult != null && draft.nutritionResult != _nutritionResult) {
+      _nutritionResult = draft.nutritionResult!;
+      _comment = draft.comment;
+      _timestamp = draft.timestamp;
+      _tag = 'Breakfast';
+      _selectedTagIndex =
+          _getMealTags().indexWhere((m) => m['label'] == _tag).clamp(0, _getMealTags().length - 1);
+    }
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -90,53 +92,53 @@ class _TextRecordPageState extends State<TextRecordPage_2> {
       ),
       body: Column(
         children: [
-          // 上半部(flex : 1):Tag 拖拉條，左右拖曳
+          // 標籤列
           Container(
             height: 100,
             padding: const EdgeInsets.symmetric(vertical: 8),
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
-              itemCount: _mealTags.length,
+              itemCount: _getMealTags().length,
               itemBuilder: (context, idx) {
-                final tag = _mealTags[idx];
+                final tagData = _getMealTags()[idx];
                 final isSelected = idx == _selectedTagIndex;
                 return GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      _selectedTagIndex = idx;
-                      _tag = _mealTags[idx]['label'] as String;
-                    });
-                  },
+                  onTap: () => setState(() {
+                    _selectedTagIndex = idx;
+                    _tag = tagData['label'] as String;
+                    draft.tag = _tag;
+                  }),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
                     margin: EdgeInsets.only(
                       left: idx == 0 ? 16 : 8,
-                      right: idx == _mealTags.length - 1 ? 16 : 0,
+                      right: idx == _getMealTags().length - 1 ? 16 : 0,
                     ),
                     width: 80,
                     decoration: BoxDecoration(
                       color: isSelected ? Colors.orangeAccent : Colors.white,
                       borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        if (isSelected)
-                          BoxShadow(
-                            color: Colors.orangeAccent.withOpacity(0.4),
-                            blurRadius: 8,
-                            offset: const Offset(0, 4),
-                          ),
-                      ],
+                      boxShadow: isSelected
+                          ? [
+                              BoxShadow(
+                                color: Colors.orangeAccent.withOpacity(0.4),
+                                blurRadius: 8,
+                                offset: const Offset(0, 4),
+                              )
+                            ]
+                          : null,
                     ),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(
-                          tag['icon'],
+                          tagData['icon'],
                           size: 32,
                           color: isSelected ? Colors.white : Colors.grey[700],
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          tag['label'],
+                          tagData['label'],
                           style: TextStyle(
                             fontSize: 14,
                             color: isSelected ? Colors.white : Colors.grey[700],
@@ -149,7 +151,7 @@ class _TextRecordPageState extends State<TextRecordPage_2> {
               },
             ),
           ),
-          // 第二部(flex : 2):相機，[名字，時間]
+          // 名稱 + 日期 + 圖片...
           Expanded(
             flex: 2,
             child: NameDateRow(
@@ -157,6 +159,7 @@ class _TextRecordPageState extends State<TextRecordPage_2> {
               onNameChanged: (name) {
                 setState(() {
                   _nutritionResult = _nutritionResult.copyWith(imageName: name);
+                  draft.nutritionResult = _nutritionResult;
                 });
               },
               onDateChanged: (d) {
@@ -165,6 +168,7 @@ class _TextRecordPageState extends State<TextRecordPage_2> {
                   _timestamp = Timestamp.fromDate(
                     DateTime(d.year, d.month, d.day, prev.hour, prev.minute),
                   );
+                  draft.timestamp = _timestamp;
                 });
               },
               onTimeChanged: (t) {
@@ -173,105 +177,70 @@ class _TextRecordPageState extends State<TextRecordPage_2> {
                   _timestamp = Timestamp.fromDate(
                     DateTime(prev.year, prev.month, prev.day, t.hour, t.minute),
                   );
+                  draft.timestamp = _timestamp;
                 });
               },
               onImageCaptured: (base64Image) {
-                // 只更新照片，不進行營養分析
-                setState(() {
-                  // 保持原有的營養數據不變
-                });
+                // 可以傳回圖片，但不做分析
               },
             ),
           ),
-          // 第三部(flex : 4)：營養數據
+          // 營養輸入表單
           Expanded(
             flex: 4,
             child: NutritionInputForm(
               initial: _nutritionResult,
-              onChanged: (newData) {
-                setState(() {
-                  _nutritionResult = newData;
-                });
-              },
-              onCommentChanged: (text) {
-                setState(() => _comment = text);
-              },
+              onChanged: (newData) => setState(() {
+                _nutritionResult = newData;
+                draft.nutritionResult = newData;
+              }),
+              onCommentChanged: (text) => setState(() {
+                _comment = text;
+                draft.comment = text;
+              }),
             ),
           ),
-
-          // 第四部(flex : 1)Space bar
-          //左邊要可以save
-          //右邊可能要有一個按鈕導入到與AI聊天的畫面
+          // Save & Chat Buttons
           Expanded(
             flex: 1,
             child: Row(
               children: [
-                // 左：Save 按鈕
                 Expanded(
-                  flex: 1,
                   child: Padding(
                     padding: const EdgeInsets.all(8),
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.amberAccent,
-                        padding: const EdgeInsets.symmetric(
-                          vertical: 12,
-                          horizontal: 24,
-                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
                       ),
                       onPressed: () async {
-                        await ImageUploadService.saveNutritionResult(
-                          // imageUrl: imageUrl,
-                          tag: _tag,
-                          base64Image: '',
-                          comment: _comment,
-                          nutritionResult: _nutritionResult,
-                          time: _timestamp,
-                        );
-                        // // 將 _nutritionResult 和 _comment 一起存進 Firestore
-                        // await FirebaseFirestore.instance.collection('nutrition_records').add({
-                        //   'timestamp': FieldValue.serverTimestamp(),
-                        //   'calories': _nutritionResult.calories,
-                        //   'protein': _nutritionResult.protein,
-                        //   'carbohydrate': _nutritionResult.carbohydrate,
-                        //   'fat': _nutritionResult.fat,
-                        //   'comment': _comment,
-                        //   'source': 'text_input',
-                        // });
-                        // 可顯示提示訊息或返回上一頁
-                        ScaffoldMessenger.of(
-                          context,
-                        ).showSnackBar(const SnackBar(content: Text('資料已儲存')));
+                        await draft.save();
+                        rootScaffoldMessengerKey.currentState!
+                            .showSnackBar(const SnackBar(content: Text('資料已儲存')));
+                        Navigator.of(context).pop();
                       },
                       child: const Text('Save'),
                     ),
                   ),
                 ),
-                // 右：進入 AI Chat 按鈕
                 Expanded(
-                  flex: 1,
                   child: Padding(
                     padding: const EdgeInsets.all(8),
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.amberAccent,
-                        padding: const EdgeInsets.symmetric(
-                          vertical: 12,
-                          horizontal: 24,
-                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
                       ),
                       onPressed: () async {
                         final updated = await Navigator.of(context).push(
                           MaterialPageRoute(
-                            builder:
-                                (_) => NutritionChatPage(
-                                  initial: _nutritionResult,
-                                ),
+                            builder: (_) => NutritionChatPage(initial: _nutritionResult),
                           ),
                         );
                         if (updated != null) {
                           setState(() {
                             _nutritionResult = updated;
+                            draft.nutritionResult = updated;
                           });
                         }
                       },
@@ -285,5 +254,16 @@ class _TextRecordPageState extends State<TextRecordPage_2> {
         ],
       ),
     );
+  }
+
+  List<Map<String, dynamic>> _getMealTags() {
+    return [
+      {'icon': Icons.breakfast_dining, 'label': 'Breakfast'},
+      {'icon': Icons.lunch_dining, 'label': 'Lunch'},
+      {'icon': Icons.dinner_dining, 'label': 'Dinner'},
+      {'icon': Icons.icecream, 'label': 'Dessert'},
+      {'icon': Icons.local_cafe, 'label': 'Snack'},
+      {'icon': FontAwesomeIcons.ghost, 'label': 'Midnight'},
+    ];
   }
 }
