@@ -482,12 +482,12 @@ class _MainPageState extends State<MainPage> {
 
                 MainProgressBar(
                   color: Colors.orange,
-                  label: 'Calories $_calories kcal',
+                  label: 'Calories $_calories kcal (${_getLabel(_calories,_caloriesTarget,' kcal')})',
                   value: _caloriesProgress,
                   onIncrement: _incrementCalories,
                 ),
                 WaveProgressBar(
-                  label: 'Water $_water ml',
+                  label: 'Water $_water ml (${_getLabel(_water, _waterTarget, ' ml')})',
                   value: _waterProgress,
                   onIncrement: _incrementWater,
                   onDecrement: _decrementWater,
