@@ -60,13 +60,16 @@ class _GoalSelectionPageState extends State<GoalSelectionPage>
           'goal': _selectedGoal,
         }, SetOptions(merge: true));
       } catch (e) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('儲存 goal 失敗: $e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('儲存 goal 失敗: $e')));
         return;
       }
 
       // 讀取 Profile (略去 dailyNeeds，如需要可以補上)
       try {
+        late String userId, gender, birthday, activityLevel;
+        late int height, weight;
         final doc =
             await FirebaseFirestore.instance
                 .collection('users')
@@ -80,8 +83,9 @@ class _GoalSelectionPageState extends State<GoalSelectionPage>
         height = (data['height'] as num).toInt();
         weight = (data['weight'] as num).toInt();
       } catch (e) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('讀取 Profile 失敗: $e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('讀取 Profile 失敗: $e')));
         return;
       }
     }
@@ -128,8 +132,10 @@ class _GoalSelectionPageState extends State<GoalSelectionPage>
                     const Expanded(
                       child: Text(
                         'What do you want to improve ?',
-                        style:
-                            TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ],
@@ -155,12 +161,13 @@ class _GoalSelectionPageState extends State<GoalSelectionPage>
                         const SizedBox(height: 12),
                         DropdownButtonFormField<String>(
                           value: _selectedGoal,
-                          items: _goals.map((String goal) {
-                            return DropdownMenuItem<String>(
-                              value: goal,
-                              child: Text(goal),
-                            );
-                          }).toList(),
+                          items:
+                              _goals.map((String goal) {
+                                return DropdownMenuItem<String>(
+                                  value: goal,
+                                  child: Text(goal),
+                                );
+                              }).toList(),
                           onChanged: (value) {
                             setState(() {
                               _selectedGoal = value!;
@@ -204,19 +211,20 @@ class _GoalSelectionPageState extends State<GoalSelectionPage>
                     MediaQuery.of(context).size.height * _fillAnimation.value,
                 width: double.infinity,
                 color: const Color(0xFFFFB74D),
-                child: _showCheckAnimation
-                    ? Center(
-                        child: Lottie.asset(
-                          "assets/check.json",
-                          controller: _lottieController,
-                          onLoaded: (composition) {
-                            _lottieController
-                              ..duration = composition.duration ~/ 2
-                              ..forward().whenComplete(_onLottieFinished);
-                          },
-                        ),
-                      )
-                    : null,
+                child:
+                    _showCheckAnimation
+                        ? Center(
+                          child: Lottie.asset(
+                            "assets/check.json",
+                            controller: _lottieController,
+                            onLoaded: (composition) {
+                              _lottieController
+                                ..duration = composition.duration ~/ 2
+                                ..forward().whenComplete(_onLottieFinished);
+                            },
+                          ),
+                        )
+                        : null,
               ),
             );
           },

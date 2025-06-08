@@ -11,12 +11,10 @@ import 'package:provider/provider.dart';
 import 'pages/record_page/image_record.dart';
 import 'pages/history_page.dart';
 
-import 'pages/record_page/text_record_2.dart';
 import 'package:calh2o/pages/logo_page.dart';
 
 import 'model/nutrition_draft.dart';
 import 'pages/record_page/text_record_page.dart';
-
 
 late List<CameraDescription> cameras;
 final GlobalKey<ScaffoldMessengerState> rootScaffoldMessengerKey =
@@ -68,7 +66,7 @@ void main() async {
   // Check login status
   final prefs = await SharedPreferences.getInstance();
   final isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
-  
+
   runApp(
     ChangeNotifierProvider(
       create: (_) => NutritionDraft(),

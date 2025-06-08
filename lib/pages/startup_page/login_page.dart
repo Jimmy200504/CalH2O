@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:calh2o/pages/main_page.dart';
-import 'package:calh2o/pages/startup_page/profile_setup_page.dart';
+import 'package:calh2o/pages/startup_page/profile_setup_page.dart'; // 輸入個人資料頁面
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -11,37 +11,11 @@ class LoginPage extends StatefulWidget {
   State<LoginPage> createState() => _LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage>
-    with SingleTickerProviderStateMixin {
+class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   String _account = '';
   String _password = '';
   bool _loading = false;
-
-  late AnimationController _fadeController;
-  late Animation<double> _fadeAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-
-    _fadeController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 800),
-    );
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _fadeController, curve: Curves.easeIn),
-    );
-
-    // 啟動淡入
-    _fadeController.forward();
-  }
-
-  @override
-  void dispose() {
-    _fadeController.dispose();
-    super.dispose();
-  }
 
   Future<void> _handleLogin() async {
     if (!_formKey.currentState!.validate()) return;
@@ -50,10 +24,11 @@ class _LoginPageState extends State<LoginPage>
     setState(() => _loading = true);
 
     try {
-      final userDoc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(_account)
-          .get();
+      final userDoc =
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(_account)
+              .get();
 
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('account', _account);
@@ -70,10 +45,7 @@ class _LoginPageState extends State<LoginPage>
           _showMessage('Incorrect password');
         }
       } else {
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(_account)
-            .set({
+        await FirebaseFirestore.instance.collection('users').doc(_account).set({
           'password': _password,
         });
 
@@ -94,42 +66,27 @@ class _LoginPageState extends State<LoginPage>
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
-  // ➡️ 統一輸入框的樣式
-  InputDecoration _inputDecoration(String label) {
-    return InputDecoration(
-      labelText: label,
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: BorderSide(color: Colors.grey.shade400),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: BorderSide(color: Colors.grey.shade400),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: Colors.grey, width: 2),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: FadeTransition(
-        opacity: _fadeAnimation,
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                children: [
-                  const Spacer(),
-                  const Text(
-                    'Login to CalH2O',
-                    style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              children: [
+                const Spacer(),
+                const Text(
+                  'Login to CalH2O',
+                  style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 24),
+                TextFormField(
+                  decoration: const InputDecoration(
+                    labelText: 'Username',
+                    border: OutlineInputBorder(),
                   ),
                   autofillHints: null,
                   enableSuggestions: false,
@@ -167,8 +124,7 @@ class _LoginPageState extends State<LoginPage>
                           : ElevatedButton(
                             onPressed: _handleLogin,
                             style: ElevatedButton.styleFrom(
-                              padding:
-                                  const EdgeInsets.symmetric(vertical: 16),
+                              padding: const EdgeInsets.symmetric(vertical: 16),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
@@ -178,10 +134,9 @@ class _LoginPageState extends State<LoginPage>
                               style: TextStyle(fontSize: 18),
                             ),
                           ),
-                  ),
-                  const Spacer(),
-                ],
-              ),
+                ),
+                const Spacer(),
+              ],
             ),
           ),
         ),
