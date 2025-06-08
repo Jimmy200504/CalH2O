@@ -6,11 +6,16 @@ import 'firebase_options.dart';
 import 'pages/main_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:calh2o/pages/startup_page/login_page.dart';
+import 'package:provider/provider.dart';
+
 import 'pages/record_page/image_record.dart';
 import 'pages/history_page.dart';
-import 'pages/record_page/text_record_2.dart';
+import 'model/nutrition_draft.dart';
+import 'pages/record_page/text_record_page.dart';
 
 late List<CameraDescription> cameras;
+final GlobalKey<ScaffoldMessengerState> rootScaffoldMessengerKey =
+    GlobalKey<ScaffoldMessengerState>();
 
 Future<void> initializeCameras() async {
   try {
@@ -58,8 +63,13 @@ void main() async {
   // Check login status
   final prefs = await SharedPreferences.getInstance();
   final isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
-
-  runApp(MyApp(startFromMainPage: isLoggedIn));
+  
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => NutritionDraft(),
+      child: MyApp(startFromMainPage: isLoggedIn),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -70,6 +80,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      scaffoldMessengerKey: rootScaffoldMessengerKey,
       title: 'CalH2O',
       initialRoute: startFromMainPage ? '/main' : '/welcome',
       routes: {
@@ -77,7 +88,7 @@ class MyApp extends StatelessWidget {
         '/login': (_) => const LoginPage(),
         '/main': (_) => const MainPage(),
         '/image': (_) => const ImageRecordPage(),
-        '/text': (_) => const TextRecordPage_2(),
+        '/text': (_) => const TextRecordPage(),
         '/history': (_) => const HistoryPage(),
       },
     );
