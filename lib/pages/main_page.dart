@@ -53,29 +53,24 @@ class _MainPageState extends State<MainPage> {
   void initState() {
     super.initState();
     _loadTargets();
-    // _setupNutritionListener();
   }
 
   Future<void> _loadTargets() async {
-    // 1. 拿到使用者 ID
     final prefs = await SharedPreferences.getInstance();
     final account = prefs.getString('account');
     if (account == null) return;
 
-    // 2. 直接從 Firestore 抓 doc 一次
     final doc =
         await FirebaseFirestore.instance.collection('users').doc(account).get();
     final data = doc.data();
     if (data == null) return;
 
-    // 3. 讀欄位並存進變數
     final int caloriesTarget = (data['calories'] as num).toInt();
     final int waterTarget = (data['water'] as num).toInt();
     final int proteinTarget = (data['proteinTarget'] as num).toInt();
     final int carbsTarget = (data['carbsTarget'] as num).toInt();
     final int fatsTarget = (data['fatsTarget'] as num).toInt();
 
-    // 4. 把它們存到 State 裡
     setState(() {
       _caloriesTarget = caloriesTarget;
       _waterTarget = waterTarget;
@@ -84,44 +79,6 @@ class _MainPageState extends State<MainPage> {
       _fatsTarget = fatsTarget;
     });
   }
-
-  // void _setupNutritionListener() {
-  // Get today's start and end timestamps
-  //   final now = DateTime.now();
-  //   final startOfDay = DateTime(now.year, now.month, now.day);
-  //   final endOfDay = startOfDay.add(const Duration(days: 1));
-
-  // Listen to Firestore for real-time updates
-  //   FirebaseFirestore.instance
-  //       .collection('nutrition_records')
-  //       .where('timestamp', isGreaterThanOrEqualTo: startOfDay)
-  //       .where('timestamp', isLessThan: endOfDay)
-  //       .snapshots()
-  //       .listen((snapshot) {
-  //         // Reset values
-  //         setState(() {
-  //           _calories = 0;
-  //           _protein = 0;
-  //           _carbs = 0;
-  //           _fats = 0;
-  //         });
-
-  //         // Sum up all nutrition values
-  //         for (var doc in snapshot.docs) {
-  //           setState(() {
-  //             _calories += (doc['calories'] as num).toInt();
-  //             _protein += (doc['protein'] as num).toInt();
-  //             _carbs += (doc['carbohydrate'] as num).toInt();
-  //             _fats += (doc['fat'] as num).toInt();
-  //           });
-  //         }
-
-  //         // Update progress values
-  //         setState(() {
-  //           _caloriesProgress = (_calories / _caloriesTarget).clamp(0.0, 1.0);
-  //         });
-  //       });
-  // }
 
   String _getLabel(int current, int target, String unit) {
     if (current >= target) {
@@ -143,18 +100,6 @@ class _MainPageState extends State<MainPage> {
       _fats += 7; // 7g fats per increment
     });
   }
-
-  // void _updateNutrition(NutritionResult nutrition) {
-  //   setState(() {
-  //     _calories += nutrition.calories.round();
-  //     _protein += nutrition.protein.round();
-  //     _carbs += nutrition.carbohydrate.round();
-  //     _fats += nutrition.fat.round();
-
-  //     // Update progress values
-  //     _caloriesProgress = (_calories / _caloriesTarget).clamp(0.0, 1.0);
-  //   });
-  // }
 
   void _incrementWater() {
     setState(() {
@@ -437,7 +382,8 @@ class _MainPageState extends State<MainPage> {
                         color: Colors.grey[300],
                         borderRadius: BorderRadius.circular(24),
                       ),
-                      child: Text(//
+                      child: Text(
+                        //
                         'combo',
                         style: TextStyle(fontSize: 20, color: Colors.black54),
                       ),
