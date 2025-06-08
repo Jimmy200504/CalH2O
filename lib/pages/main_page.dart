@@ -27,12 +27,17 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
+  double _waterProgress = 0.0;
+  bool _isProcessing = false;
+
   int _calories = 0;
+
   int _protein = 0;
   int _carbs = 0;
   int _fats = 0;
   int _initialWater = 0;
   int _water = 0;
+
 
   int _caloriesTarget = 2000;
   int _proteinTarget = 50;
@@ -68,6 +73,7 @@ class _MainPageState extends State<MainPage> {
     });
     _loadTargets();
     _setupNutritionListener();
+
   }
 
   Future<void> _loadTargets() async {
@@ -124,6 +130,27 @@ class _MainPageState extends State<MainPage> {
     final prefs = await SharedPreferences.getInstance();
     final account = prefs.getString('account');
     if (account == null) return;
+
+    // 2. 直接從 Firestore 抓 doc 一次
+    final doc =
+        await FirebaseFirestore.instance.collection('users').doc(account).get();
+    final data = doc.data();
+    if (data == null) return;
+
+    // 3. 讀欄位並存進變數
+    final int waterTarget = (data['water'] as num).toInt();
+    final int proteinTarget = (data['proteinTarget'] as num).toInt();
+    final int carbsTarget = (data['carbsTarget'] as num).toInt();
+    final int fatsTarget = (data['fatsTarget'] as num).toInt();
+
+    // 4. 把它們存到 State 裡
+    setState(() {
+      _waterTarget = waterTarget;
+      _proteinTarget = proteinTarget;
+      _carbsTarget = carbsTarget;
+      _fatsTarget = fatsTarget;
+    });
+  }
 
     // Get today's start and end timestamps
     final now = DateTime.now();
@@ -186,6 +213,7 @@ class _MainPageState extends State<MainPage> {
     await Navigator.of(context).pushNamed(routeName);
     _uploadDelta();
   }
+
 
   String _getLabel(int current, int target, String unit) {
     if (current >= target) {
@@ -404,6 +432,18 @@ class _MainPageState extends State<MainPage> {
 
   @override
   Widget build(BuildContext context) {
+    // 獲取螢幕尺寸
+    final size = MediaQuery.of(context).size;
+    final padding = MediaQuery.of(context).padding;
+    final screenHeight = size.height - padding.top - padding.bottom;
+    final screenWidth = size.width;
+
+    // 計算相對尺寸
+    final iconSize = screenWidth * 0.1; // 圖標大小
+    final titleSize = screenWidth * 0.08; // 標題大小
+    final cardSpacing = screenHeight * 0.02; // 卡片間距
+    final horizontalPadding = screenWidth * 0.05; // 水平內邊距
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: Stack(
@@ -412,15 +452,15 @@ class _MainPageState extends State<MainPage> {
             child: Column(
               children: [
                 Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 12,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: horizontalPadding,
+                    vertical: screenHeight * 0.015,
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       IconButton(
-                        icon: Icon(Icons.settings, size: 40),
+                        icon: Icon(Icons.settings, size: iconSize),
                         onPressed: () {
                           Navigator.of(context).push(
                             MaterialPageRoute(
@@ -432,13 +472,13 @@ class _MainPageState extends State<MainPage> {
                       Text(
                         'CalH2O',
                         style: TextStyle(
-                          fontSize: 32,
+                          fontSize: titleSize,
                           fontWeight: FontWeight.bold,
                           letterSpacing: 1,
                         ),
                       ),
                       IconButton(
-                        icon: const Icon(Icons.info, size: 40),
+                        icon: Icon(Icons.info, size: iconSize),
                         onPressed: _showTutorial,
                       ),
                     ],
@@ -462,29 +502,37 @@ class _MainPageState extends State<MainPage> {
                   onDecrement: _decrementWater,
                   additionalInfo: 'Total Water: $_water ml',
                 ),
-                // SizedBox(height: 24),
+                SizedBox(height: cardSpacing),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                  padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      NutritionCard(
-                        label: 'Protein',
-                        value: _protein / _proteinTarget,
-                        left: _getLabel(_protein, _proteinTarget, 'g'),
-                        icon: Icons.fitness_center,
+                      Expanded(
+                        child: NutritionCard(
+                          label: 'Protein',
+                          value: _protein / _proteinTarget,
+                          left: _getLabel(_protein, _proteinTarget, 'g'),
+                          icon: Icons.fitness_center,
+                        ),
                       ),
-                      NutritionCard(
-                        label: 'Carbs',
-                        value: _carbs / _carbsTarget,
-                        left: _getLabel(_carbs, _carbsTarget, 'g'),
-                        icon: Icons.rice_bowl,
+                      SizedBox(width: screenWidth * 0.02),
+                      Expanded(
+                        child: NutritionCard(
+                          label: 'Carbs',
+                          value: _carbs / _carbsTarget,
+                          left: _getLabel(_carbs, _carbsTarget, 'g'),
+                          icon: Icons.rice_bowl,
+                        ),
                       ),
-                      NutritionCard(
-                        label: 'Fats',
-                        value: _fats / _fatsTarget,
-                        left: _getLabel(_fats, _fatsTarget, 'g'),
-                        icon: Icons.emoji_food_beverage,
+                      SizedBox(width: screenWidth * 0.02),
+                      Expanded(
+                        child: NutritionCard(
+                          label: 'Fats',
+                          value: _fats / _fatsTarget,
+                          left: _getLabel(_fats, _fatsTarget, 'g'),
+                          icon: Icons.emoji_food_beverage,
+                        ),
                       ),
                     ],
                   ),
@@ -493,42 +541,51 @@ class _MainPageState extends State<MainPage> {
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     if (_isProcessing)
-                      const Padding(
-                        padding: EdgeInsets.only(right: 8),
-                        child: LoadingOverlay(),
+                      Padding(
+                        padding: EdgeInsets.only(right: screenWidth * 0.02),
+                        child: const LoadingOverlay(),
                       ),
                     Container(
                       key: _comboKey,
-                      margin: const EdgeInsets.only(top: 16, right: 24),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 8,
+                      margin: EdgeInsets.only(
+                        top: screenHeight * 0.02,
+                        right: screenWidth * 0.06,
+                      ),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: screenWidth * 0.05,
+                        vertical: screenHeight * 0.01,
                       ),
                       decoration: BoxDecoration(
                         color: Colors.grey[300],
                         borderRadius: BorderRadius.circular(24),
                       ),
                       child: Text(
-                        //
                         'combo',
-                        style: TextStyle(fontSize: 20, color: Colors.black54),
+                        style: TextStyle(
+                          fontSize: screenWidth * 0.05,
+                          color: Colors.black54,
+                        ),
                       ),
                     ),
                   ],
                 ),
-                SizedBox(height: 8),
+                SizedBox(height: screenHeight * 0.01),
                 Expanded(
                   child: Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children: [const FrameAnimationWidget(size: 200)],
+                      children: [
+                        FrameAnimationWidget(
+                          size: screenWidth * 0.5, // 動畫大小為螢幕寬度的一半
+                        ),
+                      ],
                     ),
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 32.0,
-                    vertical: 8,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: screenWidth * 0.08,
+                    vertical: screenHeight * 0.01,
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -537,14 +594,14 @@ class _MainPageState extends State<MainPage> {
                         key: _addKey,
                         icon: Icon(
                           Icons.lunch_dining,
-                          size: 40,
+                          size: iconSize,
                           color: _showSubButtons ? Colors.grey : Colors.black,
                         ),
                         onPressed: _toggleSubButtons,
                       ),
                       IconButton(
                         key: _historyKey,
-                        icon: const Icon(Icons.access_time, size: 40),
+                        icon: Icon(Icons.access_time, size: iconSize),
                         onPressed: () {
                           _navigateNamed('/history');
                         },
@@ -552,12 +609,15 @@ class _MainPageState extends State<MainPage> {
                     ],
                   ),
                 ),
-                SizedBox(height: 8),
+                SizedBox(height: screenHeight * 0.01),
                 Padding(
-                  padding: const EdgeInsets.only(bottom: 16.0),
+                  padding: EdgeInsets.only(bottom: screenHeight * 0.02),
                   child: Text(
                     'Sip smart, live strong.',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+                    style: TextStyle(
+                      fontSize: screenWidth * 0.05,
+                      fontWeight: FontWeight.w600,
+                    ),
                     textAlign: TextAlign.center,
                   ),
                 ),
@@ -567,11 +627,11 @@ class _MainPageState extends State<MainPage> {
 
           // 子按鈕
           AnimatedPositioned(
-            duration: const Duration(milliseconds: 300),
+            duration: const Duration(milliseconds: 400),
             curve: Curves.easeOutBack,
-            bottom: _showSubButtons ? 150 : 100,
+            bottom: _showSubButtons ? screenHeight * 0.2 : 100,
             left: _showSubButtons ? 0 : -100,
-            right: _showSubButtons ? 100 : 0,
+            right: _showSubButtons ? screenWidth * 0.25 : 0,
             child: AnimatedOpacity(
               duration: const Duration(milliseconds: 200),
               opacity: _showSubButtons ? 1.0 : 0.0,
@@ -580,16 +640,16 @@ class _MainPageState extends State<MainPage> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    // 文字輸入按鈕（上方）
                     IconButton(
                       key: _editNoteKey,
-                      icon: const Icon(Icons.edit_note, size: 40),
+                      icon: Icon(Icons.edit_note, size: iconSize),
                       onPressed: () {
-                        _navigateNamed('/text');
-                        _toggleSubButtons();
+                        setState(() => _showSubButtons = false);
+                        Navigator.pushNamed(context, '/text');
+
                       },
                     ),
-                    const SizedBox(width: 40), // 佔位，保持對齊
+                    SizedBox(width: screenWidth * 0.1),
                   ],
                 ),
               ),
@@ -597,11 +657,11 @@ class _MainPageState extends State<MainPage> {
           ),
 
           AnimatedPositioned(
-            duration: const Duration(milliseconds: 300),
+            duration: const Duration(milliseconds: 400),
             curve: Curves.easeOutBack,
-            bottom: _showSubButtons ? 90 : 80,
-            left: _showSubButtons ? -400 : -400,
-            right: _showSubButtons ? 0 : 100,
+            bottom: _showSubButtons ? screenHeight * 0.12 : screenHeight * 0.1,
+            left: _showSubButtons ? -screenWidth : -screenWidth,
+            right: _showSubButtons ? 0 : screenWidth * 0.25,
             child: AnimatedOpacity(
               duration: const Duration(milliseconds: 200),
               opacity: _showSubButtons ? 1.0 : 0.0,
@@ -610,12 +670,12 @@ class _MainPageState extends State<MainPage> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    const SizedBox(width: 40), // 佔位，保持對齊
-                    // 圖片輸入按鈕（右方）
+                    SizedBox(width: screenWidth * 0.1),
                     IconButton(
                       key: _cameraAltKey,
-                      icon: const Icon(Icons.camera_alt, size: 40),
+                      icon: Icon(Icons.camera_alt, size: iconSize),
                       onPressed: () async {
+                        setState(() => _showSubButtons = false);
                         final result = await Navigator.pushNamed(
                           context,
                           '/image',
@@ -623,7 +683,6 @@ class _MainPageState extends State<MainPage> {
                         if (result != null) {
                           await _handleImageResult(result as String);
                         }
-                        _toggleSubButtons();
                       },
                     ),
                   ],
