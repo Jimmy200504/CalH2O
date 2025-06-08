@@ -274,19 +274,29 @@ class _TextRecordPageState extends State<TextRecordPage> {
             },
           ),
 
+          const SizedBox(height: 10),
           // Generate Nutrition Button
-          GenerateNutritionButton(
-            nutritionResult: _nutritionResult,
-            onNutritionGenerated: (newNutrition) {
-              setState(() {
-                _nutritionResult = newNutrition;
-              });
-            },
+          SizedBox(
+            // 靠在畫面右邊
+            height: 50,
+            width: 500,
+            child: Align(
+              alignment: Alignment.centerRight,
+
+              child: GenerateNutritionButton(
+                nutritionResult: _nutritionResult,
+                onNutritionGenerated: (newNutrition) {
+                  setState(() {
+                    _nutritionResult = newNutrition;
+                  });
+                },
+              ),
+            ),
           ),
 
           // 第三部(flex : 4)：營養數據
           Expanded(
-            flex: 4,
+            flex: 3,
             child: NutritionInputForm(
               initial: _nutritionResult,
               onChanged:

@@ -115,73 +115,72 @@ class _NameDateRowState extends State<NameDateRow> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Expanded(
-            flex: 1,
-            child: Center(
-              child: GestureDetector(
-                onTap: _openCamera,
-                child: Container(
-                  width: 150,
-                  height: 150,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[200],
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.grey[400]!, width: 2),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        spreadRadius: 1,
-                        blurRadius: 4,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Stack(
-                    children: [
-                      _capturedImageBase64 != null
-                          ? ClipRRect(
-                            borderRadius: BorderRadius.circular(14),
-                            child: Image.memory(
-                              base64Decode(_capturedImageBase64!.split(',')[1]),
-                              fit: BoxFit.cover,
-                              width: double.infinity,
-                              height: double.infinity,
-                            ),
-                          )
-                          : Center(
-                            child: Icon(
-                              Icons.camera_alt,
-                              size: 70,
-                              color: Colors.grey[700],
-                            ),
+          // 左側圖片區塊，固定寬高
+          SizedBox(
+            width: 120,
+            height: 120,
+            child: GestureDetector(
+              onTap: _openCamera,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.grey[200],
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.grey[400]!, width: 2),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      spreadRadius: 1,
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Stack(
+                  children: [
+                    _capturedImageBase64 != null
+                        ? ClipRRect(
+                          borderRadius: BorderRadius.circular(14),
+                          child: Image.memory(
+                            base64Decode(_capturedImageBase64!.split(',')[1]),
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                            height: double.infinity,
                           ),
-                      if (_capturedImageBase64 != null)
-                        Positioned(
-                          right: 6,
-                          top: 6,
-                          child: Container(
-                            padding: const EdgeInsets.all(6),
-                            decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(0.5),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Icons.camera_alt,
-                              color: Colors.white,
-                              size: 20,
-                            ),
+                        )
+                        : Center(
+                          child: Icon(
+                            Icons.camera_alt,
+                            size: 70,
+                            color: Colors.grey[700],
                           ),
                         ),
-                    ],
-                  ),
+                    if (_capturedImageBase64 != null)
+                      Positioned(
+                        right: 6,
+                        top: 6,
+                        child: Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.5),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.camera_alt,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
               ),
             ),
           ),
+          const SizedBox(width: 20),
+          // 右側表單區塊
           Expanded(
-            flex: 1,
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 TextField(
@@ -226,8 +225,7 @@ class _NameDateRowState extends State<NameDateRow> {
                         onPressed: _pickTime,
                         icon: const Icon(Icons.access_time, size: 20),
                         label: Text(
-                          '${_selectedTime.hour.toString().padLeft(2, '0')}:'
-                          '${_selectedTime.minute.toString().padLeft(2, '0')}',
+                          '${_selectedTime.hour.toString().padLeft(2, '0')}:${_selectedTime.minute.toString().padLeft(2, '0')}',
                         ),
                         style: TextButton.styleFrom(
                           minimumSize: Size.zero,
@@ -243,9 +241,7 @@ class _NameDateRowState extends State<NameDateRow> {
                 ),
               ],
             ),
-            //
           ),
-          // Generate Nutrition Button
         ],
       ),
     );
