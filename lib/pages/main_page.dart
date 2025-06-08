@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
 import '../widgets/main_page/main_progress_bar.dart';
 import '../widgets/main_page/nutrition_card.dart';
 import '../widgets/main_page/loading_overlay.dart';
 import '../widgets/animation.dart';
 import '../services/cloud_function_fetch/get_nutrition_from_photo.dart';
+import '../services/image_upload_service.dart';
 import '../model/nutrition_draft.dart';
 import '../main.dart';
-
 import '../pages/setting_page.dart';
 import '../pages/history_page.dart';
 
@@ -34,11 +35,11 @@ class _MainPageState extends State<MainPage> {
   int _fats = 0;
 
   // Nutrition targets
-  final int _waterTarget = 2500; // 2500ml water target
-  final int _caloriesTarget = 2000; // 2000kcal calories target
-  final int _proteinTarget = 50; // 50g protein target
-  final int _carbsTarget = 250; // 250g carbs target
-  final int _fatsTarget = 65; // 65g fats target
+  int _waterTarget = 2500; // 2500ml water target
+  int _caloriesTarget = 2000; // 2000kcal calories target
+  int _proteinTarget = 50; // 50g protein target
+  int _carbsTarget = 250; // 250g carbs target
+  int _fatsTarget = 65; // 65g fats target
 
   bool _showSubButtons = false;
 
@@ -51,46 +52,76 @@ class _MainPageState extends State<MainPage> {
   @override
   void initState() {
     super.initState();
-    _setupNutritionListener();
+    _loadTargets();
+    // _setupNutritionListener();
   }
 
-  void _setupNutritionListener() {
-    // Get today's start and end timestamps
-    final now = DateTime.now();
-    final startOfDay = DateTime(now.year, now.month, now.day);
-    final endOfDay = startOfDay.add(const Duration(days: 1));
+  Future<void> _loadTargets() async {
+    // 1. 拿到使用者 ID
+    final prefs = await SharedPreferences.getInstance();
+    final account = prefs.getString('account');
+    if (account == null) return;
 
-    // Listen to Firestore for real-time updates
-    FirebaseFirestore.instance
-        .collection('nutrition_records')
-        .where('timestamp', isGreaterThanOrEqualTo: startOfDay)
-        .where('timestamp', isLessThan: endOfDay)
-        .snapshots()
-        .listen((snapshot) {
-          // Reset values
-          setState(() {
-            _calories = 0;
-            _protein = 0;
-            _carbs = 0;
-            _fats = 0;
-          });
+    // 2. 直接從 Firestore 抓 doc 一次
+    final doc =
+        await FirebaseFirestore.instance.collection('users').doc(account).get();
+    final data = doc.data();
+    if (data == null) return;
 
-          // Sum up all nutrition values
-          for (var doc in snapshot.docs) {
-            setState(() {
-              _calories += (doc['calories'] as num).toInt();
-              _protein += (doc['protein'] as num).toInt();
-              _carbs += (doc['carbohydrate'] as num).toInt();
-              _fats += (doc['fat'] as num).toInt();
-            });
-          }
+    // 3. 讀欄位並存進變數
+    final int caloriesTarget = (data['calories'] as num).toInt();
+    final int waterTarget = (data['water'] as num).toInt();
+    final int proteinTarget = (data['proteinTarget'] as num).toInt();
+    final int carbsTarget = (data['carbsTarget'] as num).toInt();
+    final int fatsTarget = (data['fatsTarget'] as num).toInt();
 
-          // Update progress values
-          setState(() {
-            _caloriesProgress = (_calories / _caloriesTarget).clamp(0.0, 1.0);
-          });
-        });
+    // 4. 把它們存到 State 裡
+    setState(() {
+      _caloriesTarget = caloriesTarget;
+      _waterTarget = waterTarget;
+      _proteinTarget = proteinTarget;
+      _carbsTarget = carbsTarget;
+      _fatsTarget = fatsTarget;
+    });
   }
+
+  // void _setupNutritionListener() {
+  // Get today's start and end timestamps
+  //   final now = DateTime.now();
+  //   final startOfDay = DateTime(now.year, now.month, now.day);
+  //   final endOfDay = startOfDay.add(const Duration(days: 1));
+
+  // Listen to Firestore for real-time updates
+  //   FirebaseFirestore.instance
+  //       .collection('nutrition_records')
+  //       .where('timestamp', isGreaterThanOrEqualTo: startOfDay)
+  //       .where('timestamp', isLessThan: endOfDay)
+  //       .snapshots()
+  //       .listen((snapshot) {
+  //         // Reset values
+  //         setState(() {
+  //           _calories = 0;
+  //           _protein = 0;
+  //           _carbs = 0;
+  //           _fats = 0;
+  //         });
+
+  //         // Sum up all nutrition values
+  //         for (var doc in snapshot.docs) {
+  //           setState(() {
+  //             _calories += (doc['calories'] as num).toInt();
+  //             _protein += (doc['protein'] as num).toInt();
+  //             _carbs += (doc['carbohydrate'] as num).toInt();
+  //             _fats += (doc['fat'] as num).toInt();
+  //           });
+  //         }
+
+  //         // Update progress values
+  //         setState(() {
+  //           _caloriesProgress = (_calories / _caloriesTarget).clamp(0.0, 1.0);
+  //         });
+  //       });
+  // }
 
   String _getLabel(int current, int target, String unit) {
     if (current >= target) {

@@ -87,6 +87,27 @@ class _GoalSelectionPageState extends State<GoalSelectionPage>
         ).showSnackBar(SnackBar(content: Text('讀取 Profile 失敗: $e')));
         return;
       }
+      debugPrint('Checking');
+      DailyNeedsResult dailyNeeds;
+      try {
+        dailyNeeds = await getDailyNeeds(
+          userId: userId,
+          gender: gender,
+          birthday: birthday,
+          height: height,
+          weight: weight,
+          activityLevel: activityLevel,
+          goal: _selectedGoal.toLowerCase(),
+        );
+        debugPrint('After try');
+      } catch (e) {
+        debugPrint("Failed");
+        if (!mounted) return;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('取得每日需求失敗: $e')));
+        return;
+      }
     }
 
     // 播放底部填滿動畫
