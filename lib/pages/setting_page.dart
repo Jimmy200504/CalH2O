@@ -22,6 +22,7 @@ class _SettingPageState extends State<SettingPage> {
   String _gender = 'Men';
   String _activityLevel = 'sedentary';
   String _goal = 'maintain weight';
+  String _ebType = 'Vicious';
 
   // options
   final List<String> _genders = ['Men', 'Women', 'Other'];
@@ -38,6 +39,7 @@ class _SettingPageState extends State<SettingPage> {
     'lose weight',
     'gain weight',
   ];
+  final List<String> _ebTypes = ['Vicious', 'Polite'];
 
   @override
   void initState() {
@@ -65,6 +67,7 @@ class _SettingPageState extends State<SettingPage> {
         _weightController.text = (data['weight'] ?? 0).toString();
         _activityLevel = data['activityLevel'] as String? ?? _activityLevel;
         _goal = (data['goal'] as String? ?? _goal).toLowerCase();
+        _ebType = data['EB_Type'] as String? ?? _ebType;
       });
     } catch (e) {
       ScaffoldMessenger.of(
@@ -117,6 +120,7 @@ class _SettingPageState extends State<SettingPage> {
         'weight': int.tryParse(_weightController.text) ?? 0,
         'activityLevel': _activityLevel,
         'goal': _goal,
+        'EB_Type': _ebType,
       });
     } catch (e) {
       ScaffoldMessenger.of(
@@ -247,6 +251,13 @@ class _SettingPageState extends State<SettingPage> {
               value: _goal,
               items: _goals,
               onChanged: (v) => setState(() => _goal = v!),
+            ),
+            const SizedBox(height: 12),
+            _buildDropdown(
+              label: 'Emotional Blackmail Style',
+              value: _ebType,
+              items: _ebTypes,
+              onChanged: (v) => setState(() => _ebType = v!),
             ),
             const SizedBox(height: 24),
             ElevatedButton(
