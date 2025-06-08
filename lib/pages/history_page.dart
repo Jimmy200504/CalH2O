@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'dart:convert';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HistoryPage extends StatefulWidget {
   const HistoryPage({super.key});
@@ -48,8 +49,15 @@ class _HistoryPageState extends State<HistoryPage> {
     final startOfMonth = DateTime(_selectedDate.year, _selectedDate.month, 1);
     final endOfMonth = DateTime(_selectedDate.year, _selectedDate.month + 1, 0);
 
+    // Get user account
+    final prefs = await SharedPreferences.getInstance();
+    final account = prefs.getString('account');
+    if (account == null) return;
+
     final querySnapshot =
         await FirebaseFirestore.instance
+            .collection('users')
+            .doc(account)
             .collection('nutrition_records')
             .where(
               'timestamp',
@@ -63,19 +71,19 @@ class _HistoryPageState extends State<HistoryPage> {
 
     _monthlyStats = {'calories': 0, 'protein': 0, 'carbohydrate': 0, 'fat': 0};
 
-    _dailyRecords = [];
-    Map<DateTime, List<Map<String, dynamic>>> dailyRecordsMap = {};
-
+    // Group records by date
+    final Map<String, List<Map<String, dynamic>>> groupedRecords = {};
     for (var doc in querySnapshot.docs) {
       final data = doc.data();
-      final timestamp = (data['timestamp'] as Timestamp).toDate();
-      final date = DateTime(timestamp.year, timestamp.month, timestamp.day);
+      final timestamp = data['timestamp'] as Timestamp;
+      final date = DateFormat('yyyy-MM-dd').format(timestamp.toDate());
 
-      if (!dailyRecordsMap.containsKey(date)) {
-        dailyRecordsMap[date] = [];
+      if (!groupedRecords.containsKey(date)) {
+        groupedRecords[date] = [];
       }
-      dailyRecordsMap[date]!.add(data);
+      groupedRecords[date]!.add(data);
 
+      // Update monthly stats
       _monthlyStats['calories'] =
           (_monthlyStats['calories'] ?? 0) + (data['calories'] ?? 0);
       _monthlyStats['protein'] =
@@ -85,23 +93,26 @@ class _HistoryPageState extends State<HistoryPage> {
       _monthlyStats['fat'] = (_monthlyStats['fat'] ?? 0) + (data['fat'] ?? 0);
     }
 
+    // Convert grouped records to list
     _dailyRecords =
-        dailyRecordsMap.entries
-            .map(
-              (entry) => {
-                'date': entry.key,
-                'records': entry.value,
-                'totalCalories': entry.value.fold<double>(
-                  0,
-                  (sum, record) => sum + (record['calories'] ?? 0),
-                ),
-              },
-            )
-            .toList();
+        groupedRecords.entries.map((entry) {
+          final totalCalories = entry.value.fold<double>(
+            0,
+            (sum, record) => sum + (record['calories'] ?? 0),
+          );
 
+          return {
+            'date': DateTime.parse(entry.key), // Convert string to DateTime
+            'totalCalories': totalCalories,
+            'foods': entry.value,
+          };
+        }).toList();
+
+    // Sort by date
     _dailyRecords.sort(
       (a, b) => (b['date'] as DateTime).compareTo(a['date'] as DateTime),
     );
+
     setState(() {});
   }
 
@@ -111,17 +122,17 @@ class _HistoryPageState extends State<HistoryPage> {
       _selectedDate.month,
       _selectedDate.day,
     );
-    final endOfDay = DateTime(
-      _selectedDate.year,
-      _selectedDate.month,
-      _selectedDate.day,
-      23,
-      59,
-      59,
-    );
+    final endOfDay = startOfDay.add(const Duration(days: 1));
+
+    // Get user account
+    final prefs = await SharedPreferences.getInstance();
+    final account = prefs.getString('account');
+    if (account == null) return;
 
     final querySnapshot =
         await FirebaseFirestore.instance
+            .collection('users')
+            .doc(account)
             .collection('nutrition_records')
             .where(
               'timestamp',
@@ -289,8 +300,7 @@ class _HistoryPageState extends State<HistoryPage> {
                               'Total Calories: ${dayData['totalCalories'].toStringAsFixed(1)} kcal',
                             ),
                             children:
-                                (dayData['records']
-                                        as List<Map<String, dynamic>>)
+                                (dayData['foods'] as List<Map<String, dynamic>>)
                                     .map((record) => _buildRecordItem(record))
                                     .toList(),
                           ),
@@ -360,9 +370,16 @@ class _HistoryPageState extends State<HistoryPage> {
       },
       onDismissed: (direction) async {
         try {
+          // Get user account
+          final prefs = await SharedPreferences.getInstance();
+          final account = prefs.getString('account');
+          if (account == null) return;
+
           // Get the document ID from the record
           final querySnapshot =
               await FirebaseFirestore.instance
+                  .collection('users')
+                  .doc(account)
                   .collection('nutrition_records')
                   .where('timestamp', isEqualTo: record['timestamp'])
                   .where('imageName', isEqualTo: record['imageName'])
@@ -380,7 +397,6 @@ class _HistoryPageState extends State<HistoryPage> {
             _fetchRecords();
           }
         } catch (e) {
-          print('Error deleting record: $e');
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Error deleting record'),
@@ -411,9 +427,6 @@ class _HistoryPageState extends State<HistoryPage> {
   }
 
   void _showDetailBottomSheet(Map<String, dynamic> record) {
-    print('Showing detail for record: ${record['imageName']}');
-    print('Base64 image length: ${record['base64Image']?.length ?? 0}');
-
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -496,7 +509,7 @@ class _HistoryPageState extends State<HistoryPage> {
                                       '${record['protein']} g',
                                     ),
                                     _buildDetailRow(
-                                      'Carbohydrates',
+                                      'Carbs',
                                       '${record['carbohydrate']} g',
                                     ),
                                     _buildDetailRow(
@@ -512,22 +525,22 @@ class _HistoryPageState extends State<HistoryPage> {
                                       ),
                                     ),
                                     const SizedBox(height: 8),
+                                    if (record['tag'] != null)
+                                      _buildDetailRow(
+                                        'Category',
+                                        record['tag'],
+                                      ),
+                                    if (record['comment'] != null)
+                                      _buildDetailRow(
+                                        'Comment',
+                                        record['comment'],
+                                      ),
                                     _buildDetailRow(
                                       'Source',
                                       record['source'] == 'image_input'
                                           ? 'Image Input'
                                           : 'Text Input',
                                     ),
-                                    if (record['tags'] != null)
-                                      _buildDetailRow(
-                                        'Tags',
-                                        record['tags'].join(', '),
-                                      ),
-                                    if (record['commit'] != null)
-                                      _buildDetailRow(
-                                        'Commit',
-                                        record['commit'],
-                                      ),
                                     _buildDetailRow(
                                       'Time',
                                       DateFormat('yyyy/MM/dd HH:mm').format(
@@ -562,7 +575,6 @@ class _HistoryPageState extends State<HistoryPage> {
   Widget _buildImageFromBase64(String base64String) {
     try {
       if (base64String.isEmpty) {
-        print('Empty base64 string');
         return const Center(
           child: Icon(Icons.image_not_supported, color: Colors.grey, size: 50),
         );
@@ -576,7 +588,6 @@ class _HistoryPageState extends State<HistoryPage> {
 
       // Check if the string is valid base64
       if (!cleanBase64.contains(RegExp(r'^[a-zA-Z0-9+/=]+$'))) {
-        print('Invalid base64 string format');
         return const Center(
           child: Icon(Icons.error_outline, color: Colors.red, size: 50),
         );
@@ -591,7 +602,6 @@ class _HistoryPageState extends State<HistoryPage> {
       // Try to decode the base64 string
       final bytes = base64Decode(paddedBase64);
       if (bytes.isEmpty) {
-        print('Decoded bytes are empty');
         return const Center(
           child: Icon(Icons.error_outline, color: Colors.red, size: 50),
         );
@@ -601,70 +611,15 @@ class _HistoryPageState extends State<HistoryPage> {
         bytes,
         fit: BoxFit.cover,
         errorBuilder: (context, error, stackTrace) {
-          print('Error loading image: $error');
-          print('Stack trace: $stackTrace');
           return const Center(
             child: Icon(Icons.error_outline, color: Colors.red, size: 50),
           );
         },
       );
-    } catch (e, stackTrace) {
-      print('Error decoding base64: $e');
-      print('Stack trace: $stackTrace');
+    } catch (e) {
       return const Center(
         child: Icon(Icons.error_outline, color: Colors.red, size: 50),
       );
     }
-  }
-
-  Widget _buildMonthlySummary(Map<String, dynamic> record) {
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Theme(
-        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-        child: ExpansionTile(
-          shape: const RoundedRectangleBorder(side: BorderSide.none),
-          collapsedIconColor: Colors.transparent,
-          tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          title: Text(
-            DateFormat(
-              'MM/dd',
-            ).format((record['timestamp'] as Timestamp).toDate()),
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
-          subtitle: Text(
-            'Total Calories: ${record['totalCalories']} kcal',
-            style: const TextStyle(color: Colors.grey),
-          ),
-          children: [
-            if (record['foods'] != null)
-              ...record['foods']
-                  .map<Widget>(
-                    (food) => ListTile(
-                      dense: true,
-                      visualDensity: VisualDensity.compact,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 4,
-                      ),
-                      title: Text(
-                        food['imageName'] ?? 'Unnamed food',
-                        style: const TextStyle(fontSize: 14),
-                      ),
-                      subtitle: Text(
-                        '${food['calories']} kcal',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey,
-                        ),
-                      ),
-                      onTap: () => _showDetailBottomSheet(food),
-                    ),
-                  )
-                  .toList(),
-          ],
-        ),
-      ),
-    );
   }
 }
