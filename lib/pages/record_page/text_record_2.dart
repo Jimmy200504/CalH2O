@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-import '../../services/cloud_function_fetch/get_nutrition_from_photo.dart';
 import '../../model/message.dart';
 import '../../model/nutrition_result.dart';
 import '../../widgets/record_page/text_container.dart';
@@ -28,7 +27,6 @@ class _TextRecordPageState extends State<TextRecordPage_2> {
   ];
 
   final TextEditingController _textController = TextEditingController();
-  int _selectedTagIndex = 0;
 
   // 營養狀態
   NutritionResult _nutritionResult = NutritionResult(
@@ -43,6 +41,9 @@ class _TextRecordPageState extends State<TextRecordPage_2> {
   // 紀錄備註
   String _comment = '';
   Timestamp? _timestamp;
+  String _tag = ''; 
+  int _selectedTagIndex = 0;
+
 
   void _resetAll() {
     setState(() {
@@ -103,7 +104,7 @@ class _TextRecordPageState extends State<TextRecordPage_2> {
                   onTap: () {
                     setState(() {
                       _selectedTagIndex = idx;
-                      // TODO: 你可以把選中的類別存到 state，以便後續用到
+                      _tag = _mealTags[idx]['label'] as String;
                     });
                   },
                   child: AnimatedContainer(
@@ -221,6 +222,7 @@ class _TextRecordPageState extends State<TextRecordPage_2> {
                       onPressed: () async {
                         await ImageUploadService.saveNutritionResult(
                           // imageUrl: imageUrl,
+                          tag: _tag,
                           base64Image: '',
                           comment: _comment,
                           nutritionResult: _nutritionResult,

@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../model/nutrition_result.dart';
 
@@ -9,11 +8,13 @@ class ImageUploadService {
     required String base64Image,
     required String comment,
     required NutritionResult nutritionResult,
-    final Timestamp? time,  // 新增
+    final Timestamp? time,
+    final String? tag,
   }) async {
     try {
       // Save the nutrition result and base64 image to Firestore
       await _firestore.collection('nutrition_records').add({
+        'tag' : tag ?? 'default',
         'timestamp': time ?? FieldValue.serverTimestamp(),
         'base64Image': base64Image, // Store base64 image data
         'imageName': nutritionResult.imageName,
