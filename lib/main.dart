@@ -85,6 +85,11 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       scaffoldMessengerKey: rootScaffoldMessengerKey,
       title: 'CalH2O',
+
+      theme: ThemeData(
+        fontFamily: 'Mononoki',
+      ),
+
       initialRoute: startFromMainPage ? '/main' : '/logo',
       builder: (context, child) {
         // 獲取設備的尺寸信息
