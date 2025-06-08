@@ -157,12 +157,12 @@ class _PersonalInfoPageState extends State<PersonalInfoPage> {
                                     'activityLevel',
                                     _activityLevel,
                                   );
-                                  final name = prefs.getString('name');
+                                  final account = prefs.getString('account');
 
-                                  if (name != null) {
+                                  if (account != null) {
                                     await FirebaseFirestore.instance
                                         .collection('users')
-                                        .doc(name)
+                                        .doc(account)
                                         .set({
                                           'height': _height,
                                           'weight': _weight,
