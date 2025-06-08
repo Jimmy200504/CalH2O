@@ -65,11 +65,9 @@ class _GoalSelectionPageState extends State<GoalSelectionPage>
         ).showSnackBar(SnackBar(content: Text('儲存 goal 失敗: $e')));
         return;
       }
-
-      // 讀取 Profile (略去 dailyNeeds，如需要可以補上)
+      late String userId, gender, birthday, activityLevel;
+      late int height, weight;
       try {
-        late String userId, gender, birthday, activityLevel;
-        late int height, weight;
         final doc =
             await FirebaseFirestore.instance
                 .collection('users')
