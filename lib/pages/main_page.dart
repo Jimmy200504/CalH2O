@@ -18,8 +18,7 @@ import '../widgets/main_page/speech_bubble.dart';
 import 'dart:async';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:flutter_barrage/flutter_barrage.dart';
-
-
+import '../widgets/combo_badge.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -51,6 +50,7 @@ class _MainPageState extends State<MainPage> {
   double _fatsProgress = 0.0;
 
   bool _showSubButtons = false;
+  int _comboCount = 0;
 
   final GlobalKey _addKey = GlobalKey();
   final GlobalKey _historyKey = GlobalKey();
@@ -59,9 +59,7 @@ class _MainPageState extends State<MainPage> {
   final GlobalKey _cameraAltKey = GlobalKey();
   final GlobalKey _petKey = GlobalKey();
 
-  
-  
-@override
+  @override
   void initState() {
     super.initState();
     // 一次性抓 OR 初始化
@@ -74,8 +72,8 @@ class _MainPageState extends State<MainPage> {
     });
     _loadTargets();
     _setupNutritionListener();
+    _updateCombo();
   }
-
 
   Future<void> _loadTargets() async {
     try {
@@ -212,6 +210,30 @@ class _MainPageState extends State<MainPage> {
             _fatsProgress = (_fats / _fatsTarget).clamp(0.0, 1.0);
           });
         });
+  }
+
+  Future<void> _updateCombo() async {
+    final prefs = await SharedPreferences.getInstance();
+    final account = prefs.getString('account');
+    if (account == null) return;
+
+    final today = DateTime.now();
+    final todayStr =
+        '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
+
+    final userDoc =
+        await FirebaseFirestore.instance.collection('users').doc(account).get();
+    final data = userDoc.data();
+
+    int lastCombo = data?['comboCount'] ?? 0;
+
+    _comboCount = lastCombo + 1;
+    await FirebaseFirestore.instance.collection('users').doc(account).update({
+      'comboCount': _comboCount,
+      'lastOpened': todayStr,
+    });
+
+    setState(() {});
   }
 
   /// 計算並上傳這段期間的水量差
@@ -514,12 +536,14 @@ class _MainPageState extends State<MainPage> {
 
                 MainProgressBar(
                   color: Colors.orange,
-                  label: 'Calories $_calories kcal (${_getLabel(_calories,_caloriesTarget,' kcal')})',
+                  label:
+                      'Calories $_calories kcal (${_getLabel(_calories, _caloriesTarget, ' kcal')})',
                   value: _caloriesProgress,
                   onIncrement: _incrementCalories,
                 ),
                 WaveProgressBar(
-                  label: 'Water $_water ml (${_getLabel(_water, _waterTarget, ' ml')})',
+                  label:
+                      'Water $_water ml (${_getLabel(_water, _waterTarget, ' ml')})',
                   value: _waterProgress,
                   onIncrement: _incrementWater,
                   onDecrement: _decrementWater,
@@ -577,17 +601,7 @@ class _MainPageState extends State<MainPage> {
                         horizontal: screenWidth * 0.05,
                         vertical: screenHeight * 0.01,
                       ),
-                      decoration: BoxDecoration(
-                        color: Colors.grey[300],
-                        borderRadius: BorderRadius.circular(24),
-                      ),
-                      child: Text(
-                        'combo',
-                        style: TextStyle(
-                          fontSize: screenWidth * 0.05,
-                          color: Colors.black54,
-                        ),
-                      ),
+                      child: ComboBadge(comboCount: _comboCount),
                     ),
                   ],
                 ),
@@ -611,8 +625,6 @@ class _MainPageState extends State<MainPage> {
                     ],
                   ),
                 ),
-
-
 
                 Padding(
                   padding: EdgeInsets.symmetric(
@@ -726,4 +738,3 @@ class _MainPageState extends State<MainPage> {
     );
   }
 }
-

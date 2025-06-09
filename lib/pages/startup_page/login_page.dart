@@ -18,6 +18,12 @@ class _LoginPageState extends State<LoginPage>
   String _account = '';
   String _password = '';
   bool _loading = false;
+  String getTodayStr() {
+    final now = DateTime.now();
+    return '${now.year.toString().padLeft(4, '0')}-'
+        '${now.month.toString().padLeft(2, '0')}-'
+        '${now.day.toString().padLeft(2, '0')}';
+  }
 
   late AnimationController _fadeController;
   late Animation<double> _fadeAnimation;
@@ -29,9 +35,10 @@ class _LoginPageState extends State<LoginPage>
       vsync: this,
       duration: const Duration(milliseconds: 800),
     );
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _fadeController, curve: Curves.easeIn),
-    );
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _fadeController, curve: Curves.easeIn));
 
     // 啟動淡入
     _fadeController.forward();
@@ -50,17 +57,32 @@ class _LoginPageState extends State<LoginPage>
     setState(() => _loading = true);
 
     try {
-      final userDoc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(_account)
-          .get();
+      final userDoc =
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(_account)
+              .get();
 
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('account', _account);
 
+      final todayStr = getTodayStr(); // 取得今天的字串
+
       if (userDoc.exists) {
         final data = userDoc.data()!;
         if (data['password'] == _password) {
+          int comboCount = (data['comboCount'] ?? 0) as int;
+          String? lastOpened = data['lastOpened'];
+
+          // 如果今天還沒登入過，combo + 1
+          if (lastOpened != todayStr) {
+            comboCount += 1;
+            await FirebaseFirestore.instance
+                .collection('users')
+                .doc(_account)
+                .update({'comboCount': comboCount, 'lastOpened': todayStr});
+          }
+
           await prefs.setBool('isLoggedIn', true);
           Navigator.pushReplacement(
             context,
@@ -70,10 +92,11 @@ class _LoginPageState extends State<LoginPage>
           _showMessage('Incorrect password');
         }
       } else {
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(_account)
-            .set({'password': _password});
+        await FirebaseFirestore.instance.collection('users').doc(_account).set({
+          'password': _password,
+          'comboCount': 0,
+          'lastOpened': todayStr,
+        });
 
         _showMessage('Account created. Please complete your profile.');
         Navigator.pushReplacement(
@@ -134,33 +157,40 @@ class _LoginPageState extends State<LoginPage>
                   TextFormField(
                     decoration: _inputDecoration('Username'),
                     onSaved: (value) => _account = value!.trim(),
-                    validator: (value) =>
-                        value == null || value.isEmpty ? 'Enter username' : null,
+                    validator:
+                        (value) =>
+                            value == null || value.isEmpty
+                                ? 'Enter username'
+                                : null,
                   ),
                   const SizedBox(height: 16),
                   TextFormField(
                     decoration: _inputDecoration('Password'),
                     obscureText: true,
                     onSaved: (value) => _password = value!.trim(),
-                    validator: (value) =>
-                        value == null || value.isEmpty ? 'Enter password' : null,
+                    validator:
+                        (value) =>
+                            value == null || value.isEmpty
+                                ? 'Enter password'
+                                : null,
                   ),
                   const SizedBox(height: 24),
                   SizedBox(
                     width: double.infinity,
                     height: 56,
-                    child: _loading
-                        ? const Center(
-                            child: CircularProgressIndicator(
-                              color: Color(0xFFFFB74D), // 這裡用品牌色
+                    child:
+                        _loading
+                            ? const Center(
+                              child: CircularProgressIndicator(
+                                color: Color(0xFFFFB74D), // 這裡用品牌色
+                              ),
+                            )
+                            : LoginButton(
+                              text: 'Login',
+                              onPressed: _handleLogin,
+                              width: double.infinity,
+                              height: 56,
                             ),
-                          )
-                        : LoginButton(
-                            text: 'Login',
-                            onPressed: _handleLogin,
-                            width: double.infinity,
-                            height: 56,
-                          ),
                   ),
                   const Spacer(),
                 ],
