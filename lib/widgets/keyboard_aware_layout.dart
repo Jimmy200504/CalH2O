@@ -10,40 +10,38 @@ class KeyboardAwareLayout extends StatelessWidget {
   /// 是否啟用點擊空白處收起鍵盤
   final bool enableDismissOnTap;
 
-  /// 是否啟用自動調整大小
-  final bool enableResizeToAvoidBottomInset;
-
   const KeyboardAwareLayout({
     super.key,
     required this.child,
     this.enableDismissOnTap = true,
-    this.enableResizeToAvoidBottomInset = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      // 點擊空白處收起鍵盤
-      onTap: enableDismissOnTap ? () => FocusScope.of(context).unfocus() : null,
-      // 確保點擊事件不會影響子組件
-      behavior: HitTestBehavior.translucent,
-      child: SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-            minHeight: MediaQuery.of(context).size.height,
-          ),
-          child: IntrinsicHeight(
-            child: Column(
-              children: [
-                child,
-                // 添加底部空間，確保內容不會被鍵盤遮擋
-                SizedBox(height: MediaQuery.of(context).viewInsets.bottom),
-              ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return GestureDetector(
+          onTap:
+              enableDismissOnTap
+                  // Use a safer way to unfocus to prevent edge cases
+                  ? () => FocusManager.instance.primaryFocus?.unfocus()
+                  : null,
+          behavior: HitTestBehavior.translucent,
+          child: SingleChildScrollView(
+            // This physics is more stable during rapid layout changes
+            physics: const AlwaysScrollableScrollPhysics(
+              parent: BouncingScrollPhysics(),
+            ),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                // Ensure the content is at least as tall as the viewport
+                minHeight: constraints.maxHeight,
+              ),
+              child: child,
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
