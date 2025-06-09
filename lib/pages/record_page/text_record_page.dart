@@ -32,6 +32,9 @@ class _TextRecordPageState extends State<TextRecordPage> {
     ),
   ];
 
+  // Saving state
+  bool _isSaving = false;
+
   // 營養狀態
   NutritionResult _nutritionResult = NutritionResult(
     foods: [],
@@ -148,56 +151,28 @@ class _TextRecordPageState extends State<TextRecordPage> {
               context.read<NutritionDraft>().clearDraft();
             },
           ),
-          IconButton(
-            iconSize: 30,
-            icon: const Icon(Icons.done),
-            onPressed: () async {
-              if (_nutritionResult.imageName.isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      'Please enter a name',
-                      style: TextStyle(fontSize: 12, color: Colors.black),
-                    ),
-                    backgroundColor: Colors.orange[100],
-                    behavior: SnackBarBehavior.floating,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    margin: EdgeInsets.all(8),
-                  ),
-                );
-                return;
-              }
-
-              // Hide keyboard before saving and popping to avoid render errors.
-              final isKeyboardVisible =
-                  MediaQuery.of(context).viewInsets.bottom > 0;
-              if (isKeyboardVisible) {
-                FocusManager.instance.primaryFocus?.unfocus();
-                await Future.delayed(const Duration(milliseconds: 300));
-              }
-
-              if (!mounted) return;
-
-              try {
-                await ImageUploadService.saveNutritionResult(
-                  base64Image: _capturedImageBase64 ?? '',
-                  comment: _comment,
-                  nutritionResult: _nutritionResult,
-                  time: _timestamp,
-                  tag: _tag,
-                  documentId: widget.initialRecord?['documentId'],
-                );
-
-                // Clear the draft after successful save
-                context.read<NutritionDraft>().clearDraft();
-
-                if (mounted) {
+          if (_isSaving)
+            const Padding(
+              padding: EdgeInsets.all(12.0),
+              child: SizedBox(
+                height: 24,
+                width: 24,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.5,
+                  color: Colors.black87,
+                ),
+              ),
+            )
+          else
+            IconButton(
+              iconSize: 30,
+              icon: const Icon(Icons.done),
+              onPressed: () async {
+                if (_nutritionResult.imageName.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(
-                        'Nutrition record saved',
+                        'Please enter a name',
                         style: TextStyle(fontSize: 12, color: Colors.black),
                       ),
                       backgroundColor: Colors.orange[100],
@@ -208,28 +183,76 @@ class _TextRecordPageState extends State<TextRecordPage> {
                       margin: EdgeInsets.all(8),
                     ),
                   );
-                  Navigator.of(context).pop(true); // 返回 true 表示已更新
+                  return;
                 }
-              } catch (e) {
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        'Error saving record: $e',
-                        style: TextStyle(fontSize: 12, color: Colors.black),
-                      ),
-                      backgroundColor: Colors.orange[100],
-                      behavior: SnackBarBehavior.floating,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      margin: EdgeInsets.all(8),
-                    ),
+
+                setState(() {
+                  _isSaving = true;
+                });
+
+                // Hide keyboard before saving and popping to avoid render errors.
+                final isKeyboardVisible =
+                    MediaQuery.of(context).viewInsets.bottom > 0;
+                if (isKeyboardVisible) {
+                  FocusManager.instance.primaryFocus?.unfocus();
+                  await Future.delayed(const Duration(milliseconds: 300));
+                }
+
+                if (!mounted) return;
+
+                try {
+                  await ImageUploadService.saveNutritionResult(
+                    base64Image: _capturedImageBase64 ?? '',
+                    comment: _comment,
+                    nutritionResult: _nutritionResult,
+                    time: _timestamp,
+                    tag: _tag,
+                    documentId: widget.initialRecord?['documentId'],
                   );
+
+                  // Clear the draft after successful save
+                  context.read<NutritionDraft>().clearDraft();
+
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          'Nutrition record saved',
+                          style: TextStyle(fontSize: 12, color: Colors.black),
+                        ),
+                        backgroundColor: Colors.orange[100],
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        margin: EdgeInsets.all(8),
+                      ),
+                    );
+                    Navigator.of(context).pop(true); // 返回 true 表示已更新
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          'Error saving record: $e',
+                          style: TextStyle(fontSize: 12, color: Colors.black),
+                        ),
+                        backgroundColor: Colors.orange[100],
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        margin: EdgeInsets.all(8),
+                      ),
+                    );
+                    setState(() {
+                      _isSaving = false;
+                    });
+                  }
                 }
-              }
-            },
-          ),
+              },
+            ),
         ],
       ),
       body: KeyboardAwareLayout(
