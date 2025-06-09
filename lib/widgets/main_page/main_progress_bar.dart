@@ -34,12 +34,14 @@ class _WaveProgressBarState extends State<WaveProgressBar>
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 800),
-    )
-      ..addListener(() => setState(() {}))
-      ..stop();
+    _controller =
+        AnimationController(
+            vsync: this,
+            duration: const Duration(milliseconds: 800),
+          )
+          ..addListener(() => setState(() {}))
+          ..stop()
+          ..repeat();
   }
 
   @override
@@ -92,9 +94,12 @@ class _WaveProgressBarState extends State<WaveProgressBar>
                       borderRadius: BorderRadius.circular(40),
                       child: ClipPath(
                         clipper: _WaveClipperLeftGravity(
-                          wavePhase: (_isForward
+                          wavePhase:
+                              (_isForward
                                   ? _controller.value
-                                  : -_controller.value) * 2 * pi,
+                                  : -_controller.value) *
+                              2 *
+                              pi,
                           progress: progress,
                         ),
                         child: Container(color: Colors.blue),
@@ -199,7 +204,6 @@ class _WaveClipperLeftGravity extends CustomClipper<Path> {
     return old.wavePhase != wavePhase || old.progress != progress;
   }
 }
-
 
 class MainProgressBar extends StatelessWidget {
   final Color color;
