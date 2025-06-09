@@ -58,6 +58,16 @@ class _LoginPageState extends State<LoginPage>
 
     setState(() => _loading = true);
 
+    // Hide keyboard before proceeding to avoid render errors during navigation.
+    final isKeyboardVisible = MediaQuery.of(context).viewInsets.bottom > 0;
+    if (isKeyboardVisible) {
+      FocusManager.instance.primaryFocus?.unfocus();
+      // Wait for keyboard to dismiss
+      await Future.delayed(const Duration(milliseconds: 300));
+    }
+
+    if (!mounted) return;
+
     try {
       final userDoc =
           await FirebaseFirestore.instance
@@ -92,6 +102,7 @@ class _LoginPageState extends State<LoginPage>
           );
         } else {
           _showMessage('Incorrect password');
+          if (mounted) setState(() => _loading = false);
         }
       } else {
         await FirebaseFirestore.instance.collection('users').doc(_account).set({
@@ -108,8 +119,9 @@ class _LoginPageState extends State<LoginPage>
       }
     } catch (e) {
       _showMessage('Login failed: $e');
-    } finally {
-      setState(() => _loading = false);
+      if (mounted) {
+        setState(() => _loading = false);
+      }
     }
   }
 
