@@ -142,7 +142,7 @@ export const dailyNeeds = functionsV1
     }
 
     try {
-      const { waterIntake, waterNeed, caloriesIntake, caloriesNeed, EB_Type } = req.body;
+      const { waterIntake, waterNeed, caloriesIntake, caloriesNeed, calories, carbohydrate, protein, fat, carbTarget, proteinTarget, fatTarget, EB_Type } = req.body;
 
       // 基本驗證
       if (
@@ -150,7 +150,14 @@ export const dailyNeeds = functionsV1
         typeof waterNeed !== 'number' ||
         typeof caloriesIntake !== 'number' ||
         typeof caloriesNeed !== 'number' ||
-        !['Friend(polite)', 'Friend(vicious)', 'Mom'].includes(EB_Type)
+        typeof calories !== 'number' ||
+        typeof carbohydrate !== 'number' ||
+        typeof protein !== 'number' ||
+        typeof fat !== 'number' ||
+        typeof carbTarget !== 'number' ||
+        typeof proteinTarget !== 'number' ||
+        typeof fatTarget !== 'number' ||
+        !['Polite', 'Vicious'].includes(EB_Type)
       ) {
         res.status(400).json({ error: 'Missing or invalid fields' });
         return;
@@ -162,9 +169,15 @@ export const dailyNeeds = functionsV1
         waterNeed,
         caloriesIntake,
         caloriesNeed,
-        EB_Type: EB_Type as 'Polite' | 'Vicious' ,
+        calories,
+        carbohydrate,
+        protein,
+        fat,
+        carbTarget,
+        proteinTarget,
+        fatTarget,
+        EB_Type,
       });
-
       res.status(200).json(result);
       return;
     } catch (e: any) {
