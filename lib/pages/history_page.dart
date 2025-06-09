@@ -248,7 +248,7 @@ class _HistoryPageState extends State<HistoryPage> {
             padding: const EdgeInsets.all(16),
             margin: const EdgeInsets.symmetric(horizontal: 16),
             decoration: BoxDecoration(
-              color: Colors.blue.shade50,
+              color: Color.fromARGB(255, 255, 206, 133),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Column(
@@ -314,11 +314,39 @@ class _HistoryPageState extends State<HistoryPage> {
                         );
                       },
                     )
-                    : ListView.builder(
-                      itemCount: _dailyRecords.length,
-                      itemBuilder: (context, index) {
-                        return _buildRecordItem(_dailyRecords[index]);
-                      },
+                    : Column(
+                      children: [
+                        Expanded(
+                          child: ListView.builder(
+                            itemCount: _dailyRecords.length,
+                            itemBuilder: (context, index) {
+                              return _buildRecordItem(_dailyRecords[index]);
+                            },
+                          ),
+                        ),
+                        if (_dailyRecords.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.info_outline,
+                                  size: 16,
+                                  color: Colors.grey[600],
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Click on any item to see more information',
+                                  style: TextStyle(
+                                    color: Colors.grey[600],
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                      ],
                     ),
           ),
         ],
