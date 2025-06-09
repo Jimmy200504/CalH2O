@@ -170,6 +170,16 @@ class _TextRecordPageState extends State<TextRecordPage> {
                 return;
               }
 
+              // Hide keyboard before saving and popping to avoid render errors.
+              final isKeyboardVisible =
+                  MediaQuery.of(context).viewInsets.bottom > 0;
+              if (isKeyboardVisible) {
+                FocusManager.instance.primaryFocus?.unfocus();
+                await Future.delayed(const Duration(milliseconds: 300));
+              }
+
+              if (!mounted) return;
+
               try {
                 await ImageUploadService.saveNutritionResult(
                   base64Image: _capturedImageBase64 ?? '',
