@@ -194,7 +194,6 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
                           const SizedBox(height: 16),
 
                           buildLabel('Gender'),
-                          buildLabel('Gender'),
                           DropdownButtonFormField<String>(
                             value: _gender,
                             decoration: _inputDecoration(''),
