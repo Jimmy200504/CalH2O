@@ -8,18 +8,12 @@ import '../widgets/main_page/nutrition_card.dart';
 import '../widgets/main_page/loading_overlay.dart';
 import '../widgets/animation.dart';
 import '../services/cloud_function_fetch/get_nutrition_from_photo.dart';
-import '../services/image_upload_service.dart';
 import '../model/nutrition_draft.dart';
 import '../main.dart';
 import '../services/water_upload_service.dart';
 import '../pages/setting_page.dart';
-import '../pages/history_page.dart';
 import '../widgets/main_page/speech_bubble.dart';
-import 'dart:async';
-import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
-import 'package:flutter_barrage/flutter_barrage.dart';
-
-
+import '../widgets/main_page/tutorial_manager.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -59,9 +53,7 @@ class _MainPageState extends State<MainPage> {
   final GlobalKey _cameraAltKey = GlobalKey();
   final GlobalKey _petKey = GlobalKey();
 
-  
-  
-@override
+  @override
   void initState() {
     super.initState();
     // 一次性抓 OR 初始化
@@ -75,7 +67,6 @@ class _MainPageState extends State<MainPage> {
     _loadTargets();
     _setupNutritionListener();
   }
-
 
   Future<void> _loadTargets() async {
     try {
@@ -305,156 +296,18 @@ class _MainPageState extends State<MainPage> {
     }
   }
 
-  List<TargetFocus> targets = [];
-
-  void _initTargets() {
-    targets = [
-      TargetFocus(
-        identify: "Combo",
-        keyTarget: _comboKey,
-        contents: [
-          TargetContent(
-            align: ContentAlign.bottom,
-            builder: (context, controllerTarget) {
-              Future.delayed(const Duration(seconds: 1), () {
-                controllerTarget.next();
-              });
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                children: const [
-                  SizedBox(height: 50),
-                  Text(
-                    "This shows your combo streak of daily records!",
-                    style: TextStyle(color: Colors.white, fontSize: 20),
-                  ),
-                ],
-              );
-            },
-          ),
-        ],
-      ),
-      TargetFocus(
-        identify: "Add",
-        keyTarget: _addKey,
-        contents: [
-          TargetContent(
-            align: ContentAlign.top,
-            builder: (context, controllerTarget) {
-              Future.delayed(const Duration(seconds: 1), () {
-                controllerTarget.next();
-              });
-              return const Text(
-                "Add a new record",
-                style: TextStyle(color: Colors.white, fontSize: 20),
-              );
-            },
-          ),
-        ],
-      ),
-      TargetFocus(
-        identify: "EditNote",
-        keyTarget: _editNoteKey,
-        contents: [
-          TargetContent(
-            align: ContentAlign.top,
-            builder: (context, controllerTarget) {
-              Future.delayed(const Duration(seconds: 1), () {
-                controllerTarget.next();
-              });
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                children: const [
-                  SizedBox(height: 8),
-                  Text(
-                    "Add notes to your entry",
-                    style: TextStyle(color: Colors.white, fontSize: 20),
-                  ),
-                ],
-              );
-            },
-          ),
-        ],
-      ),
-      TargetFocus(
-        identify: "Camera",
-        keyTarget: _cameraAltKey,
-        contents: [
-          TargetContent(
-            align: ContentAlign.top,
-            builder: (context, controllerTarget) {
-              Future.delayed(const Duration(seconds: 1), () {
-                controllerTarget.next();
-              });
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                children: const [
-                  SizedBox(height: 8),
-                  Text(
-                    "Use the camera to scan food",
-                    style: TextStyle(color: Colors.white, fontSize: 20),
-                  ),
-                ],
-              );
-            },
-          ),
-        ],
-      ),
-      TargetFocus(
-        identify: "History",
-        keyTarget: _historyKey,
-        contents: [
-          TargetContent(
-            align: ContentAlign.top,
-            builder: (context, controllerTarget) {
-              Future.delayed(const Duration(seconds: 1), () {
-                controllerTarget.next();
-              });
-              return const Text(
-                "Check the history",
-                style: TextStyle(color: Colors.white, fontSize: 20),
-              );
-            },
-          ),
-        ],
-      ),
-      TargetFocus(
-        identify: "Pet",
-        keyTarget: _petKey,
-        contents: [
-          TargetContent(
-            align: ContentAlign.top,
-            builder: (context, controllerTarget) {
-              Future.delayed(const Duration(seconds: 1), () {
-                controllerTarget.next();
-              });
-              return const Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    "The pet in the middle shows your health status.\nPlease pay attention to your diet.",
-                    style: TextStyle(color: Colors.white, fontSize: 20),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              );
-            },
-          ),
-        ],
-      ),
-    ];
-  }
-
   void _showTutorial() {
-    setState(() {
-      _showSubButtons = true;
-    });
-    _initTargets();
-    TutorialCoachMark(
-      targets: targets,
-      colorShadow: Colors.black,
-      textSkip: "SKIP",
-      onFinish: () => print("Tutorial finished"),
-    ).show(context: context);
+    TutorialManager.showTutorial(
+      context: context,
+      addKey: _addKey,
+      historyKey: _historyKey,
+      comboKey: _comboKey,
+      editNoteKey: _editNoteKey,
+      cameraAltKey: _cameraAltKey,
+      petKey: _petKey,
+      onTutorialStart: () => setState(() => _showSubButtons = true),
+      onTutorialFinish: () => setState(() => _showSubButtons = false),
+    );
   }
 
   @override
@@ -514,12 +367,14 @@ class _MainPageState extends State<MainPage> {
 
                 MainProgressBar(
                   color: Colors.orange,
-                  label: 'Calories $_calories kcal (${_getLabel(_calories,_caloriesTarget,' kcal')})',
+                  label:
+                      'Calories $_calories kcal (${_getLabel(_calories, _caloriesTarget, ' kcal')})',
                   value: _caloriesProgress,
                   onIncrement: _incrementCalories,
                 ),
                 WaveProgressBar(
-                  label: 'Water $_water ml (${_getLabel(_water, _waterTarget, ' ml')})',
+                  label:
+                      'Water $_water ml (${_getLabel(_water, _waterTarget, ' ml')})',
                   value: _waterProgress,
                   onIncrement: _incrementWater,
                   onDecrement: _decrementWater,
@@ -611,8 +466,6 @@ class _MainPageState extends State<MainPage> {
                     ],
                   ),
                 ),
-
-
 
                 Padding(
                   padding: EdgeInsets.symmetric(
@@ -726,4 +579,3 @@ class _MainPageState extends State<MainPage> {
     );
   }
 }
-
