@@ -182,32 +182,33 @@ class _HistoryPageState extends State<HistoryPage> {
         firstDate: DateTime(2020),
         lastDate: DateTime.now(),
         initialDatePickerMode: DatePickerMode.year,
-        builder: (context, child) => Theme(
-          data: ThemeData().copyWith(
-            colorScheme: ColorScheme.light(
-              primary: Color(0xFFFFB74D), // 主色
-              onPrimary: Colors.black,     // icon color
-              surface: Colors.white,
-              onSurface: Colors.black,
-            ),
-            dialogBackgroundColor: Colors.white,
-            textButtonTheme: TextButtonThemeData(
-              style: TextButton.styleFrom(
-                foregroundColor: Colors.black, // Cancel / OK 按鈕文字顏色
+        builder:
+            (context, child) => Theme(
+              data: ThemeData().copyWith(
+                colorScheme: ColorScheme.light(
+                  primary: Color(0xFFFFB74D), // 主色
+                  onPrimary: Colors.black, // icon color
+                  surface: Colors.white,
+                  onSurface: Colors.black,
+                ),
+                dialogBackgroundColor: Colors.white,
+                textButtonTheme: TextButtonThemeData(
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.black, // Cancel / OK 按鈕文字顏色
+                  ),
+                ),
+                inputDecorationTheme: const InputDecorationTheme(
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.black),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.black),
+                  ),
+                  labelStyle: TextStyle(color: Colors.black),
+                ),
               ),
+              child: child!,
             ),
-            inputDecorationTheme: const InputDecorationTheme(
-              focusedBorder: OutlineInputBorder(
-                borderSide: BorderSide(color: Colors.black),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderSide: BorderSide(color: Colors.black),
-              ),
-              labelStyle: TextStyle(color: Colors.black),
-            ),
-          ),
-          child: child!,
-        ),
       );
       if (picked != null) {
         setState(() {
@@ -222,32 +223,33 @@ class _HistoryPageState extends State<HistoryPage> {
         initialDate: _selectedDate,
         firstDate: DateTime(2020),
         lastDate: DateTime.now(),
-        builder: (context, child) => Theme(
+        builder:
+            (context, child) => Theme(
               data: ThemeData().copyWith(
-            colorScheme: ColorScheme.light(
-              primary: Color(0xFFFFB74D), // 主色
-              onPrimary: Colors.black,     // icon color
-              surface: Colors.white,
-              onSurface: Colors.black,
-            ),
-            dialogBackgroundColor: Colors.white,
-            textButtonTheme: TextButtonThemeData(
-              style: TextButton.styleFrom(
-                foregroundColor: Colors.black, // Cancel / OK 按鈕文字顏色
+                colorScheme: ColorScheme.light(
+                  primary: Color(0xFFFFB74D), // 主色
+                  onPrimary: Colors.black, // icon color
+                  surface: Colors.white,
+                  onSurface: Colors.black,
+                ),
+                dialogBackgroundColor: Colors.white,
+                textButtonTheme: TextButtonThemeData(
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.black, // Cancel / OK 按鈕文字顏色
+                  ),
+                ),
+                inputDecorationTheme: const InputDecorationTheme(
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.black),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.black),
+                  ),
+                  labelStyle: TextStyle(color: Colors.black),
+                ),
               ),
+              child: child!,
             ),
-            inputDecorationTheme: const InputDecorationTheme(
-              focusedBorder: OutlineInputBorder(
-                borderSide: BorderSide(color: Colors.black),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderSide: BorderSide(color: Colors.black),
-              ),
-              labelStyle: TextStyle(color: Colors.black),
-            ),
-          ),
-          child: child!,
-        ),
       );
       if (picked != null) {
         setState(() {
@@ -293,7 +295,7 @@ class _HistoryPageState extends State<HistoryPage> {
                     _isMonthView
                         ? DateFormat('yyyy/MM').format(_selectedDate)
                         : DateFormat('yyyy/MM/dd').format(_selectedDate),
-                        style: const TextStyle(color: Colors.black), // 文字顏色
+                    style: const TextStyle(color: Colors.black), // 文字顏色
                   ),
                   style: TextButton.styleFrom(
                     foregroundColor: Colors.black, // ripple 特效顏色
@@ -353,9 +355,10 @@ class _HistoryPageState extends State<HistoryPage> {
                             vertical: 8,
                           ),
                           elevation: 0,
+                          color: Colors.white,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
-                            side: BorderSide(color: Colors.grey.shade200),
+                            side: BorderSide(color: Colors.grey.shade300),
                           ),
                           child: ExpansionTile(
                             title: Text(
@@ -375,6 +378,8 @@ class _HistoryPageState extends State<HistoryPage> {
                             collapsedShape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
+                            backgroundColor: Colors.white,
+                            collapsedBackgroundColor: Colors.white,
                             children:
                                 (dayData['foods'] as List<Map<String, dynamic>>)
                                     .map((record) => _buildRecordItem(record))
