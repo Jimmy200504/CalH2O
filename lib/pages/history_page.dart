@@ -48,7 +48,11 @@ class _HistoryPageState extends State<HistoryPage> {
 
   Future<void> _fetchMonthlyRecords() async {
     final startOfMonth = DateTime(_selectedDate.year, _selectedDate.month, 1);
-    final endOfMonth = DateTime(_selectedDate.year, _selectedDate.month + 1, 0);
+    final endOfMonth = DateTime(
+      _selectedDate.year,
+      _selectedDate.month + 1,
+      0,
+    ).add(const Duration(days: 1));
 
     // Get user account
     final prefs = await SharedPreferences.getInstance();
@@ -64,10 +68,7 @@ class _HistoryPageState extends State<HistoryPage> {
               'timestamp',
               isGreaterThanOrEqualTo: Timestamp.fromDate(startOfMonth),
             )
-            .where(
-              'timestamp',
-              isLessThanOrEqualTo: Timestamp.fromDate(endOfMonth),
-            )
+            .where('timestamp', isLessThan: Timestamp.fromDate(endOfMonth))
             .get();
 
     _monthlyStats = {'calories': 0, 'protein': 0, 'carbohydrate': 0, 'fat': 0};
@@ -140,10 +141,7 @@ class _HistoryPageState extends State<HistoryPage> {
               'timestamp',
               isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay),
             )
-            .where(
-              'timestamp',
-              isLessThanOrEqualTo: Timestamp.fromDate(endOfDay),
-            )
+            .where('timestamp', isLessThan: Timestamp.fromDate(endOfDay))
             .get();
 
     _dailyRecords =
@@ -176,7 +174,7 @@ class _HistoryPageState extends State<HistoryPage> {
   Future<void> _selectDate(BuildContext context) async {
     if (_isMonthView) {
       // Show year and month picker
-      final DateTime? picked = await showDatePicker(
+      showDatePicker(
         context: context,
         initialDate: _selectedDate,
         firstDate: DateTime(2020),
@@ -185,7 +183,7 @@ class _HistoryPageState extends State<HistoryPage> {
         builder:
             (context, child) => Theme(
               data: ThemeData().copyWith(
-                colorScheme: ColorScheme.light(
+                colorScheme: const ColorScheme.light(
                   primary: Color(0xFFFFB74D), // 主色
                   onPrimary: Colors.black, // icon color
                   surface: Colors.white,
@@ -197,25 +195,17 @@ class _HistoryPageState extends State<HistoryPage> {
                     foregroundColor: Colors.black, // Cancel / OK 按鈕文字顏色
                   ),
                 ),
-                inputDecorationTheme: const InputDecorationTheme(
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.black),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.black),
-                  ),
-                  labelStyle: TextStyle(color: Colors.black),
-                ),
               ),
               child: child!,
             ),
-      );
-      if (picked != null) {
-        setState(() {
-          _selectedDate = DateTime(picked.year, picked.month, 1);
-          _fetchRecords();
-        });
-      }
+      ).then((picked) {
+        if (picked != null) {
+          setState(() {
+            _selectedDate = DateTime(picked.year, picked.month, 1);
+            _fetchRecords();
+          });
+        }
+      });
     } else {
       // Show full date picker
       final DateTime? picked = await showDatePicker(
@@ -226,7 +216,7 @@ class _HistoryPageState extends State<HistoryPage> {
         builder:
             (context, child) => Theme(
               data: ThemeData().copyWith(
-                colorScheme: ColorScheme.light(
+                colorScheme: const ColorScheme.light(
                   primary: Color(0xFFFFB74D), // 主色
                   onPrimary: Colors.black, // icon color
                   surface: Colors.white,
@@ -237,15 +227,6 @@ class _HistoryPageState extends State<HistoryPage> {
                   style: TextButton.styleFrom(
                     foregroundColor: Colors.black, // Cancel / OK 按鈕文字顏色
                   ),
-                ),
-                inputDecorationTheme: const InputDecorationTheme(
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.black),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.black),
-                  ),
-                  labelStyle: TextStyle(color: Colors.black),
                 ),
               ),
               child: child!,
@@ -260,189 +241,255 @@ class _HistoryPageState extends State<HistoryPage> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        title: Text(_isMonthView ? 'Monthly History' : 'Daily History'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.bar_chart, color: Colors.black),
-            tooltip: '分析',
-            onPressed: () => Navigator.pushNamed(context, '/analyze'),
-          ),
-          IconButton(
-            icon: Icon(
-              _isMonthView ? Icons.calendar_today : Icons.calendar_month,
-            ),
-            onPressed: () {
-              setState(() {
-                _isMonthView = !_isMonthView;
-                _fetchRecords();
-              });
-            },
-          ),
-        ],
-      ),
-      body: Column(
+  Widget _buildDateSelector() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                TextButton.icon(
-                  onPressed: () => _selectDate(context),
-                  icon: const Icon(Icons.calendar_today),
-                  label: Text(
-                    _isMonthView
-                        ? DateFormat('yyyy/MM').format(_selectedDate)
-                        : DateFormat('yyyy/MM/dd').format(_selectedDate),
-                    style: const TextStyle(color: Colors.black), // 文字顏色
-                  ),
-                  style: TextButton.styleFrom(
-                    foregroundColor: Colors.black, // ripple 特效顏色
-                  ),
-                ),
-              ],
+          ActionChip(
+            onPressed: () => _selectDate(context),
+            avatar: const Icon(
+              Icons.calendar_today,
+              size: 18,
+              color: Color(0xFFFFB74D),
             ),
-          ),
-          Container(
-            padding: const EdgeInsets.all(16),
-            margin: const EdgeInsets.symmetric(horizontal: 16),
-            decoration: BoxDecoration(
-              color: Colors.orange.withOpacity(0.25),
-              borderRadius: BorderRadius.circular(12),
+            label: Text(
+              _isMonthView
+                  ? DateFormat('yyyy / MM').format(_selectedDate)
+                  : DateFormat('yyyy / MM / dd').format(_selectedDate),
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
             ),
-            child: Column(
-              children: [
-                Text(
-                  _isMonthView ? 'Monthly Summary' : 'Daily Summary',
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-                const SizedBox(height: 8),
-                _buildSummaryRow(
-                  'Total Calories',
-                  '${_monthlyStats['calories']?.toStringAsFixed(1)} kcal',
-                ),
-                _buildSummaryRow(
-                  'Total Protein',
-                  '${_monthlyStats['protein']?.toStringAsFixed(1)} g',
-                ),
-                _buildSummaryRow(
-                  'Total Carbs',
-                  '${_monthlyStats['carbohydrate']?.toStringAsFixed(1)} g',
-                ),
-                _buildSummaryRow(
-                  'Total Fat',
-                  '${_monthlyStats['fat']?.toStringAsFixed(1)} g',
-                ),
-              ],
+            backgroundColor: Colors.white,
+            elevation: 2,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+              side: BorderSide(color: Colors.grey.shade200),
             ),
-          ),
-          const SizedBox(height: 16),
-          Expanded(
-            child:
-                _isMonthView
-                    ? ListView.builder(
-                      itemCount: _dailyRecords.length,
-                      itemBuilder: (context, index) {
-                        final dayData = _dailyRecords[index];
-                        if (dayData['date'] == null) {
-                          return const SizedBox.shrink();
-                        }
-
-                        return Card(
-                          margin: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 8,
-                          ),
-                          elevation: 0,
-                          color: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            side: BorderSide(color: Colors.grey.shade300),
-                          ),
-                          child: ExpansionTile(
-                            title: Text(
-                              DateFormat(
-                                'MM/dd',
-                              ).format(dayData['date'] as DateTime),
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            subtitle: Text(
-                              'Total Calories: ${dayData['totalCalories'].toStringAsFixed(1)} kcal',
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            collapsedShape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            backgroundColor: Colors.white,
-                            collapsedBackgroundColor: Colors.white,
-                            children:
-                                (dayData['foods'] as List<Map<String, dynamic>>)
-                                    .map((record) => _buildRecordItem(record))
-                                    .toList(),
-                          ),
-                        );
-                      },
-                    )
-                    : Column(
-                      children: [
-                        Expanded(
-                          child: ListView.builder(
-                            itemCount: _dailyRecords.length,
-                            itemBuilder: (context, index) {
-                              return _buildRecordItem(_dailyRecords[index]);
-                            },
-                          ),
-                        ),
-                        if (_dailyRecords.isNotEmpty)
-                          Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.info_outline,
-                                  size: 16,
-                                  color: Colors.grey[600],
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'Click on any item to see more information',
-                                  style: TextStyle(
-                                    color: Colors.grey[600],
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                      ],
-                    ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildSummaryRow(String label, String value) {
+  Widget _buildSummarySection() {
+    final summaryData = [
+      {
+        'label': 'Calories',
+        'value': '${_monthlyStats['calories']?.toStringAsFixed(0)} kcal',
+        'icon': FontAwesomeIcons.fire,
+        'color': Colors.redAccent,
+      },
+      {
+        'label': 'Protein',
+        'value': '${_monthlyStats['protein']?.toStringAsFixed(1)} g',
+        'icon': FontAwesomeIcons.drumstickBite,
+        'color': Colors.blueAccent,
+      },
+      {
+        'label': 'Carbs',
+        'value': '${_monthlyStats['carbohydrate']?.toStringAsFixed(1)} g',
+        'icon': FontAwesomeIcons.breadSlice,
+        'color': Colors.green,
+      },
+      {
+        'label': 'Fat',
+        'value': '${_monthlyStats['fat']?.toStringAsFixed(1)} g',
+        'icon': FontAwesomeIcons.cheese,
+        'color': Colors.orangeAccent,
+      },
+    ];
+
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label),
-          Text(value, style: const TextStyle(fontWeight: FontWeight.bold)),
+          Padding(
+            padding: const EdgeInsets.only(left: 4, bottom: 12),
+            child: Text(
+              _isMonthView ? 'Monthly Summary' : 'Daily Summary',
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+          ),
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: summaryData.length,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+              childAspectRatio: 1.95,
+            ),
+            itemBuilder: (context, index) {
+              final item = summaryData[index];
+              return _buildSummaryCard(
+                item['label'] as String,
+                item['value'] as String,
+                item['icon'] as IconData,
+                item['color'] as Color,
+              );
+            },
+          ),
         ],
       ),
+    );
+  }
+
+  Widget _buildSummaryCard(
+    String label,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      color: Colors.white,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Flexible(
+                  child: Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[600],
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+                Icon(icon, size: 18, color: color),
+              ],
+            ),
+            const SizedBox(height: 8),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(FontAwesomeIcons.folderOpen, size: 60, color: Colors.grey[300]),
+          const SizedBox(height: 16),
+          Text(
+            'No records found',
+            style: TextStyle(fontSize: 18, color: Colors.grey[600]),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            _isMonthView
+                ? 'There are no records for this month.'
+                : 'There are no records for this day.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.grey[500]),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMonthlyList() {
+    return ListView.builder(
+      padding: const EdgeInsets.only(bottom: 16),
+      itemCount: _dailyRecords.length,
+      itemBuilder: (context, index) {
+        final dayData = _dailyRecords[index];
+        if (dayData['date'] == null) {
+          return const SizedBox.shrink();
+        }
+
+        return Card(
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          elevation: 2,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: ExpansionTile(
+            tilePadding: const EdgeInsets.symmetric(
+              horizontal: 20,
+              vertical: 8,
+            ),
+            iconColor: Colors.orange,
+            collapsedIconColor: Colors.grey[600],
+            backgroundColor: Colors.white,
+            collapsedBackgroundColor: Colors.white,
+            title: Text(
+              DateFormat('MM / dd (E)').format(dayData['date'] as DateTime),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
+            subtitle: Padding(
+              padding: const EdgeInsets.only(top: 4.0),
+              child: Text(
+                'Total Calories: ${dayData['totalCalories'].toStringAsFixed(0)} kcal',
+                style: TextStyle(color: Colors.grey[600]),
+              ),
+            ),
+            children:
+                (dayData['foods'] as List<Map<String, dynamic>>)
+                    .map((record) => _buildMonthlyRecordItem(record))
+                    .toList(),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildMonthlyRecordItem(Map<String, dynamic> record) {
+    final tag = record['tag'] as String? ?? 'Other';
+    final icon = _tagIcons[tag] ?? Icons.fastfood;
+
+    return ListTile(
+      contentPadding: const EdgeInsets.fromLTRB(24, 4, 24, 4),
+      leading: CircleAvatar(
+        radius: 18,
+        backgroundColor: Colors.orange.withOpacity(0.1),
+        child: Icon(icon, size: 18, color: Colors.orange[800]),
+      ),
+      title: Text(record['imageName'] ?? 'Unnamed food'),
+      trailing: Text(
+        '${record['calories']?.toStringAsFixed(0) ?? 0} kcal',
+        style: const TextStyle(fontWeight: FontWeight.w500),
+      ),
+      onTap: () => _showDetailBottomSheet(record),
+    );
+  }
+
+  Widget _buildDailyList() {
+    return ListView.builder(
+      padding: const EdgeInsets.only(bottom: 16),
+      itemCount: _dailyRecords.length,
+      itemBuilder: (context, index) {
+        return _buildRecordItem(_dailyRecords[index]);
+      },
     );
   }
 
@@ -450,13 +497,22 @@ class _HistoryPageState extends State<HistoryPage> {
     final tag = record['tag'] as String? ?? 'Other';
     final icon = _tagIcons[tag] ?? Icons.fastfood;
 
+    // Safeguard against records without a documentId
+    if (record['documentId'] == null) {
+      return const SizedBox.shrink();
+    }
+
     return Dismissible(
-      key: Key(record['timestamp'].toString()),
+      key: Key("${record['documentId']}-${record['timestamp']}"),
       direction: DismissDirection.endToStart,
       background: Container(
         alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: 20),
-        color: Colors.red,
+        padding: const EdgeInsets.only(right: 30),
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        decoration: BoxDecoration(
+          color: Colors.redAccent,
+          borderRadius: BorderRadius.circular(16),
+        ),
         child: const Icon(Icons.delete, color: Colors.white),
       ),
       confirmDismiss: (direction) async {
@@ -464,6 +520,9 @@ class _HistoryPageState extends State<HistoryPage> {
           context: context,
           builder: (BuildContext context) {
             return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
               title: const Text('Confirm Delete'),
               content: const Text(
                 'Are you sure you want to delete this record?',
@@ -471,13 +530,17 @@ class _HistoryPageState extends State<HistoryPage> {
               actions: <Widget>[
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(false),
-                  style: TextButton.styleFrom(foregroundColor: Colors.black),
-                  child: const Text('Cancel'),
+                  child: const Text(
+                    'Cancel',
+                    style: TextStyle(color: Colors.black54),
+                  ),
                 ),
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(true),
-                  style: TextButton.styleFrom(foregroundColor: Colors.black),
-                  child: const Text('Delete'),
+                  child: const Text(
+                    'Delete',
+                    style: TextStyle(color: Colors.redAccent),
+                  ),
                 ),
               ],
             );
@@ -486,46 +549,22 @@ class _HistoryPageState extends State<HistoryPage> {
       },
       onDismissed: (direction) async {
         try {
-          // Get user account
           final prefs = await SharedPreferences.getInstance();
           final account = prefs.getString('account');
           if (account == null) return;
 
-          // Get the document ID from the record
-          final querySnapshot =
-              await FirebaseFirestore.instance
-                  .collection('users')
-                  .doc(account)
-                  .collection('nutrition_records')
-                  .where('timestamp', isEqualTo: record['timestamp'])
-                  .where('imageName', isEqualTo: record['imageName'])
-                  .get();
+          final docId = record['documentId'] as String;
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(account)
+              .collection('nutrition_records')
+              .doc(docId)
+              .delete();
 
-          if (querySnapshot.docs.isNotEmpty) {
-            final docId = querySnapshot.docs.first.id;
-            await querySnapshot.docs.first.reference.delete();
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  'Record deleted successfully',
-                  style: TextStyle(fontSize: 12, color: Colors.black),
-                ),
-                backgroundColor: Colors.orange[100],
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                margin: EdgeInsets.all(8),
-              ),
-            );
-            // Refresh the records
-            _fetchRecords();
-          }
-        } catch (e) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(
-                'Error deleting record',
+              content: const Text(
+                'Record deleted successfully',
                 style: TextStyle(fontSize: 12, color: Colors.black),
               ),
               backgroundColor: Colors.orange[100],
@@ -533,28 +572,55 @@ class _HistoryPageState extends State<HistoryPage> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
               ),
-              margin: EdgeInsets.all(8),
+              margin: const EdgeInsets.all(8),
+            ),
+          );
+          _fetchRecords();
+        } catch (e) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text(
+                'Error deleting record',
+                style: TextStyle(fontSize: 12, color: Colors.black),
+              ),
+              backgroundColor: Colors.red[100],
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              margin: const EdgeInsets.all(8),
             ),
           );
         }
       },
-      child: ListTile(
-        leading: Icon(icon),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(tag, style: const TextStyle(fontSize: 12, color: Colors.grey)),
-            Text(
-              record['imageName'] ?? 'Unnamed food',
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+      child: Card(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        elevation: 2,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: ListTile(
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 10,
+          ),
+          leading: CircleAvatar(
+            backgroundColor: Colors.orange.withOpacity(0.1),
+            child: Icon(icon, color: Colors.orange[800]),
+          ),
+          title: Text(
+            record['imageName'] ?? 'Unnamed food',
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          subtitle: Text(tag, style: TextStyle(color: Colors.grey[600])),
+          trailing: Text(
+            '${record['calories']?.toStringAsFixed(0) ?? 0} kcal',
+            style: TextStyle(
+              color: Colors.orange[800],
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
             ),
-          ],
+          ),
+          onTap: () => _showDetailBottomSheet(record),
         ),
-        subtitle: Text(
-          'Calories: ${record['calories']} kcal',
-          style: const TextStyle(color: Colors.black),
-        ),
-        onTap: () => _showDetailBottomSheet(record),
       ),
     );
   }
@@ -564,56 +630,48 @@ class _HistoryPageState extends State<HistoryPage> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      enableDrag: true,
-      isDismissible: true,
-      useSafeArea: true,
       builder:
-          (BuildContext context) => GestureDetector(
-            onTap: () => Navigator.pop(context),
-            child: Container(
-              color: Colors.transparent,
-              child: GestureDetector(
-                onTap: () {}, // Prevent tap from propagating to parent
-                child: DraggableScrollableSheet(
-                  initialChildSize: 0.6,
-                  minChildSize: 0.4,
-                  maxChildSize: 0.9,
-                  builder:
-                      (
-                        BuildContext context,
-                        ScrollController scrollController,
-                      ) => Container(
-                        decoration: const BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.vertical(
-                            top: Radius.circular(20),
-                          ),
+          (context) => DraggableScrollableSheet(
+            initialChildSize: 0.6,
+            minChildSize: 0.4,
+            maxChildSize: 0.9,
+            builder:
+                (_, scrollController) => Container(
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(24),
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      // Drag handle
+                      Container(
+                        width: 40,
+                        height: 5,
+                        margin: const EdgeInsets.symmetric(vertical: 10),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[300],
+                          borderRadius: BorderRadius.circular(10),
                         ),
+                      ),
+                      Expanded(
                         child: SingleChildScrollView(
                           controller: scrollController,
                           child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               if (record['base64Image'] != null &&
                                   record['base64Image'].toString().isNotEmpty)
-                                Container(
+                                SizedBox(
                                   height: 200,
                                   width: double.infinity,
-                                  decoration: const BoxDecoration(
-                                    borderRadius: BorderRadius.vertical(
-                                      top: Radius.circular(20),
-                                    ),
-                                  ),
-                                  child: ClipRRect(
-                                    borderRadius: const BorderRadius.vertical(
-                                      top: Radius.circular(20),
-                                    ),
-                                    child: _buildImageFromBase64(
-                                      record['base64Image'],
-                                    ),
+                                  child: _buildImageFromBase64(
+                                    record['base64Image'],
                                   ),
                                 ),
                               Padding(
-                                padding: const EdgeInsets.all(16),
+                                padding: const EdgeInsets.all(24),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
@@ -624,7 +682,7 @@ class _HistoryPageState extends State<HistoryPage> {
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
-                                    const SizedBox(height: 16),
+                                    const SizedBox(height: 24),
                                     const Text(
                                       'Nutrition Information',
                                       style: TextStyle(
@@ -649,7 +707,7 @@ class _HistoryPageState extends State<HistoryPage> {
                                       'Fat',
                                       '${record['fat']} g',
                                     ),
-                                    const SizedBox(height: 16),
+                                    const SizedBox(height: 24),
                                     const Text(
                                       'Additional Information',
                                       style: TextStyle(
@@ -663,7 +721,8 @@ class _HistoryPageState extends State<HistoryPage> {
                                         'Category',
                                         record['tag'],
                                       ),
-                                    if (record['comment'] != null)
+                                    if (record['comment'] != null &&
+                                        record['comment'].isNotEmpty)
                                       _buildDetailRow(
                                         'Comment',
                                         record['comment'],
@@ -681,12 +740,14 @@ class _HistoryPageState extends State<HistoryPage> {
                                             .toDate(),
                                       ),
                                     ),
-                                    const SizedBox(height: 24),
+                                    const SizedBox(height: 32),
                                     SizedBox(
                                       width: double.infinity,
                                       child: ElevatedButton.icon(
                                         onPressed: () async {
-                                          Navigator.pop(context); // 關閉詳情頁面
+                                          Navigator.pop(
+                                            context,
+                                          ); // Close details
                                           final result = await Navigator.push(
                                             context,
                                             MaterialPageRoute(
@@ -697,16 +758,23 @@ class _HistoryPageState extends State<HistoryPage> {
                                             ),
                                           );
                                           if (result == true) {
-                                            _fetchRecords(); // 重新載入資料
+                                            _fetchRecords();
                                           }
                                         },
-                                        icon: const Icon(Icons.edit),
+                                        icon: const Icon(Icons.edit, size: 18),
                                         label: const Text('Edit Record'),
                                         style: ElevatedButton.styleFrom(
-                                          backgroundColor: Color(0xFFFFB74D),
+                                          backgroundColor: const Color(
+                                            0xFFFFB74D,
+                                          ),
                                           foregroundColor: Colors.white,
                                           padding: const EdgeInsets.symmetric(
-                                            vertical: 12,
+                                            vertical: 16,
+                                          ),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
                                           ),
                                         ),
                                       ),
@@ -718,19 +786,25 @@ class _HistoryPageState extends State<HistoryPage> {
                           ),
                         ),
                       ),
+                    ],
+                  ),
                 ),
-              ),
-            ),
           ),
     );
   }
 
   Widget _buildDetailRow(String label, String value) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [Text(label), Text(value)],
+        children: [
+          Text(label, style: TextStyle(color: Colors.grey[600])),
+          Text(
+            value,
+            style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 15),
+          ),
+        ],
       ),
     );
   }
@@ -743,30 +817,19 @@ class _HistoryPageState extends State<HistoryPage> {
         );
       }
 
-      // Remove data URL prefix if present
       String cleanBase64 = base64String;
       if (base64String.contains('base64,')) {
         cleanBase64 = base64String.split('base64,')[1];
       }
 
-      // Check if the string is valid base64
-      if (!cleanBase64.contains(RegExp(r'^[a-zA-Z0-9+/=]+$'))) {
-        return const Center(
-          child: Icon(Icons.error_outline, color: Colors.red, size: 50),
-        );
+      if (cleanBase64.length % 4 != 0) {
+        cleanBase64 += '=' * (4 - cleanBase64.length % 4);
       }
 
-      // Add padding if needed
-      String paddedBase64 = cleanBase64;
-      while (paddedBase64.length % 4 != 0) {
-        paddedBase64 += '=';
-      }
-
-      // Try to decode the base64 string
-      final bytes = base64Decode(paddedBase64);
+      final bytes = base64Decode(cleanBase64);
       if (bytes.isEmpty) {
         return const Center(
-          child: Icon(Icons.error_outline, color: Colors.red, size: 50),
+          child: Icon(Icons.broken_image, color: Colors.grey, size: 50),
         );
       }
 
@@ -784,5 +847,66 @@ class _HistoryPageState extends State<HistoryPage> {
         child: Icon(Icons.error_outline, color: Colors.red, size: 50),
       );
     }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.grey[50],
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 1,
+        centerTitle: true,
+        title: Text(
+          _isMonthView ? 'Monthly History' : 'Daily History',
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+          ),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.bar_chart, color: Colors.black),
+            tooltip: 'Analysis',
+            onPressed: () => Navigator.pushNamed(context, '/analyze'),
+          ),
+          IconButton(
+            icon: Icon(
+              _isMonthView
+                  ? Icons.calendar_today_outlined
+                  : Icons.calendar_month_outlined,
+              color: Colors.black,
+            ),
+            onPressed: () {
+              setState(() {
+                _isMonthView = !_isMonthView;
+                if (_isMonthView) {
+                  _selectedDate = DateTime(
+                    _selectedDate.year,
+                    _selectedDate.month,
+                    1,
+                  );
+                }
+                _fetchRecords();
+              });
+            },
+          ),
+        ],
+      ),
+      body: Column(
+        children: [
+          _buildDateSelector(),
+          _buildSummarySection(),
+          Expanded(
+            child:
+                _dailyRecords.isEmpty
+                    ? _buildEmptyState()
+                    : _isMonthView
+                    ? _buildMonthlyList()
+                    : _buildDailyList(),
+          ),
+        ],
+      ),
+    );
   }
 }
