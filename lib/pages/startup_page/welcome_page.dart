@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:calh2o/pages/startup_page/login_page.dart';
-import 'package:calh2o/widgets/next_button.dart';
+import 'package:calh2o/widgets/button_or_other_modifications/next_button.dart';
+
 
 class WelcomePage extends StatefulWidget {
   const WelcomePage({super.key});

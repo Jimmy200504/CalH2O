@@ -3,7 +3,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:calh2o/pages/main_page.dart';
 import 'package:calh2o/pages/startup_page/profile_setup_page.dart';
-import 'package:calh2o/widgets/login_button.dart';
+import 'package:calh2o/widgets/button_or_other_modifications/login_button.dart';
+
 import 'package:calh2o/widgets/keyboard_aware_layout.dart';
 
 class LoginPage extends StatefulWidget {

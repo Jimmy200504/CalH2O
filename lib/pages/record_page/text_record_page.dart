@@ -220,7 +220,7 @@ class _TextRecordPageState extends State<TextRecordPage> {
                         vertical: 8,
                       ),
                       decoration: BoxDecoration(
-                        color: isSelected ? Colors.orangeAccent : Colors.white,
+                        color: isSelected ? Color(0xFFFFB74D) : Colors.white,
                         borderRadius: BorderRadius.circular(12),
                         boxShadow:
                             isSelected
@@ -339,7 +339,7 @@ class _TextRecordPageState extends State<TextRecordPage> {
               child: Align(
                 alignment: Alignment.bottomRight,
                 child: FloatingActionButton(
-                  backgroundColor: Colors.amberAccent,
+                  backgroundColor: Color(0xFFFFB74D),
                   onPressed: () async {
                     final result = await Navigator.of(context).push(
                       MaterialPageRoute(

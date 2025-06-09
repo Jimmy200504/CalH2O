@@ -182,6 +182,32 @@ class _HistoryPageState extends State<HistoryPage> {
         firstDate: DateTime(2020),
         lastDate: DateTime.now(),
         initialDatePickerMode: DatePickerMode.year,
+        builder: (context, child) => Theme(
+          data: ThemeData().copyWith(
+            colorScheme: ColorScheme.light(
+              primary: Color(0xFFFFB74D), // 主色
+              onPrimary: Colors.black,     // icon color
+              surface: Colors.white,
+              onSurface: Colors.black,
+            ),
+            dialogBackgroundColor: Colors.white,
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.black, // Cancel / OK 按鈕文字顏色
+              ),
+            ),
+            inputDecorationTheme: const InputDecorationTheme(
+              focusedBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: Colors.black),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: Colors.black),
+              ),
+              labelStyle: TextStyle(color: Colors.black),
+            ),
+          ),
+          child: child!,
+        ),
       );
       if (picked != null) {
         setState(() {
@@ -196,6 +222,32 @@ class _HistoryPageState extends State<HistoryPage> {
         initialDate: _selectedDate,
         firstDate: DateTime(2020),
         lastDate: DateTime.now(),
+        builder: (context, child) => Theme(
+              data: ThemeData().copyWith(
+            colorScheme: ColorScheme.light(
+              primary: Color(0xFFFFB74D), // 主色
+              onPrimary: Colors.black,     // icon color
+              surface: Colors.white,
+              onSurface: Colors.black,
+            ),
+            dialogBackgroundColor: Colors.white,
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.black, // Cancel / OK 按鈕文字顏色
+              ),
+            ),
+            inputDecorationTheme: const InputDecorationTheme(
+              focusedBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: Colors.black),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: Colors.black),
+              ),
+              labelStyle: TextStyle(color: Colors.black),
+            ),
+          ),
+          child: child!,
+        ),
       );
       if (picked != null) {
         setState(() {
@@ -209,7 +261,9 @@ class _HistoryPageState extends State<HistoryPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
+        backgroundColor: Colors.white,
         title: Text(_isMonthView ? 'Monthly History' : 'Daily History'),
         actions: [
           IconButton(
@@ -239,6 +293,10 @@ class _HistoryPageState extends State<HistoryPage> {
                     _isMonthView
                         ? DateFormat('yyyy/MM').format(_selectedDate)
                         : DateFormat('yyyy/MM/dd').format(_selectedDate),
+                        style: const TextStyle(color: Colors.black), // 文字顏色
+                  ),
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.black, // ripple 特效顏色
                   ),
                 ),
               ],
@@ -248,7 +306,7 @@ class _HistoryPageState extends State<HistoryPage> {
             padding: const EdgeInsets.all(16),
             margin: const EdgeInsets.symmetric(horizontal: 16),
             decoration: BoxDecoration(
-              color: Color.fromARGB(255, 255, 206, 133),
+              color: Colors.orange.withOpacity(0.25),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Column(
@@ -606,7 +664,7 @@ class _HistoryPageState extends State<HistoryPage> {
                                         icon: const Icon(Icons.edit),
                                         label: const Text('Edit Record'),
                                         style: ElevatedButton.styleFrom(
-                                          backgroundColor: Colors.blue,
+                                          backgroundColor: Color(0xFFFFB74D),
                                           foregroundColor: Colors.white,
                                           padding: const EdgeInsets.symmetric(
                                             vertical: 12,
