@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:calh2o/pages/main_page.dart';
 import 'package:calh2o/pages/startup_page/profile_setup_page.dart';
 import 'package:calh2o/widgets/login_button.dart';
+import 'package:calh2o/widgets/keyboard_aware_layout.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -29,9 +30,10 @@ class _LoginPageState extends State<LoginPage>
       vsync: this,
       duration: const Duration(milliseconds: 800),
     );
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _fadeController, curve: Curves.easeIn),
-    );
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _fadeController, curve: Curves.easeIn));
 
     // 啟動淡入
     _fadeController.forward();
@@ -50,10 +52,11 @@ class _LoginPageState extends State<LoginPage>
     setState(() => _loading = true);
 
     try {
-      final userDoc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(_account)
-          .get();
+      final userDoc =
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(_account)
+              .get();
 
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('account', _account);
@@ -70,10 +73,9 @@ class _LoginPageState extends State<LoginPage>
           _showMessage('Incorrect password');
         }
       } else {
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(_account)
-            .set({'password': _password});
+        await FirebaseFirestore.instance.collection('users').doc(_account).set({
+          'password': _password,
+        });
 
         _showMessage('Account created. Please complete your profile.');
         Navigator.pushReplacement(
@@ -115,55 +117,68 @@ class _LoginPageState extends State<LoginPage>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       backgroundColor: Colors.white,
-      body: FadeTransition(
-        opacity: _fadeAnimation,
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                children: [
-                  const Spacer(),
-                  const Text(
-                    'Login to CalH2O',
-                    style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 24),
-                  TextFormField(
-                    decoration: _inputDecoration('Username'),
-                    onSaved: (value) => _account = value!.trim(),
-                    validator: (value) =>
-                        value == null || value.isEmpty ? 'Enter username' : null,
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    decoration: _inputDecoration('Password'),
-                    obscureText: true,
-                    onSaved: (value) => _password = value!.trim(),
-                    validator: (value) =>
-                        value == null || value.isEmpty ? 'Enter password' : null,
-                  ),
-                  const SizedBox(height: 24),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 56,
-                    child: _loading
-                        ? const Center(
-                            child: CircularProgressIndicator(
-                              color: Color(0xFFFFB74D), // 這裡用品牌色
-                            ),
-                          )
-                        : LoginButton(
-                            text: 'Login',
-                            onPressed: _handleLogin,
-                            width: double.infinity,
-                            height: 56,
-                          ),
-                  ),
-                  const Spacer(),
-                ],
+      body: KeyboardAwareLayout(
+        child: FadeTransition(
+          opacity: _fadeAnimation,
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  children: [
+                    const Spacer(),
+                    const Text(
+                      'Login to CalH2O',
+                      style: TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    TextFormField(
+                      decoration: _inputDecoration('Username'),
+                      onSaved: (value) => _account = value!.trim(),
+                      validator:
+                          (value) =>
+                              value == null || value.isEmpty
+                                  ? 'Enter username'
+                                  : null,
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      decoration: _inputDecoration('Password'),
+                      obscureText: true,
+                      onSaved: (value) => _password = value!.trim(),
+                      validator:
+                          (value) =>
+                              value == null || value.isEmpty
+                                  ? 'Enter password'
+                                  : null,
+                    ),
+                    const SizedBox(height: 24),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 56,
+                      child:
+                          _loading
+                              ? const Center(
+                                child: CircularProgressIndicator(
+                                  color: Color(0xFFFFB74D), // 這裡用品牌色
+                                ),
+                              )
+                              : LoginButton(
+                                text: 'Login',
+                                onPressed: _handleLogin,
+                                width: double.infinity,
+                                height: 56,
+                              ),
+                    ),
+                    const Spacer(),
+                  ],
+                ),
               ),
             ),
           ),
