@@ -4,69 +4,87 @@ import 'dart:convert';
 
 class WaterChartWidget extends StatelessWidget {
   final List<Map<String, dynamic>> waterData;
-  final int period;
 
-  const WaterChartWidget({Key? key, required this.waterData, required this.period}) : super(key: key);
-
-  List<Map<String, dynamic>> _getGroupedWaterData() {
-    List<Map<String, dynamic>> groupedData = [];
-
-    if (period == 7) {
-      // 前7天，每一天顯示一個點
-      groupedData = waterData;
-    } else if (period == 30) {
-      // 前30天，每5天顯示一個點
-      for (int i = 0; i < waterData.length; i += 5) {
-        double totalMl = 0;
-        String date = waterData[i]['date'];
-        // 累加每5天的水量
-        for (int j = i; j < i + 5 && j < waterData.length; j++) {
-          totalMl += waterData[j]['ml'];
-        }
-        groupedData.add({'date': date, 'ml': totalMl});
-      }
-    } else if (period == 360) {
-      // 前360天，每30天顯示一個點
-      for (int i = 0; i < waterData.length; i += 30) {
-        double totalMl = 0;
-        String date = waterData[i]['date'];
-        // 累加每30天的水量
-        for (int j = i; j < i + 30 && j < waterData.length; j++) {
-          totalMl += waterData[j]['ml'];
-        }
-        groupedData.add({'date': date, 'ml': totalMl});
-      }
-    }
-
-    return groupedData;
-  }
+  const WaterChartWidget({Key? key, required this.waterData}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    List<Map<String, dynamic>> groupedData = _getGroupedWaterData();
+    if (waterData.isEmpty) {
+      return const Center(child: Text("No data available for this period."));
+    }
 
-    // JS Option for water line chart
     final lineChartOption = '''
     {
-      tooltip: { trigger: 'axis' },
-      xAxis: { type: 'category', data: ${jsonEncode(groupedData.map((e) => e['date']).toList())} },
-      yAxis: { type: 'value' },
+      title: {
+        text: 'Water Intake Analysis',
+        left: 'center',
+        textStyle: {
+          color: '#333',
+          fontSize: 18,
+          fontWeight: 'bold'
+        }
+      },
+      tooltip: {
+        trigger: 'axis',
+        formatter: '{b0}<br/>Intake: {c0} ml'
+      },
+      grid: {
+        left: '3%',
+        right: '4%',
+        bottom: '3%',
+        containLabel: true
+      },
+      xAxis: {
+        type: 'category',
+        boundaryGap: false,
+        data: ${jsonEncode(waterData.map((e) => e['date']).toList())},
+        axisLine: { lineStyle: { color: '#888' } },
+        name: 'Date',
+        nameLocation: 'middle',
+        nameGap: 30
+      },
+      yAxis: {
+        type: 'value',
+        name: 'Intake (ml)',
+        nameLocation: 'middle',
+        nameGap: 50,
+        axisLine: { show: true, lineStyle: { color: '#888' } },
+        splitLine: { lineStyle: { color: '#eee' } }
+      },
       series: [{
-        name: '水量',
+        name: 'Water Intake',
         type: 'line',
-        data: ${jsonEncode(groupedData.map((e) => e['ml']).toList())},
+        data: ${jsonEncode(waterData.map((e) => (e['ml'] as num).round()).toList())},
         smooth: true,
         symbol: 'circle',
-        symbolSize: 6
+        symbolSize: 8,
+        lineStyle: {
+          color: '#5470C6',
+          width: 3
+        },
+        itemStyle: {
+          color: '#5470C6',
+          borderColor: '#fff',
+          borderWidth: 2
+        },
+        areaStyle: {
+          color: {
+            type: 'linear',
+            x: 0,
+            y: 0,
+            x2: 0,
+            y2: 1,
+            colorStops: [{
+                offset: 0, color: 'rgba(84, 112, 198, 0.5)'
+            }, {
+                offset: 1, color: 'rgba(84, 112, 198, 0.1)'
+            }]
+          }
+        }
       }]
     }
     ''';
 
-    return Expanded(
-      flex: 1,
-      child: Echarts(
-        option: lineChartOption,
-      ),
-    );
+    return Echarts(option: lineChartOption);
   }
 }
