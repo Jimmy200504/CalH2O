@@ -1,3 +1,4 @@
+import 'package:calh2o/widgets/button_or_other_modifications/continue_button.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'goal_selection_page.dart';
@@ -33,7 +34,7 @@ class _PersonalInfoPageState extends State<PersonalInfoPage> {
         foregroundColor: Colors.black,
         elevation: 0,
       ),
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.white, // 👈 整個背景白色
       body: Padding(
         padding: const EdgeInsets.all(24.0),
         child: Column(
@@ -41,7 +42,7 @@ class _PersonalInfoPageState extends State<PersonalInfoPage> {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Image.asset('assets/minion.png', height: 120),
+                Image.asset('assets/animation/normal/frame_0.png', height: 120),
                 const SizedBox(width: 16),
                 const Expanded(
                   child: Text(
@@ -52,10 +53,10 @@ class _PersonalInfoPageState extends State<PersonalInfoPage> {
               ],
             ),
             const SizedBox(height: 32),
-
             Expanded(
               child: SingleChildScrollView(
                 child: Card(
+                  color: Colors.white, // 👈 Card 背景白色
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),
@@ -78,11 +79,9 @@ class _PersonalInfoPageState extends State<PersonalInfoPage> {
                           TextFormField(
                             decoration: _inputDecoration('Height (cm)'),
                             keyboardType: TextInputType.number,
-                            validator:
-                                (value) =>
-                                    value == null || value.isEmpty
-                                        ? 'Enter your height'
-                                        : null,
+                            validator: (value) => value == null || value.isEmpty
+                                ? 'Enter your height'
+                                : null,
                             onSaved: (value) => _height = int.parse(value!),
                           ),
                           const SizedBox(height: 16),
@@ -97,11 +96,9 @@ class _PersonalInfoPageState extends State<PersonalInfoPage> {
                           TextFormField(
                             decoration: _inputDecoration('Weight (kg)'),
                             keyboardType: TextInputType.number,
-                            validator:
-                                (value) =>
-                                    value == null || value.isEmpty
-                                        ? 'Enter your weight'
-                                        : null,
+                            validator: (value) => value == null || value.isEmpty
+                                ? 'Enter your weight'
+                                : null,
                             onSaved: (value) => _weight = int.parse(value!),
                           ),
                           const SizedBox(height: 16),
@@ -115,42 +112,30 @@ class _PersonalInfoPageState extends State<PersonalInfoPage> {
                           const SizedBox(height: 8),
                           DropdownButtonFormField<String>(
                             value: _activityLevel,
-                            items:
-                                _activityOptions.map((String level) {
-                                  return DropdownMenuItem<String>(
-                                    value: level,
-                                    child: Text(level),
-                                  );
-                                }).toList(),
+                            decoration: _inputDecoration(''), // 👈 背景白色
+                            dropdownColor: Colors.white, // 👈 Dropdown 也白色
+                            items: _activityOptions.map((String level) {
+                              return DropdownMenuItem<String>(
+                                value: level,
+                                child: Text(level),
+                              );
+                            }).toList(),
                             onChanged: (value) {
                               setState(() {
                                 _activityLevel = value!;
                               });
                             },
-                            decoration: InputDecoration(
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                            ),
                           ),
-                          SizedBox(height: 32),
+                          const SizedBox(height: 32),
                           SizedBox(
                             width: double.infinity,
-                            child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 16,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                              ),
+                            child: ContinueButton(
+                              text: 'Continue',
                               onPressed: () async {
                                 if (_formKey.currentState!.validate()) {
                                   _formKey.currentState!.save();
 
-                                  final prefs =
-                                      await SharedPreferences.getInstance();
+                                  final prefs = await SharedPreferences.getInstance();
                                   await prefs.setInt('height', _height);
                                   await prefs.setInt('weight', _weight);
                                   await prefs.setString(
@@ -164,26 +149,23 @@ class _PersonalInfoPageState extends State<PersonalInfoPage> {
                                         .collection('users')
                                         .doc(account)
                                         .set({
-                                          'height': _height,
-                                          'weight': _weight,
-                                          'activityLevel': _activityLevel,
-                                        }, SetOptions(merge: true));
+                                      'height': _height,
+                                      'weight': _weight,
+                                      'activityLevel': _activityLevel,
+                                    }, SetOptions(merge: true));
                                   }
                                   Navigator.pushReplacement(
                                     context,
                                     MaterialPageRoute(
-                                      builder:
-                                          (context) =>
-                                              const GoalSelectionPage(),
+                                      builder: (context) => const GoalSelectionPage(),
                                     ),
                                   );
                                 }
                               },
-                              child: const Text(
-                                'Continue',
-                                style: TextStyle(fontSize: 18),
-                              ),
+                              width: double.infinity,
+                              height: 56,
                             ),
+
                           ),
                         ],
                       ),
@@ -200,8 +182,19 @@ class _PersonalInfoPageState extends State<PersonalInfoPage> {
 
   InputDecoration _inputDecoration(String hintText) {
     return InputDecoration(
+      filled: true,
+      fillColor: Colors.white, // 👈 輸入框背景白色
       hintText: hintText,
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+      hintStyle: const TextStyle(color: Colors.black54),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: BorderSide(color: Colors.grey.shade400),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: const BorderSide(color: Colors.black, width: 2),
+      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
     );
   }
 }

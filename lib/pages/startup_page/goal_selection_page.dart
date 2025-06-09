@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:lottie/lottie.dart';
+import 'package:calh2o/widgets/button_or_other_modifications/lets_start_button.dart';
 
 class GoalSelectionPage extends StatefulWidget {
   const GoalSelectionPage({super.key});
@@ -14,6 +15,8 @@ class GoalSelectionPage extends StatefulWidget {
 
 class _GoalSelectionPageState extends State<GoalSelectionPage>
     with TickerProviderStateMixin {
+
+  bool _isSaving = false;
   final List<String> _goals = [
     'Maintain weight',
     'Drink more water',
@@ -49,6 +52,9 @@ class _GoalSelectionPageState extends State<GoalSelectionPage>
   }
 
   Future<void> _saveGoalAndStart() async {
+    setState(() {
+      _isSaving = true;
+    });
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('goal', _selectedGoal);
 
@@ -111,6 +117,7 @@ class _GoalSelectionPageState extends State<GoalSelectionPage>
 
     // 播放底部填滿動畫
     await _fillController.forward();
+    setState(() => _isSaving = false);
     setState(() => _showCheckAnimation = true);
   }
 
@@ -146,7 +153,7 @@ class _GoalSelectionPageState extends State<GoalSelectionPage>
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Image.asset('assets/minion.png', height: 120),
+                    Image.asset('assets/animation/fat/frame_0.png', height: 120),
                     const SizedBox(width: 16),
                     const Expanded(
                       child: Text(
@@ -161,6 +168,7 @@ class _GoalSelectionPageState extends State<GoalSelectionPage>
                 ),
                 const SizedBox(height: 32),
                 Card(
+                  color: Colors.white, // 卡片背景白色
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -180,37 +188,38 @@ class _GoalSelectionPageState extends State<GoalSelectionPage>
                         const SizedBox(height: 12),
                         DropdownButtonFormField<String>(
                           value: _selectedGoal,
-                          items:
-                              _goals.map((String goal) {
-                                return DropdownMenuItem<String>(
-                                  value: goal,
-                                  child: Text(goal),
-                                );
-                              }).toList(),
+                          items: _goals.map((String goal) {
+                            return DropdownMenuItem<String>(
+                              value: goal,
+                              child: Text(goal),
+                            );
+                          }).toList(),
                           onChanged: (value) {
                             setState(() {
                               _selectedGoal = value!;
                             });
                           },
                           decoration: InputDecoration(
-                            border: OutlineInputBorder(
+                            filled: true,
+                            fillColor: Colors.white,
+                            enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
+                              borderSide: const BorderSide(color: Colors.black, width: 1.5),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: const BorderSide(color: Colors.black, width: 2),
                             ),
                           ),
+                          dropdownColor: Colors.white,
                         ),
                         const SizedBox(height: 24),
-                        ElevatedButton(
+                        LetsStartButton(
+                          text: "Let's Start",
+                          isSaving: _isSaving,
                           onPressed: _saveGoalAndStart,
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                          ),
-                          child: const Text(
-                            "Let’s Start",
-                            style: TextStyle(fontSize: 18),
-                          ),
+                          width: double.infinity,
+                          height: 56,
                         ),
                       ],
                     ),

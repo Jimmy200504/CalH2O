@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:calh2o/widgets/button_or_other_modifications/continue_button.dart';
 
 class ProfileSetupPage extends StatefulWidget {
   const ProfileSetupPage({super.key});
@@ -40,6 +41,32 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
       initialDate: initial,
       firstDate: DateTime(1900),
       lastDate: now,
+      builder: (context, child) => Theme(
+        data: ThemeData().copyWith(
+          colorScheme: ColorScheme.light(
+            primary: Color(0xFFFFB74D),
+            onPrimary: Colors.black,
+            surface: Colors.white,
+            onSurface: Colors.black,
+          ),
+          dialogBackgroundColor: Colors.white,
+          textButtonTheme: TextButtonThemeData(
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.black,
+            ),
+          ),
+          inputDecorationTheme: const InputDecorationTheme(
+            focusedBorder: OutlineInputBorder(
+              borderSide: BorderSide(color: Colors.black), // 👈 輸入框聚焦時黑色
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderSide: BorderSide(color: Colors.black), // 👈 輸入框啟用時黑色
+            ),
+            labelStyle: TextStyle(color: Colors.black), // 👈 Label（Enter Date）文字顏色
+          ),
+        ),
+        child: child!,
+      ),
     );
     if (dt != null) {
       setState(() {
@@ -68,7 +95,6 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
         'name': _name,
         'gender': _gender,
         'birthday': _birthday,
-        'EB_Type': 'Vicious',
       }, SetOptions(merge: true));
 
       Navigator.push(
@@ -84,16 +110,19 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
 
   InputDecoration _inputDecoration(String hintText) {
     return InputDecoration(
+      filled: true,
+      fillColor: Colors.white,  // 白色背景
       hintText: hintText,
+      hintStyle: const TextStyle(color: Colors.black54),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide(color: Colors.grey.shade400),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: BorderSide(color: Colors.blue, width: 2),
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Colors.black, width: 2),
       ),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
     );
   }
 
@@ -102,7 +131,11 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
       padding: const EdgeInsets.only(bottom: 8.0),
       child: Text(
         text,
-        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        style: const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+          color: Colors.black,  // 可根據需求調成其他顏色
+        ),
       ),
     );
   }
@@ -111,7 +144,6 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        // leading: const BackButton(),
         title: const Text(""),
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
@@ -125,7 +157,7 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Image.asset('assets/minion.png', height: 120),
+                Image.asset('assets/animation/slim/frame_0.png', height: 120),
                 const SizedBox(width: 16),
                 const Expanded(
                   child: Text(
@@ -139,6 +171,7 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
             Expanded(
               child: SingleChildScrollView(
                 child: Card(
+                  color: Colors.white,  // 白色背景
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),
@@ -153,34 +186,32 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
                           buildLabel('Name'),
                           TextFormField(
                             decoration: _inputDecoration('Name'),
-                            validator:
-                                (val) =>
-                                    val == null || val.isEmpty
-                                        ? 'Please enter your name'
-                                        : null,
+                            validator: (val) => val == null || val.isEmpty
+                                ? 'Please enter your name'
+                                : null,
                             onSaved: (val) => _name = val!.trim(),
                           ),
                           const SizedBox(height: 16),
 
                           buildLabel('Gender'),
+                          buildLabel('Gender'),
                           DropdownButtonFormField<String>(
                             value: _gender,
                             decoration: _inputDecoration(''),
-                            items:
-                                _genderOptions
-                                    .map(
-                                      (g) => DropdownMenuItem(
-                                        value: g,
-                                        child: Text(g),
-                                      ),
-                                    )
-                                    .toList(),
+                            dropdownColor: Colors.white,  // 👈 下拉背景改成白色
+                            items: _genderOptions
+                                .map(
+                                  (g) => DropdownMenuItem(
+                                    value: g,
+                                    child: Text(g),
+                                  ),
+                                )
+                                .toList(),
                             onChanged: (v) => setState(() => _gender = v!),
                           ),
                           const SizedBox(height: 16),
 
                           buildLabel('Birthday'),
-                          // 只可點 Icon 叫出 Picker，文字框唯讀
                           TextFormField(
                             controller: _birthdayController,
                             readOnly: true,
@@ -199,28 +230,15 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
                               }
                               return null;
                             },
-                            onSaved:
-                                (_) => _birthday = _birthdayController.text,
+                            onSaved: (_) => _birthday = _birthdayController.text,
                           ),
                           const SizedBox(height: 16),
 
-                          SizedBox(
+                          ContinueButton(
+                            text: 'Continue',
+                            onPressed: _saveAndContinue,
                             width: double.infinity,
-                            child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 16,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                              ),
-                              onPressed: _saveAndContinue,
-                              child: const Text(
-                                'Continue',
-                                style: TextStyle(fontSize: 18),
-                              ),
-                            ),
+                            height: 56,
                           ),
                         ],
                       ),

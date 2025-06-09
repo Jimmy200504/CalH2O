@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/services.dart';
+import 'package:calh2o/widgets/button_or_other_modifications/save_button.dart';
 
 class SettingPage extends StatefulWidget {
   const SettingPage({super.key});
@@ -13,6 +14,7 @@ class SettingPage extends StatefulWidget {
 }
 
 class _SettingPageState extends State<SettingPage> {
+  
   // controllers
   final TextEditingController _birthdayController = TextEditingController();
   final TextEditingController _heightController = TextEditingController();
@@ -110,6 +112,21 @@ class _SettingPageState extends State<SettingPage> {
       initialDate: initial,
       firstDate: DateTime(1900),
       lastDate: now,
+      builder: (context, child) => Theme(
+        data: ThemeData().copyWith(
+          colorScheme: ColorScheme.light(
+            primary: Color(0xFFFFB74D),
+            onPrimary: Colors.black,
+            surface: Colors.white,
+            onSurface: Colors.black,
+          ),
+          dialogBackgroundColor: Colors.white,
+          textButtonTheme: TextButtonThemeData(
+            style: TextButton.styleFrom(foregroundColor: Colors.black),
+          ),
+        ),
+        child: child!,
+      ),
     );
     if (dt != null) {
       _birthdayController.text =
@@ -308,24 +325,10 @@ class _SettingPageState extends State<SettingPage> {
               onChanged: (v) => setState(() => _ebType = v!),
             ),
             const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: _isSaving ? null : _saveUserData,
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              child:
-                  _isSaving
-                      ? const CircularProgressIndicator(
-                        color: Colors.white,
-                        strokeWidth: 2,
-                      )
-                      : const Text(
-                        'Save Changes',
-                        style: TextStyle(fontSize: 18),
-                      ),
+            SaveButton(
+              text: 'Save Changes',
+              isSaving: _isSaving,
+              onPressed: _saveUserData,
             ),
           ],
         ),
@@ -346,20 +349,28 @@ class _SettingPageState extends State<SettingPage> {
         const SizedBox(height: 4),
         DropdownButtonFormField<String>(
           value: value,
-          items:
-              items
-                  .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                  .toList(),
+          items: items.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
           onChanged: onChanged,
-          decoration: const InputDecoration(
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: Colors.white,  // 👈 背景白
+            enabledBorder: OutlineInputBorder(
+              borderSide: const BorderSide(color: Colors.black), // 👈 黑色邊框
+              borderRadius: BorderRadius.circular(10),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderSide: const BorderSide(color: Colors.black, width: 2), // 👈 黑色邊框
+              borderRadius: BorderRadius.circular(10),
+            ),
             isDense: true,
           ),
+          dropdownColor: Colors.white,  // 👈 下拉選單背景白
         ),
       ],
     );
   }
 
+  // Date Field
   Widget _buildDateField({
     required String label,
     required TextEditingController controller,
@@ -374,8 +385,17 @@ class _SettingPageState extends State<SettingPage> {
           controller: controller,
           readOnly: true,
           decoration: InputDecoration(
+            filled: true,
+            fillColor: Colors.white,  // 👈 背景白
             hintText: 'YYYYMMDD',
-            border: const OutlineInputBorder(),
+            enabledBorder: OutlineInputBorder(
+              borderSide: const BorderSide(color: Colors.black), // 👈 黑色邊框
+              borderRadius: BorderRadius.circular(10),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderSide: const BorderSide(color: Colors.black, width: 2), // 👈 黑色邊框
+              borderRadius: BorderRadius.circular(10),
+            ),
             suffixIcon: IconButton(
               icon: const Icon(Icons.calendar_today),
               onPressed: onIconPressed,
@@ -393,11 +413,22 @@ class _SettingPageState extends State<SettingPage> {
     return TextField(
       controller: controller,
       decoration: InputDecoration(
+        filled: true,
+        fillColor: Colors.white,  // 👈 白色背景
         labelText: label,
-        border: const OutlineInputBorder(),
+        labelStyle: const TextStyle(color: Colors.black),  // 👈 Label 文字顏色黑色
+        enabledBorder: OutlineInputBorder(
+          borderSide: const BorderSide(color: Colors.black), // 👈 黑色邊框
+          borderRadius: BorderRadius.circular(10),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderSide: const BorderSide(color: Colors.black, width: 2), // 👈 黑色邊框
+          borderRadius: BorderRadius.circular(10),
+        ),
       ),
       keyboardType: TextInputType.number,
       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
     );
   }
+
 }
