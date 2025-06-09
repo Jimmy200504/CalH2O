@@ -24,6 +24,9 @@ class NameDateRow extends StatefulWidget {
   /// 初始顯示的圖片
   final String? initialImage;
 
+  /// 初始日期時間
+  final DateTime? initialDateTime;
+
   const NameDateRow({
     super.key,
     required this.initialName,
@@ -32,6 +35,7 @@ class NameDateRow extends StatefulWidget {
     required this.onTimeChanged,
     required this.onImageCaptured,
     this.initialImage,
+    this.initialDateTime,
   });
 
   @override
@@ -40,8 +44,8 @@ class NameDateRow extends StatefulWidget {
 
 class _NameDateRowState extends State<NameDateRow> {
   late TextEditingController _nameController;
-  DateTime _selectedDate = DateTime.now();
-  TimeOfDay _selectedTime = TimeOfDay.now();
+  late DateTime _selectedDate;
+  late TimeOfDay _selectedTime;
   String? _capturedImageBase64;
 
   @override
@@ -49,6 +53,15 @@ class _NameDateRowState extends State<NameDateRow> {
     super.initState();
     _nameController = TextEditingController(text: widget.initialName);
     _capturedImageBase64 = widget.initialImage;
+
+    // 設置初始時間
+    if (widget.initialDateTime != null) {
+      _selectedDate = widget.initialDateTime!;
+      _selectedTime = TimeOfDay.fromDateTime(widget.initialDateTime!);
+    } else {
+      _selectedDate = DateTime.now();
+      _selectedTime = TimeOfDay.now();
+    }
   }
 
   @override
@@ -59,6 +72,11 @@ class _NameDateRowState extends State<NameDateRow> {
     }
     if (widget.initialImage != oldWidget.initialImage) {
       _capturedImageBase64 = widget.initialImage;
+    }
+    if (widget.initialDateTime != oldWidget.initialDateTime &&
+        widget.initialDateTime != null) {
+      _selectedDate = widget.initialDateTime!;
+      _selectedTime = TimeOfDay.fromDateTime(widget.initialDateTime!);
     }
   }
 
@@ -140,12 +158,7 @@ class _NameDateRowState extends State<NameDateRow> {
                     _capturedImageBase64 != null
                         ? ClipRRect(
                           borderRadius: BorderRadius.circular(14),
-                          child: Image.memory(
-                            base64Decode(_capturedImageBase64!.split(',')[1]),
-                            fit: BoxFit.cover,
-                            width: double.infinity,
-                            height: double.infinity,
-                          ),
+                          child: _buildImageFromBase64(_capturedImageBase64!),
                         )
                         : Center(
                           child: Icon(
@@ -245,5 +258,58 @@ class _NameDateRowState extends State<NameDateRow> {
         ],
       ),
     );
+  }
+
+  Widget _buildImageFromBase64(String base64String) {
+    try {
+      if (base64String.isEmpty) {
+        return const Center(
+          child: Icon(Icons.image_not_supported, color: Colors.grey, size: 50),
+        );
+      }
+
+      // Remove data URL prefix if present
+      String cleanBase64 = base64String;
+      if (base64String.contains('base64,')) {
+        cleanBase64 = base64String.split('base64,')[1];
+      }
+
+      // Check if the string is valid base64
+      if (!cleanBase64.contains(RegExp(r'^[a-zA-Z0-9+/=]+$'))) {
+        return const Center(
+          child: Icon(Icons.error_outline, color: Colors.red, size: 50),
+        );
+      }
+
+      // Add padding if needed
+      String paddedBase64 = cleanBase64;
+      while (paddedBase64.length % 4 != 0) {
+        paddedBase64 += '=';
+      }
+
+      // Try to decode the base64 string
+      final bytes = base64Decode(paddedBase64);
+      if (bytes.isEmpty) {
+        return const Center(
+          child: Icon(Icons.error_outline, color: Colors.red, size: 50),
+        );
+      }
+
+      return Image.memory(
+        bytes,
+        fit: BoxFit.cover,
+        width: double.infinity,
+        height: double.infinity,
+        errorBuilder: (context, error, stackTrace) {
+          return const Center(
+            child: Icon(Icons.error_outline, color: Colors.red, size: 50),
+          );
+        },
+      );
+    } catch (e) {
+      return const Center(
+        child: Icon(Icons.error_outline, color: Colors.red, size: 50),
+      );
+    }
   }
 }
