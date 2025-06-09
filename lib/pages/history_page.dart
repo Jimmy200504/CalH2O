@@ -324,7 +324,7 @@ class _HistoryPageState extends State<HistoryPage> {
               crossAxisCount: 2,
               crossAxisSpacing: 12,
               mainAxisSpacing: 12,
-              childAspectRatio: 1.95,
+              childAspectRatio: 1.7,
             ),
             itemBuilder: (context, index) {
               final item = summaryData[index];

@@ -27,12 +27,7 @@ Future<void> initializeCameras() async {
     if (cameras.isEmpty) {
       debugPrint('No cameras available on this device');
     } else {
-      debugPrint('Found ${cameras.length} cameras:');
-      for (var camera in cameras) {
-        debugPrint(
-          'Camera: ${camera.name}, lensDirection: ${camera.lensDirection}',
-        );
-      }
+      debugPrint('Found ${cameras.length} cameras');
     }
   } on CameraException catch (e) {
     switch (e.code) {
