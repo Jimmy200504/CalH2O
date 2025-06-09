@@ -53,6 +53,11 @@ class _MainPageState extends State<MainPage> {
   bool _showSubButtons = false;
   int _comboCount = 0;
 
+  //
+  int _mealCaloriesTarget = 0; // 新增：每餐目標卡路里
+  int _latestMealCalories = 0;
+  bool _initialSnapshotHandled = false;
+
   final GlobalKey _addKey = GlobalKey();
   final GlobalKey _historyKey = GlobalKey();
   final GlobalKey _comboKey = GlobalKey();
@@ -72,6 +77,7 @@ class _MainPageState extends State<MainPage> {
       });
     });
     _loadTargets();
+    _fetchLatestMealCalories();
     _setupNutritionListener();
     _updateCombo();
   }
@@ -104,6 +110,9 @@ class _MainPageState extends State<MainPage> {
         _carbsTarget = newCarbTarget;
         _fatsTarget = newFatTarget;
 
+        _mealCaloriesTarget = (_caloriesTarget / 3).round();  // ⭐️ 每餐卡路里目標
+        print('🔥 每餐建議攝取量: $_mealCaloriesTarget kcal');  // 印出來確認
+
         // **重算進度**：載入完新目標後，馬上把目前數值除以目標，算出 ProgressBar
         _caloriesProgress = (_calories / _caloriesTarget).clamp(0.0, 1.0);
         _waterProgress = (_water / _waterTarget).clamp(0.0, 1.0);
@@ -126,6 +135,55 @@ class _MainPageState extends State<MainPage> {
         _carbsProgress = (_carbs / _carbsTarget).clamp(0.0, 1.0);
         _fatsProgress = (_fats / _fatsTarget).clamp(0.0, 1.0);
       });
+    }
+  }
+  void _fetchLatestMealCalories() {
+    SharedPreferences.getInstance().then((prefs) {
+      final account = prefs.getString('account');
+      if (account == null) return;
+
+      FirebaseFirestore.instance
+          .collection('users')
+          .doc(account)
+          .collection('nutrition_records')
+          .orderBy('timestamp', descending: true)
+          .limit(1)
+          .snapshots()
+          .listen((querySnapshot) {
+            if (!_initialSnapshotHandled) {
+              _initialSnapshotHandled = true;
+                      // 這是初始化
+              debugPrint("第一次snapshot，略過或處理初始化");
+            }
+            else {
+              if (querySnapshot.docs.isNotEmpty) {
+                final latestDoc = querySnapshot.docs.first;
+                final latestCalories = (latestDoc['calories'] as num).toInt();
+
+                setState(() {
+                  _latestMealCalories += latestCalories;
+                });
+                print('🔥 每餐建議攝取量: $_mealCaloriesTarget kcal');  // 印出來確認
+                debugPrint("🔥 最新一餐 calories: $_latestMealCalories kcal");
+              }
+              else {
+                setState(() {
+                  _latestMealCalories = 0;
+                });
+                debugPrint("🔥 最新一餐 calories: $_latestMealCalories kcal");
+              }
+            }
+          });
+    });
+  }
+
+  BodyType determineBodyType() {
+    if (_latestMealCalories >= _mealCaloriesTarget * 1.2) {
+      return BodyType.fat;
+    } else if (_latestMealCalories <= _mealCaloriesTarget * 0.8) {
+      return BodyType.slim;
+    } else {
+      return BodyType.normal;
     }
   }
 
@@ -517,7 +575,10 @@ class _MainPageState extends State<MainPage> {
                         child: FittedBox(
                           fit: BoxFit.contain,
                           key: _petKey,
-                          child: const FrameAnimationWidget(size: 200),
+                          child: FrameAnimationWidget(
+                            size: 200,
+                            bodyType: determineBodyType(),
+                          ),
                         ),
                       ),
                     ],
