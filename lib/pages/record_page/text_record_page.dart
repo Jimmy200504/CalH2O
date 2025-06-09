@@ -16,7 +16,9 @@ import '../../model/nutrition_draft.dart';
 import '../../services/cloud_function_fetch/generateEBMessage.dart';
 
 class TextRecordPage extends StatefulWidget {
-  const TextRecordPage({super.key});
+  final Map<String, dynamic>? initialRecord;
+
+  const TextRecordPage({super.key, this.initialRecord});
 
   @override
   _TextRecordPageState createState() => _TextRecordPageState();
@@ -61,17 +63,36 @@ class _TextRecordPageState extends State<TextRecordPage> {
   @override
   void initState() {
     super.initState();
-    // 從 Provider 讀取 Draft
-    final draft = context.read<NutritionDraft>();
-    if (draft.nutritionResult != null) {
-      _nutritionResult = draft.nutritionResult!;
-      _comment = draft.comment;
-      _timestamp = draft.timestamp;
-      _tag = 'Breakfast';
+    // 如果有初始記錄，使用它來初始化資料
+    if (widget.initialRecord != null) {
+      _nutritionResult = NutritionResult(
+        foods: [],
+        imageName: widget.initialRecord!['imageName'] ?? '',
+        calories: widget.initialRecord!['calories'] ?? 0,
+        carbohydrate: widget.initialRecord!['carbohydrate'] ?? 0,
+        protein: widget.initialRecord!['protein'] ?? 0,
+        fat: widget.initialRecord!['fat'] ?? 0,
+      );
+      _comment = widget.initialRecord!['comment'] ?? '';
+      _timestamp = widget.initialRecord!['timestamp'] as Timestamp?;
+      _tag = widget.initialRecord!['tag'] ?? 'Breakfast';
       _selectedTagIndex = _getMealTags()
           .indexWhere((m) => m['label'] == _tag)
           .clamp(0, _getMealTags().length - 1);
-      _capturedImageBase64 = draft.base64Image;
+      _capturedImageBase64 = widget.initialRecord!['base64Image'];
+    } else {
+      // 從 Provider 讀取 Draft
+      final draft = context.read<NutritionDraft>();
+      if (draft.nutritionResult != null) {
+        _nutritionResult = draft.nutritionResult!;
+        _comment = draft.comment;
+        _timestamp = draft.timestamp;
+        _tag = 'Breakfast';
+        _selectedTagIndex = _getMealTags()
+            .indexWhere((m) => m['label'] == _tag)
+            .clamp(0, _getMealTags().length - 1);
+        _capturedImageBase64 = draft.base64Image;
+      }
     }
   }
 
@@ -146,7 +167,18 @@ class _TextRecordPageState extends State<TextRecordPage> {
               // 1. 必填检查
               if (_nutritionResult.imageName.isEmpty) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Please enter a name')),
+                  SnackBar(
+                    content: Text(
+                      'Please enter a name',
+                      style: TextStyle(fontSize: 12, color: Colors.black),
+                    ),
+                    backgroundColor: Colors.orange[100],
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    margin: EdgeInsets.all(8),
+                  ),
                 );
                 return;
               }
@@ -159,19 +191,43 @@ class _TextRecordPageState extends State<TextRecordPage> {
                   nutritionResult: _nutritionResult,
                   time: _timestamp,
                   tag: _tag,
+                  documentId: widget.initialRecord?['documentId'],
                 );
                 // 清空 draft
                 context.read<NutritionDraft>().clearDraft();
 
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Nutrition record saved')),
+                    SnackBar(
+                      content: Text(
+                        'Nutrition record saved',
+                        style: TextStyle(fontSize: 12, color: Colors.black),
+                      ),
+                      backgroundColor: Colors.orange[100],
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      margin: EdgeInsets.all(8),
+                    ),
                   );
+//                   Navigator.of(context).pop(true); // 返回 true 表示已更新
                 }
               } catch (e) {
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Error saving record: $e')),
+                    SnackBar(
+                      content: Text(
+                        'Error saving record: $e',
+                        style: TextStyle(fontSize: 12, color: Colors.black),
+                      ),
+                      backgroundColor: Colors.orange[100],
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      margin: EdgeInsets.all(8),
+                    ),
                   );
                 }
                 return; // 儲存失敗就直接回，不往後跑
@@ -275,6 +331,7 @@ class _TextRecordPageState extends State<TextRecordPage> {
             NameDateRow(
               initialName: _nutritionResult.imageName,
               initialImage: _capturedImageBase64,
+              initialDateTime: _timestamp?.toDate(),
               onNameChanged: (name) {
                 setState(() {
                   _nutritionResult = _nutritionResult.copyWith(imageName: name);
@@ -329,6 +386,7 @@ class _TextRecordPageState extends State<TextRecordPage> {
               height: MediaQuery.of(context).size.height * 0.4,
               child: NutritionInputForm(
                 initial: _nutritionResult,
+                initialComment: _comment,
                 onChanged:
                     (newData) => setState(() {
                       _nutritionResult = newData;

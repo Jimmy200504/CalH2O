@@ -24,6 +24,8 @@ class _SettingPageState extends State<SettingPage> {
   String _goal = 'maintain weight';
   String _ebType = 'Vicious';
 
+  bool _isSaving = false;
+
   // options
   final List<String> _genders = ['Men', 'Women', 'Other'];
   final List<String> _activities = [
@@ -70,9 +72,20 @@ class _SettingPageState extends State<SettingPage> {
         _ebType = data['EB_Type'] as String? ?? _ebType;
       });
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('讀取資料失敗：$e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '讀取資料失敗：$e',
+            style: TextStyle(fontSize: 12, color: Colors.black),
+          ),
+          backgroundColor: Colors.orange[100],
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          margin: EdgeInsets.all(8),
+        ),
+      );
     }
   }
 
@@ -107,6 +120,7 @@ class _SettingPageState extends State<SettingPage> {
   }
 
   Future<void> _saveUserData() async {
+    setState(() => _isSaving = true);
     final prefs = await SharedPreferences.getInstance();
     final account = prefs.getString('account');
     if (account == null) return;
@@ -123,9 +137,20 @@ class _SettingPageState extends State<SettingPage> {
         'EB_Type': _ebType,
       });
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('更新資料失敗：$e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '更新資料失敗：$e',
+            style: TextStyle(fontSize: 12, color: Colors.black),
+          ),
+          backgroundColor: Colors.orange[100],
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          margin: EdgeInsets.all(8),
+        ),
+      );
       return;
     }
 
@@ -145,9 +170,20 @@ class _SettingPageState extends State<SettingPage> {
       height = (data['height'] as num).toInt();
       weight = (data['weight'] as num).toInt();
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('讀取 Profile 失敗：$e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '讀取 Profile 失敗：$e',
+            style: TextStyle(fontSize: 12, color: Colors.black),
+          ),
+          backgroundColor: Colors.orange[100],
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          margin: EdgeInsets.all(8),
+        ),
+      );
       return;
     }
 
@@ -165,9 +201,20 @@ class _SettingPageState extends State<SettingPage> {
       );
       // you may want to store dailyNeeds in prefs or Firestore here
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('取得每日需求失敗：$e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '取得每日需求失敗：$e',
+            style: TextStyle(fontSize: 12, color: Colors.black),
+          ),
+          backgroundColor: Colors.orange[100],
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          margin: EdgeInsets.all(8),
+        ),
+      );
       return;
     }
 
@@ -176,6 +223,7 @@ class _SettingPageState extends State<SettingPage> {
       context,
       MaterialPageRoute(builder: (_) => const MainPage()),
     );
+    setState(() => _isSaving = false);
   }
 
   @override
@@ -261,14 +309,23 @@ class _SettingPageState extends State<SettingPage> {
             ),
             const SizedBox(height: 24),
             ElevatedButton(
-              onPressed: _saveUserData,
+              onPressed: _isSaving ? null : _saveUserData,
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
-              child: const Text('Save Changes', style: TextStyle(fontSize: 18)),
+              child:
+                  _isSaving
+                      ? const CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      )
+                      : const Text(
+                        'Save Changes',
+                        style: TextStyle(fontSize: 18),
+                      ),
             ),
           ],
         ),

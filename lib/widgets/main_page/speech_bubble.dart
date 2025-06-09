@@ -44,6 +44,30 @@ class SpeechBubbleState extends State<SpeechBubble> {
 
   void _startBarrage() {
     if (_messages.isEmpty) return;
+//     WidgetsBinding.instance.addPostFrameCallback((_) {
+//       _handleRouteChange();
+//     });
+//   }
+
+//   @override
+//   void didChangeDependencies() {
+//     super.didChangeDependencies();
+//     WidgetsBinding.instance.addPostFrameCallback((_) {
+//       _handleRouteChange();
+//     });
+//   }
+
+//   void _handleRouteChange() {
+//     final isCurrent = ModalRoute.of(context)?.isCurrent ?? false;
+//     if (isCurrent) {
+//       _startBarrage();
+//     } else {
+//       _stopBarrage();
+//     }
+//   }
+
+//   void _startBarrage() {
+//     _stopBarrage(); // 保險：先停掉
     _addBulletTimer = Timer.periodic(const Duration(seconds: 2), (_) {
       _messages.shuffle();
       _barrageController.send([
@@ -62,10 +86,16 @@ class SpeechBubbleState extends State<SpeechBubble> {
     });
   }
 
+  void _stopBarrage() {
+    _addBulletTimer?.cancel();
+    _addBulletTimer = null;
+  }
+
   @override
   void dispose() {
     _addBulletTimer?.cancel();
     _barrageController.dispose();
+//     _stopBarrage();
     super.dispose();
   }
 
@@ -75,6 +105,7 @@ class SpeechBubbleState extends State<SpeechBubble> {
       controller: _barrageController,
       speed: 6,
       child: Container(color: Colors.transparent),
+//       child: Container(),
     );
   }
 }
