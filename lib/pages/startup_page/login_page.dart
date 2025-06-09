@@ -19,6 +19,12 @@ class _LoginPageState extends State<LoginPage>
   String _account = '';
   String _password = '';
   bool _loading = false;
+  String getTodayStr() {
+    final now = DateTime.now();
+    return '${now.year.toString().padLeft(4, '0')}-'
+        '${now.month.toString().padLeft(2, '0')}-'
+        '${now.day.toString().padLeft(2, '0')}';
+  }
 
   late AnimationController _fadeController;
   late Animation<double> _fadeAnimation;
@@ -61,9 +67,23 @@ class _LoginPageState extends State<LoginPage>
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('account', _account);
 
+      final todayStr = getTodayStr(); // 取得今天的字串
+
       if (userDoc.exists) {
         final data = userDoc.data()!;
         if (data['password'] == _password) {
+          int comboCount = (data['comboCount'] ?? 0) as int;
+          String? lastOpened = data['lastOpened'];
+
+          // 如果今天還沒登入過，combo + 1
+          if (lastOpened != todayStr) {
+            comboCount += 1;
+            await FirebaseFirestore.instance
+                .collection('users')
+                .doc(_account)
+                .update({'comboCount': comboCount, 'lastOpened': todayStr});
+          }
+
           await prefs.setBool('isLoggedIn', true);
           Navigator.pushReplacement(
             context,
@@ -75,6 +95,8 @@ class _LoginPageState extends State<LoginPage>
       } else {
         await FirebaseFirestore.instance.collection('users').doc(_account).set({
           'password': _password,
+          'comboCount': 0,
+          'lastOpened': todayStr,
         });
 
         _showMessage('Account created. Please complete your profile.');

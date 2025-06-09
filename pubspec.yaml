@@ -102,7 +102,7 @@ flutter:
     - assets/text_input_cartoon.png
     - assets/CalH2O.svg
     - assets/check.json
-
+    - assets/animation/fire.json
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
 
