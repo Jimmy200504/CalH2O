@@ -13,7 +13,7 @@ export type Status = z.infer<typeof statusSchema>;
 
 // --- Output Schema ---
 export const ebOutputSchema = z.object({
-  messages: z.array(z.string()).describe("List of blackmail messages, at least 6 items"),
+  messages: z.array(z.string()).describe("List of blackmail messages, at least 9 items"),
 });
 export type EBOutput = z.infer<typeof ebOutputSchema>;
 
