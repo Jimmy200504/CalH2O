@@ -9,7 +9,7 @@ class NameDateRow extends StatefulWidget {
   /// 初始顯示的名字
   final String initialName;
 
-  /// 當使用者輸入/提交名字時回傳
+  /// 當使用者輸入名字時即時回傳
   final ValueChanged<String> onNameChanged;
 
   /// 當使用者選擇日期時回傳
@@ -92,21 +92,22 @@ class _NameDateRowState extends State<NameDateRow> {
       initialDate: _selectedDate,
       firstDate: DateTime(2000),
       lastDate: DateTime(2100),
-      builder: (context, child) => Theme(
-        data: ThemeData().copyWith(
-          colorScheme: ColorScheme.light(
-            primary: Color(0xFFFFB74D),
-            onPrimary: Colors.black,
-            surface: Colors.white,
-            onSurface: Colors.black,
+      builder:
+          (context, child) => Theme(
+            data: ThemeData().copyWith(
+              colorScheme: ColorScheme.light(
+                primary: Color(0xFFFFB74D),
+                onPrimary: Colors.black,
+                surface: Colors.white,
+                onSurface: Colors.black,
+              ),
+              dialogBackgroundColor: Colors.white,
+              textButtonTheme: TextButtonThemeData(
+                style: TextButton.styleFrom(foregroundColor: Colors.black),
+              ),
+            ),
+            child: child!,
           ),
-          dialogBackgroundColor: Colors.white,
-          textButtonTheme: TextButtonThemeData(
-            style: TextButton.styleFrom(foregroundColor: Colors.black),
-          ),
-        ),
-        child: child!,
-      ),
     );
     if (picked != null) {
       setState(() => _selectedDate = picked);
@@ -118,24 +119,27 @@ class _NameDateRowState extends State<NameDateRow> {
     final picked = await showTimePicker(
       context: context,
       initialTime: _selectedTime,
-      builder: (context, child) => Theme(
-        data: ThemeData().copyWith(
-          colorScheme: ColorScheme.light(
-            primary: Color(0xFFFFB74D),
-            onPrimary: Colors.black,
-            surface: Colors.white,
-            onSurface: Colors.black,
+      builder:
+          (context, child) => Theme(
+            data: ThemeData().copyWith(
+              colorScheme: ColorScheme.light(
+                primary: Color(0xFFFFB74D),
+                onPrimary: Colors.black,
+                surface: Colors.white,
+                onSurface: Colors.black,
+              ),
+              dialogBackgroundColor: Colors.white,
+              timePickerTheme: TimePickerThemeData(
+                dayPeriodColor: Color(
+                  0xFFFFB74D,
+                ).withOpacity(0.5), // AM/PM按鈕背景顏色
+              ),
+              textButtonTheme: TextButtonThemeData(
+                style: TextButton.styleFrom(foregroundColor: Colors.black),
+              ),
+            ),
+            child: child!,
           ),
-          dialogBackgroundColor: Colors.white,
-          timePickerTheme: TimePickerThemeData(
-            dayPeriodColor: Color(0xFFFFB74D).withOpacity(0.5),     // AM/PM按鈕背景顏色
-          ),
-          textButtonTheme: TextButtonThemeData(
-            style: TextButton.styleFrom(foregroundColor: Colors.black),
-          ),
-        ),
-        child: child!,
-      ),
     );
     if (picked != null) {
       setState(() => _selectedTime = picked);
@@ -233,7 +237,9 @@ class _NameDateRowState extends State<NameDateRow> {
                   controller: _nameController,
                   decoration: InputDecoration(
                     labelText: 'Name',
-                    labelStyle: const TextStyle(color: Colors.black), // label 文字改黑
+                    labelStyle: const TextStyle(
+                      color: Colors.black,
+                    ), // label 文字改黑
                     border: OutlineInputBorder(
                       borderSide: BorderSide(color: Colors.black), // 黑色邊框
                       borderRadius: BorderRadius.circular(8),
@@ -250,8 +256,8 @@ class _NameDateRowState extends State<NameDateRow> {
                   ),
                   style: const TextStyle(color: Colors.black), // 文字改黑
                   textInputAction: TextInputAction.done,
-                  onSubmitted: (text) {
-                    widget.onNameChanged(text);
+                  onChanged: widget.onNameChanged,
+                  onSubmitted: (_) {
                     FocusScope.of(context).unfocus();
                   },
                 ),
@@ -261,7 +267,11 @@ class _NameDateRowState extends State<NameDateRow> {
                     Flexible(
                       child: TextButton.icon(
                         onPressed: _pickDate,
-                        icon: const Icon(Icons.calendar_today, size: 20, color:Colors.black),
+                        icon: const Icon(
+                          Icons.calendar_today,
+                          size: 20,
+                          color: Colors.black,
+                        ),
                         label: FittedBox(
                           fit: BoxFit.scaleDown,
                           child: Text(
@@ -283,7 +293,11 @@ class _NameDateRowState extends State<NameDateRow> {
                     Flexible(
                       child: TextButton.icon(
                         onPressed: _pickTime,
-                        icon: const Icon(Icons.access_time, size: 20, color: Colors.black),
+                        icon: const Icon(
+                          Icons.access_time,
+                          size: 20,
+                          color: Colors.black,
+                        ),
                         label: Text(
                           '${_selectedTime.hour.toString().padLeft(2, '0')}:${_selectedTime.minute.toString().padLeft(2, '0')}',
                           style: const TextStyle(color: Colors.black), // 文字黑
