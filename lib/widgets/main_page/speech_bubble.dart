@@ -3,21 +3,23 @@ import 'package:flutter/material.dart';
 import 'package:flutter_barrage/flutter_barrage.dart';
 
 class SpeechBubble extends StatefulWidget {
-  const SpeechBubble({super.key});
-
+  SpeechBubble({Key? key}) : super(key: key);
   @override
-  State<SpeechBubble> createState() => _SpeechBubbleState();
+  SpeechBubbleState createState() => SpeechBubbleState();
 }
 
-class _SpeechBubbleState extends State<SpeechBubble> {
-  final List<String> _messages = [
-    "so hungry",
-    "please eat",
-    "too full",
-    "so unhealthy",
-    "please don't eat junk food",
+class SpeechBubbleState extends State<SpeechBubble> {
+  static const List<String> _defaultMessages = [
+    "Hello",
+    "How are we?",
+    "Eat anything yet?",
+    "You look dehydrated.",
+    "What did you do today?",
+    "Let's not eat junk food today?",
+    "What's your goal of the day?",
   ];
 
+  List<String> _messages = List.from(_defaultMessages);
   late final BarrageWallController _barrageController;
   Timer? _addBulletTimer;
 
@@ -25,12 +27,23 @@ class _SpeechBubbleState extends State<SpeechBubble> {
   void initState() {
     super.initState();
     _barrageController = BarrageWallController();
+    _startBarrage();
+  }
 
-    // 啟動彈幕
+  void updateMessages(List<String> newMessages) {
+    if (newMessages.isEmpty) return; // 空陣列就不更新
+    setState(() {
+      _messages = newMessages;
+      _barrageController.dispose();
+      _barrageController = BarrageWallController();
+    });
+    // 重新啟動彈幕：先停掉再重開
+    _addBulletTimer?.cancel();
     _startBarrage();
   }
 
   void _startBarrage() {
+    if (_messages.isEmpty) return;
     _addBulletTimer = Timer.periodic(const Duration(seconds: 2), (_) {
       _messages.shuffle();
       _barrageController.send([
@@ -52,22 +65,16 @@ class _SpeechBubbleState extends State<SpeechBubble> {
   @override
   void dispose() {
     _addBulletTimer?.cancel();
+    _barrageController.dispose();
     super.dispose();
   }
 
-
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        BarrageWall(
-          controller: _barrageController,
-          speed: 6,
-          child: Container(),
-        ),
-        // 你可以在 Stack 內加上其他 Widget，
-        // 例如漸層背景或其他 overlay。
-      ],
+    return BarrageWall(
+      controller: _barrageController,
+      speed: 6,
+      child: Container(color: Colors.transparent),
     );
   }
 }

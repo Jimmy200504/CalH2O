@@ -10,8 +10,10 @@ import '../../widgets/record_page/name_date_row.dart';
 import '../../widgets/record_page/nutrition_input_form.dart';
 import '../../widgets/record_page/generate_nutrition_button.dart';
 import '../../widgets/keyboard_aware_layout.dart';
+import '../../widgets/main_page/speech_bubble.dart';
 import 'nutrition_chat_page.dart';
 import '../../model/nutrition_draft.dart';
+import '../../services/cloud_function_fetch/generateEBMessage.dart';
 
 class TextRecordPage extends StatefulWidget {
   const TextRecordPage({super.key});
@@ -28,6 +30,16 @@ class _TextRecordPageState extends State<TextRecordPage> {
           'Hello. I can help you track your daily water and nutrition intake. You can tell me what you ate or drank today.',
       isUser: false,
     ),
+  ];
+
+  static const List<String> _defaultEBMessages = [
+    "Hello",
+    "How are we?",
+    "Eat anything yet?",
+    "You look dehydrated.",
+    "What did you do today?",
+    "Let's not eat junk food today?",
+    "What's your goal of the day?",
   ];
 
   // 營養狀態
@@ -131,6 +143,7 @@ class _TextRecordPageState extends State<TextRecordPage> {
             iconSize: 30,
             icon: const Icon(Icons.done),
             onPressed: () async {
+              // 1. 必填检查
               if (_nutritionResult.imageName.isEmpty) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Please enter a name')),
@@ -138,6 +151,7 @@ class _TextRecordPageState extends State<TextRecordPage> {
                 return;
               }
 
+              // 2. 儲存到後端
               try {
                 await ImageUploadService.saveNutritionResult(
                   base64Image: _capturedImageBase64 ?? '',
@@ -146,15 +160,13 @@ class _TextRecordPageState extends State<TextRecordPage> {
                   time: _timestamp,
                   tag: _tag,
                 );
-
-                // Clear the draft after successful save
+                // 清空 draft
                 context.read<NutritionDraft>().clearDraft();
 
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Nutrition record saved')),
                   );
-                  Navigator.of(context).pop();
                 }
               } catch (e) {
                 if (mounted) {
@@ -162,6 +174,28 @@ class _TextRecordPageState extends State<TextRecordPage> {
                     SnackBar(content: Text('Error saving record: $e')),
                   );
                 }
+                return; // 儲存失敗就直接回，不往後跑
+              }
+
+              // 3. 取得 EB 訊息
+              List<String> newMsgs;
+              try {
+                final ebResult = await getEmotionalBlackmail(
+                  waterIntake: 100, // 你實際的參數
+                  waterNeed: 2000,
+                  caloriesIntake: 100,
+                  caloriesNeed: 2000,
+                  EB_Type: 'Vicious',
+                );
+                final msgs = ebResult.messages ?? <String>[];
+                newMsgs = msgs.isNotEmpty ? msgs : _defaultEBMessages;
+              } catch (_) {
+                newMsgs = _defaultEBMessages;
+              }
+
+              // 4. 最後一次 pop，帶回 newMsgs
+              if (mounted) {
+                Navigator.pop(context, newMsgs);
               }
             },
           ),

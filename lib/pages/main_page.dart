@@ -18,8 +18,7 @@ import '../widgets/main_page/speech_bubble.dart';
 import 'dart:async';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:flutter_barrage/flutter_barrage.dart';
-
-
+import '../pages/record_page/text_record_page.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -58,10 +57,9 @@ class _MainPageState extends State<MainPage> {
   final GlobalKey _editNoteKey = GlobalKey();
   final GlobalKey _cameraAltKey = GlobalKey();
   final GlobalKey _petKey = GlobalKey();
+  final GlobalKey<SpeechBubbleState> _bubbleKey = GlobalKey();
 
-  
-  
-@override
+  @override
   void initState() {
     super.initState();
     // 一次性抓 OR 初始化
@@ -75,7 +73,6 @@ class _MainPageState extends State<MainPage> {
     _loadTargets();
     _setupNutritionListener();
   }
-
 
   Future<void> _loadTargets() async {
     try {
@@ -514,12 +511,14 @@ class _MainPageState extends State<MainPage> {
 
                 MainProgressBar(
                   color: Colors.orange,
-                  label: 'Calories $_calories kcal (${_getLabel(_calories,_caloriesTarget,' kcal')})',
+                  label:
+                      'Calories $_calories kcal (${_getLabel(_calories, _caloriesTarget, ' kcal')})',
                   value: _caloriesProgress,
                   onIncrement: _incrementCalories,
                 ),
                 WaveProgressBar(
-                  label: 'Water $_water ml (${_getLabel(_water, _waterTarget, ' ml')})',
+                  label:
+                      'Water $_water ml (${_getLabel(_water, _waterTarget, ' ml')})',
                   value: _waterProgress,
                   onIncrement: _incrementWater,
                   onDecrement: _decrementWater,
@@ -598,7 +597,7 @@ class _MainPageState extends State<MainPage> {
                   child: Stack(
                     children: [
                       // 先放彈幕
-                      const SpeechBubble(),
+                      SpeechBubble(key: _bubbleKey),
 
                       // 再放動畫
                       Center(
@@ -611,8 +610,6 @@ class _MainPageState extends State<MainPage> {
                     ],
                   ),
                 ),
-
-
 
                 Padding(
                   padding: EdgeInsets.symmetric(
@@ -675,9 +672,23 @@ class _MainPageState extends State<MainPage> {
                     IconButton(
                       key: _editNoteKey,
                       icon: Icon(Icons.edit_note, size: iconSize),
-                      onPressed: () {
+                      onPressed: () async {
                         setState(() => _showSubButtons = false);
-                        Navigator.pushNamed(context, '/text');
+                        // Navigator.pushNamed(context, '/text');
+
+                        // 用 MaterialPageRoute 推到文字頁，並告訴它回傳 List<String>
+                        final List<String>? newMsgs = await Navigator.of(
+                          context,
+                        ).push<List<String>>(
+                          MaterialPageRoute(
+                            builder: (_) => const TextRecordPage(),
+                          ),
+                        );
+
+                        // 如果有回傳且非空，就更新 SpeechBubble
+                        if (newMsgs != null && newMsgs.isNotEmpty) {
+                          _bubbleKey.currentState?.updateMessages(newMsgs);
+                        }
                       },
                     ),
                     SizedBox(width: screenWidth * 0.1),
@@ -726,4 +737,3 @@ class _MainPageState extends State<MainPage> {
     );
   }
 }
-
