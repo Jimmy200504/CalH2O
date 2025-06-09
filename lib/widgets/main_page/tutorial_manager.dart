@@ -194,7 +194,7 @@ class TutorialManager {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    "The pet in the middle shows your health status.\nPlease pay attention to your diet.",
+                    "Terry in the middle shows your health status.\nPlease pay attention to your diet.",
                     style: TextStyle(color: Colors.white, fontSize: 20),
                     textAlign: TextAlign.center,
                   ),

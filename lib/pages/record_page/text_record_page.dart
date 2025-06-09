@@ -154,7 +154,18 @@ class _TextRecordPageState extends State<TextRecordPage> {
             onPressed: () async {
               if (_nutritionResult.imageName.isEmpty) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Please enter a name')),
+                  SnackBar(
+                    content: Text(
+                      'Please enter a name',
+                      style: TextStyle(fontSize: 12, color: Colors.black),
+                    ),
+                    backgroundColor: Colors.orange[100],
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    margin: EdgeInsets.all(8),
+                  ),
                 );
                 return;
               }
@@ -174,14 +185,36 @@ class _TextRecordPageState extends State<TextRecordPage> {
 
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Nutrition record saved')),
+                    SnackBar(
+                      content: Text(
+                        'Nutrition record saved',
+                        style: TextStyle(fontSize: 12, color: Colors.black),
+                      ),
+                      backgroundColor: Colors.orange[100],
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      margin: EdgeInsets.all(8),
+                    ),
                   );
                   Navigator.of(context).pop(true); // 返回 true 表示已更新
                 }
               } catch (e) {
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Error saving record: $e')),
+                    SnackBar(
+                      content: Text(
+                        'Error saving record: $e',
+                        style: TextStyle(fontSize: 12, color: Colors.black),
+                      ),
+                      backgroundColor: Colors.orange[100],
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      margin: EdgeInsets.all(8),
+                    ),
                   );
                 }
               }

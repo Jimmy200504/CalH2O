@@ -280,9 +280,28 @@ class _MainPageState extends State<MainPage> {
       // 3. 全域通知 (SnackBar + 前往文字頁按鈕)
       rootScaffoldMessengerKey.currentState!.showSnackBar(
         SnackBar(
-          content: const Text('營養分析完成，請到文字頁確認並儲存'),
+          content: Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.black, size: 20),
+              SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Photo Analyzation Done. Save in',
+                  style: TextStyle(fontSize: 12, color: Colors.black),
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: Colors.orange[100],
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          margin: EdgeInsets.all(8),
+          duration: Duration(seconds: 3),
           action: SnackBarAction(
-            label: '前往文字頁',
+            label: 'Text page',
+            textColor: Colors.orange[400],
             onPressed: () {
               _navigateNamed('/text');
             },
@@ -434,9 +453,10 @@ class _MainPageState extends State<MainPage> {
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     if (_isProcessing)
-                      Padding(
-                        padding: EdgeInsets.only(right: screenWidth * 0.02),
-                        child: const LoadingOverlay(),
+                      LoadingOverlay(
+                        width:
+                            MediaQuery.of(context).size.width *
+                            0.58, // 設置為螢幕寬度的 30%，與 nutrition_card 的寬度相近
                       ),
                     Container(
                       key: _comboKey,
