@@ -120,6 +120,7 @@ class _TextRecordPageState extends State<TextRecordPage> {
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
         title: const Text('Record Nutrition'),
+        backgroundColor: Colors.white,
         actions: [
           IconButton(
             iconSize: 30,
