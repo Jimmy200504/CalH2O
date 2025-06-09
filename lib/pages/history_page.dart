@@ -594,6 +594,7 @@ class _HistoryPageState extends State<HistoryPage> {
         }
       },
       child: Card(
+        color: Colors.white,
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
         elevation: 2,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -603,7 +604,7 @@ class _HistoryPageState extends State<HistoryPage> {
             vertical: 10,
           ),
           leading: CircleAvatar(
-            backgroundColor: Colors.orange.withOpacity(0.1),
+            backgroundColor: Colors.orange.withValues(alpha: 0.1),
             child: Icon(icon, color: Colors.orange[800]),
           ),
           title: Text(
