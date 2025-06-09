@@ -11,6 +11,7 @@ class ImageUploadService {
     required NutritionResult nutritionResult,
     final Timestamp? time,
     final String? tag,
+    final String? documentId,
   }) async {
     try {
       // Get user account from SharedPreferences
@@ -21,23 +22,35 @@ class ImageUploadService {
         throw Exception('User not logged in');
       }
 
-      // Save the nutrition result and base64 image to user's document
-      await _firestore
-          .collection('users')
-          .doc(account)
-          .collection('nutrition_records')
-          .add({
-            'tag': tag ?? 'default',
-            'timestamp': time ?? FieldValue.serverTimestamp(),
-            'base64Image': base64Image,
-            'imageName': nutritionResult.imageName,
-            'calories': nutritionResult.calories,
-            'protein': nutritionResult.protein,
-            'carbohydrate': nutritionResult.carbohydrate,
-            'fat': nutritionResult.fat,
-            'comment': comment,
-            'source': base64Image.isEmpty ? 'text_input' : 'image_input',
-          });
+      final data = {
+        'tag': tag ?? 'default',
+        'timestamp': time ?? FieldValue.serverTimestamp(),
+        'base64Image': base64Image,
+        'imageName': nutritionResult.imageName,
+        'calories': nutritionResult.calories,
+        'protein': nutritionResult.protein,
+        'carbohydrate': nutritionResult.carbohydrate,
+        'fat': nutritionResult.fat,
+        'comment': comment,
+        'source': base64Image.isEmpty ? 'text_input' : 'image_input',
+      };
+
+      if (documentId != null) {
+        // 更新現有記錄
+        await _firestore
+            .collection('users')
+            .doc(account)
+            .collection('nutrition_records')
+            .doc(documentId)
+            .update(data);
+      } else {
+        // 新增記錄
+        await _firestore
+            .collection('users')
+            .doc(account)
+            .collection('nutrition_records')
+            .add(data);
+      }
     } catch (e) {
       throw Exception('Failed to save nutrition result: $e');
     }

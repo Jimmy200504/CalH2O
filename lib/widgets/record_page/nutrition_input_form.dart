@@ -6,6 +6,9 @@ class NutritionInputForm extends StatefulWidget {
   /// 初始值
   final NutritionResult initial;
 
+  /// 初始備註
+  final String? initialComment;
+
   /// 當任一營養數值改變時回傳最新 NutritionResult
   final ValueChanged<NutritionResult> onChanged;
 
@@ -15,6 +18,7 @@ class NutritionInputForm extends StatefulWidget {
   const NutritionInputForm({
     super.key,
     required this.initial,
+    this.initialComment,
     required this.onChanged,
     required this.onCommentChanged,
   });
@@ -48,7 +52,9 @@ class _NutritionInputFormState extends State<NutritionInputForm> {
       _proteinController.text = _data.protein.toString();
       _carbsController.text = _data.carbohydrate.toString();
       _fatsController.text = _data.fat.toString();
-      // 如需重設 comment，可同時更新 _commentController.text
+    }
+    if (widget.initialComment != oldWidget.initialComment) {
+      _commentController.text = widget.initialComment ?? '';
     }
   }
 
@@ -59,7 +65,9 @@ class _NutritionInputFormState extends State<NutritionInputForm> {
       text: data.carbohydrate.toString(),
     );
     _fatsController = TextEditingController(text: data.fat.toString());
-    _commentController = TextEditingController();
+    _commentController = TextEditingController(
+      text: widget.initialComment ?? '',
+    );
   }
 
   @override

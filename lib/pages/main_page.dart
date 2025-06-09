@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'dart:ui'; // Import for the blur effect
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -8,17 +9,17 @@ import '../widgets/main_page/nutrition_card.dart';
 import '../widgets/main_page/loading_overlay.dart';
 import '../widgets/animation.dart';
 import '../services/cloud_function_fetch/get_nutrition_from_photo.dart';
-import '../services/image_upload_service.dart';
 import '../model/nutrition_draft.dart';
 import '../main.dart';
 import '../services/water_upload_service.dart';
 import '../pages/setting_page.dart';
-import '../pages/history_page.dart';
 import '../widgets/main_page/speech_bubble.dart';
 import 'dart:async';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:flutter_barrage/flutter_barrage.dart';
 import '../widgets/combo_badge.dart';
+import '../widgets/main_page/tutorial_manager.dart';
+
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -327,156 +328,32 @@ class _MainPageState extends State<MainPage> {
     }
   }
 
-  List<TargetFocus> targets = [];
-
-  void _initTargets() {
-    targets = [
-      TargetFocus(
-        identify: "Combo",
-        keyTarget: _comboKey,
-        contents: [
-          TargetContent(
-            align: ContentAlign.bottom,
-            builder: (context, controllerTarget) {
-              Future.delayed(const Duration(seconds: 1), () {
-                controllerTarget.next();
-              });
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                children: const [
-                  SizedBox(height: 50),
-                  Text(
-                    "This shows your combo streak of daily records!",
-                    style: TextStyle(color: Colors.white, fontSize: 20),
-                  ),
-                ],
-              );
-            },
-          ),
-        ],
-      ),
-      TargetFocus(
-        identify: "Add",
-        keyTarget: _addKey,
-        contents: [
-          TargetContent(
-            align: ContentAlign.top,
-            builder: (context, controllerTarget) {
-              Future.delayed(const Duration(seconds: 1), () {
-                controllerTarget.next();
-              });
-              return const Text(
-                "Add a new record",
-                style: TextStyle(color: Colors.white, fontSize: 20),
-              );
-            },
-          ),
-        ],
-      ),
-      TargetFocus(
-        identify: "EditNote",
-        keyTarget: _editNoteKey,
-        contents: [
-          TargetContent(
-            align: ContentAlign.top,
-            builder: (context, controllerTarget) {
-              Future.delayed(const Duration(seconds: 1), () {
-                controllerTarget.next();
-              });
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                children: const [
-                  SizedBox(height: 8),
-                  Text(
-                    "Add notes to your entry",
-                    style: TextStyle(color: Colors.white, fontSize: 20),
-                  ),
-                ],
-              );
-            },
-          ),
-        ],
-      ),
-      TargetFocus(
-        identify: "Camera",
-        keyTarget: _cameraAltKey,
-        contents: [
-          TargetContent(
-            align: ContentAlign.top,
-            builder: (context, controllerTarget) {
-              Future.delayed(const Duration(seconds: 1), () {
-                controllerTarget.next();
-              });
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                children: const [
-                  SizedBox(height: 8),
-                  Text(
-                    "Use the camera to scan food",
-                    style: TextStyle(color: Colors.white, fontSize: 20),
-                  ),
-                ],
-              );
-            },
-          ),
-        ],
-      ),
-      TargetFocus(
-        identify: "History",
-        keyTarget: _historyKey,
-        contents: [
-          TargetContent(
-            align: ContentAlign.top,
-            builder: (context, controllerTarget) {
-              Future.delayed(const Duration(seconds: 1), () {
-                controllerTarget.next();
-              });
-              return const Text(
-                "Check the history",
-                style: TextStyle(color: Colors.white, fontSize: 20),
-              );
-            },
-          ),
-        ],
-      ),
-      TargetFocus(
-        identify: "Pet",
-        keyTarget: _petKey,
-        contents: [
-          TargetContent(
-            align: ContentAlign.top,
-            builder: (context, controllerTarget) {
-              Future.delayed(const Duration(seconds: 1), () {
-                controllerTarget.next();
-              });
-              return const Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    "The pet in the middle shows your health status.\nPlease pay attention to your diet.",
-                    style: TextStyle(color: Colors.white, fontSize: 20),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              );
-            },
-          ),
-        ],
-      ),
-    ];
-  }
-
   void _showTutorial() {
-    setState(() {
-      _showSubButtons = true;
-    });
-    _initTargets();
-    TutorialCoachMark(
-      targets: targets,
-      colorShadow: Colors.black,
-      textSkip: "SKIP",
-      onFinish: () => print("Tutorial finished"),
-    ).show(context: context);
+    TutorialManager.showTutorial(
+      context: context,
+      addKey: _addKey,
+      historyKey: _historyKey,
+      comboKey: _comboKey,
+      editNoteKey: _editNoteKey,
+      cameraAltKey: _cameraAltKey,
+      petKey: _petKey,
+      onTutorialStart:
+          () {}, // This can be used to set a global "isTutorialActive" flag if needed
+      onTutorialFinish: () {
+        // Hide the buttons when the tutorial is finished or skipped
+        if (mounted) setState(() => _showSubButtons = false);
+      },
+      expandSubButtonsCallback: () {
+        // This is called by the manager when the user taps the 'Add' target
+        if (mounted) setState(() => _showSubButtons = true);
+      },
+      hideSubButtonsCallback: () {
+        // This is called by the manager when the user taps the 'Camera' target
+        Future.delayed(const Duration(milliseconds: 400), () {
+          if (mounted) setState(() => _showSubButtons = false);
+        });
+      },
+    );
   }
 
   @override
@@ -497,6 +374,7 @@ class _MainPageState extends State<MainPage> {
       backgroundColor: Colors.white,
       body: Stack(
         children: [
+          // Main content area
           SafeArea(
             child: Column(
               children: [
@@ -669,7 +547,23 @@ class _MainPageState extends State<MainPage> {
             ),
           ),
 
-          // 子按鈕
+          // Blur overlay that appears when sub-buttons are shown
+          IgnorePointer(
+            ignoring: !_showSubButtons,
+            child: AnimatedOpacity(
+              opacity: _showSubButtons ? 1.0 : 0.0,
+              duration: const Duration(milliseconds: 200),
+              child: GestureDetector(
+                onTap: () => setState(() => _showSubButtons = false),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
+                  child: Container(color: Colors.black.withOpacity(0.1)),
+                ),
+              ),
+            ),
+          ),
+
+          // Sub-buttons (they appear on top of the blur)
           AnimatedPositioned(
             duration: const Duration(milliseconds: 400),
             curve: Curves.easeOutBack,
