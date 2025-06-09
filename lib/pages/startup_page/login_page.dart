@@ -113,7 +113,15 @@ class _LoginPageState extends State<LoginPage>
   }
 
   void _showMessage(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(msg, style: TextStyle(fontSize: 12, color: Colors.black)),
+        backgroundColor: Colors.orange[100],
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        margin: EdgeInsets.all(8),
+      ),
+    );
   }
 
   // 統一輸入框樣式
