@@ -45,6 +45,8 @@ class _MainPageState extends State<MainPage> {
   int _fatsTarget = 65;
   int _waterTarget = 2000;
 
+  String? _lastProcessedDocId; // 👈 放在 State 裡面
+
   double _caloriesProgress = 0.0;
   double _proteinProgress = 0.0;
   double _carbsProgress = 0.0;
@@ -143,37 +145,42 @@ class _MainPageState extends State<MainPage> {
       if (account == null) return;
 
       FirebaseFirestore.instance
-          .collection('users')
-          .doc(account)
-          .collection('nutrition_records')
-          .orderBy('timestamp', descending: true)
-          .limit(1)
-          .snapshots()
-          .listen((querySnapshot) {
-            if (!_initialSnapshotHandled) {
-              _initialSnapshotHandled = true;
-                      // 這是初始化
-              debugPrint("第一次snapshot，略過或處理初始化");
-            }
-            else {
-              if (querySnapshot.docs.isNotEmpty) {
-                final latestDoc = querySnapshot.docs.first;
-                final latestCalories = (latestDoc['calories'] as num).toInt();
+        .collection('users')
+        .doc(account)
+        .collection('nutrition_records')
+        .orderBy('timestamp', descending: true)
+        .limit(1)
+        .snapshots()
+        .listen((querySnapshot) {
+          if (!_initialSnapshotHandled) {
+            _initialSnapshotHandled = true;
+            debugPrint("🍀 第一次 snapshot，略過初始化");
+            return;
+          }
 
-                setState(() {
-                  _latestMealCalories += latestCalories;
-                });
-                print('🔥 每餐建議攝取量: $_mealCaloriesTarget kcal');  // 印出來確認
-                debugPrint("🔥 最新一餐 calories: $_latestMealCalories kcal");
-              }
-              else {
-                setState(() {
-                  _latestMealCalories = 0;
-                });
-                debugPrint("🔥 最新一餐 calories: $_latestMealCalories kcal");
-              }
+          if (querySnapshot.docs.isNotEmpty) {
+            final latestDoc = querySnapshot.docs.first;
+            final latestCalories = (latestDoc['calories'] as num).toInt();
+            final latestDocId = latestDoc.id;
+
+            // ✅ 比較 id 避免重複
+            if (_lastProcessedDocId != latestDocId) {
+              _lastProcessedDocId = latestDocId;
+              setState(() {
+                _latestMealCalories += latestCalories;
+              });
+              debugPrint("🔥 每餐建議攝取量: $_mealCaloriesTarget kcal");
+              debugPrint("🔥 最新一餐 calories: $_latestMealCalories kcal");
+            } else {
+              debugPrint("🌀 已處理過這筆資料，跳過");
             }
-          });
+          } else {
+            setState(() {
+              _latestMealCalories = 0;
+            });
+            debugPrint("🔥 最新一餐 calories: $_latestMealCalories kcal (無資料)");
+          }
+        });
     });
   }
 
