@@ -352,6 +352,11 @@ class _HistoryPageState extends State<HistoryPage> {
                             horizontal: 16,
                             vertical: 8,
                           ),
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            side: BorderSide(color: Colors.grey.shade200),
+                          ),
                           child: ExpansionTile(
                             title: Text(
                               DateFormat(
@@ -363,6 +368,12 @@ class _HistoryPageState extends State<HistoryPage> {
                             ),
                             subtitle: Text(
                               'Total Calories: ${dayData['totalCalories'].toStringAsFixed(1)} kcal',
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            collapsedShape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
                             ),
                             children:
                                 (dayData['foods'] as List<Map<String, dynamic>>)
@@ -450,10 +461,12 @@ class _HistoryPageState extends State<HistoryPage> {
               actions: <Widget>[
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(false),
+                  style: TextButton.styleFrom(foregroundColor: Colors.black),
                   child: const Text('Cancel'),
                 ),
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(true),
+                  style: TextButton.styleFrom(foregroundColor: Colors.black),
                   child: const Text('Delete'),
                 ),
               ],
@@ -482,9 +495,17 @@ class _HistoryPageState extends State<HistoryPage> {
             final docId = querySnapshot.docs.first.id;
             await querySnapshot.docs.first.reference.delete();
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Record deleted successfully'),
-                duration: Duration(seconds: 2),
+              SnackBar(
+                content: Text(
+                  'Record deleted successfully',
+                  style: TextStyle(fontSize: 12, color: Colors.black),
+                ),
+                backgroundColor: Colors.orange[100],
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                margin: EdgeInsets.all(8),
               ),
             );
             // Refresh the records
@@ -492,9 +513,17 @@ class _HistoryPageState extends State<HistoryPage> {
           }
         } catch (e) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Error deleting record'),
-              duration: Duration(seconds: 2),
+            SnackBar(
+              content: Text(
+                'Error deleting record',
+                style: TextStyle(fontSize: 12, color: Colors.black),
+              ),
+              backgroundColor: Colors.orange[100],
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              margin: EdgeInsets.all(8),
             ),
           );
         }

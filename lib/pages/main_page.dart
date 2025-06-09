@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'dart:ui'; // Import for the blur effect
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -13,7 +14,12 @@ import '../main.dart';
 import '../services/water_upload_service.dart';
 import '../pages/setting_page.dart';
 import '../widgets/main_page/speech_bubble.dart';
+import 'dart:async';
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
+import 'package:flutter_barrage/flutter_barrage.dart';
+import '../widgets/combo_badge.dart';
 import '../widgets/main_page/tutorial_manager.dart';
+
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -45,6 +51,7 @@ class _MainPageState extends State<MainPage> {
   double _fatsProgress = 0.0;
 
   bool _showSubButtons = false;
+  int _comboCount = 0;
 
   final GlobalKey _addKey = GlobalKey();
   final GlobalKey _historyKey = GlobalKey();
@@ -66,6 +73,7 @@ class _MainPageState extends State<MainPage> {
     });
     _loadTargets();
     _setupNutritionListener();
+    _updateCombo();
   }
 
   Future<void> _loadTargets() async {
@@ -205,6 +213,30 @@ class _MainPageState extends State<MainPage> {
         });
   }
 
+  Future<void> _updateCombo() async {
+    final prefs = await SharedPreferences.getInstance();
+    final account = prefs.getString('account');
+    if (account == null) return;
+
+    final today = DateTime.now();
+    final todayStr =
+        '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
+
+    final userDoc =
+        await FirebaseFirestore.instance.collection('users').doc(account).get();
+    final data = userDoc.data();
+
+    int lastCombo = data?['comboCount'] ?? 0;
+
+    _comboCount = lastCombo + 1;
+    await FirebaseFirestore.instance.collection('users').doc(account).update({
+      'comboCount': _comboCount,
+      'lastOpened': todayStr,
+    });
+
+    setState(() {});
+  }
+
   /// 計算並上傳這段期間的水量差
   void _uploadDelta() {
     final delta = _water - _initialWater;
@@ -279,9 +311,28 @@ class _MainPageState extends State<MainPage> {
       // 3. 全域通知 (SnackBar + 前往文字頁按鈕)
       rootScaffoldMessengerKey.currentState!.showSnackBar(
         SnackBar(
-          content: const Text('營養分析完成，請到文字頁確認並儲存'),
+          content: Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.black, size: 20),
+              SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Photo Analyzation Done. Save in',
+                  style: TextStyle(fontSize: 12, color: Colors.black),
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: Colors.orange[100],
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          margin: EdgeInsets.all(8),
+          duration: Duration(seconds: 3),
           action: SnackBarAction(
-            label: '前往文字頁',
+            label: 'Text page',
+            textColor: Colors.orange[400],
             onPressed: () {
               _navigateNamed('/text');
             },
@@ -305,8 +356,22 @@ class _MainPageState extends State<MainPage> {
       editNoteKey: _editNoteKey,
       cameraAltKey: _cameraAltKey,
       petKey: _petKey,
-      onTutorialStart: () => setState(() => _showSubButtons = true),
-      onTutorialFinish: () => setState(() => _showSubButtons = false),
+      onTutorialStart:
+          () {}, // This can be used to set a global "isTutorialActive" flag if needed
+      onTutorialFinish: () {
+        // Hide the buttons when the tutorial is finished or skipped
+        if (mounted) setState(() => _showSubButtons = false);
+      },
+      expandSubButtonsCallback: () {
+        // This is called by the manager when the user taps the 'Add' target
+        if (mounted) setState(() => _showSubButtons = true);
+      },
+      hideSubButtonsCallback: () {
+        // This is called by the manager when the user taps the 'Camera' target
+        Future.delayed(const Duration(milliseconds: 400), () {
+          if (mounted) setState(() => _showSubButtons = false);
+        });
+      },
     );
   }
 
@@ -328,6 +393,7 @@ class _MainPageState extends State<MainPage> {
       backgroundColor: Colors.white,
       body: Stack(
         children: [
+          // Main content area
           SafeArea(
             child: Column(
               children: [
@@ -418,9 +484,10 @@ class _MainPageState extends State<MainPage> {
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     if (_isProcessing)
-                      Padding(
-                        padding: EdgeInsets.only(right: screenWidth * 0.02),
-                        child: const LoadingOverlay(),
+                      LoadingOverlay(
+                        width:
+                            MediaQuery.of(context).size.width *
+                            0.58, // 設置為螢幕寬度的 30%，與 nutrition_card 的寬度相近
                       ),
                     Container(
                       key: _comboKey,
@@ -432,17 +499,7 @@ class _MainPageState extends State<MainPage> {
                         horizontal: screenWidth * 0.05,
                         vertical: screenHeight * 0.01,
                       ),
-                      decoration: BoxDecoration(
-                        color: Colors.grey[300],
-                        borderRadius: BorderRadius.circular(24),
-                      ),
-                      child: Text(
-                        'combo',
-                        style: TextStyle(
-                          fontSize: screenWidth * 0.05,
-                          color: Colors.black54,
-                        ),
-                      ),
+                      child: ComboBadge(comboCount: _comboCount),
                     ),
                   ],
                 ),
@@ -510,7 +567,23 @@ class _MainPageState extends State<MainPage> {
             ),
           ),
 
-          // 子按鈕
+          // Blur overlay that appears when sub-buttons are shown
+          IgnorePointer(
+            ignoring: !_showSubButtons,
+            child: AnimatedOpacity(
+              opacity: _showSubButtons ? 1.0 : 0.0,
+              duration: const Duration(milliseconds: 200),
+              child: GestureDetector(
+                onTap: () => setState(() => _showSubButtons = false),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
+                  child: Container(color: Colors.black.withOpacity(0.1)),
+                ),
+              ),
+            ),
+          ),
+
+          // Sub-buttons (they appear on top of the blur)
           AnimatedPositioned(
             duration: const Duration(milliseconds: 400),
             curve: Curves.easeOutBack,
