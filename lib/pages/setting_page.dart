@@ -72,9 +72,20 @@ class _SettingPageState extends State<SettingPage> {
         _ebType = data['EB_Type'] as String? ?? _ebType;
       });
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('讀取資料失敗：$e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '讀取資料失敗：$e',
+            style: TextStyle(fontSize: 12, color: Colors.black),
+          ),
+          backgroundColor: Colors.orange[100],
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          margin: EdgeInsets.all(8),
+        ),
+      );
     }
   }
 
@@ -126,9 +137,20 @@ class _SettingPageState extends State<SettingPage> {
         'EB_Type': _ebType,
       });
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('更新資料失敗：$e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '更新資料失敗：$e',
+            style: TextStyle(fontSize: 12, color: Colors.black),
+          ),
+          backgroundColor: Colors.orange[100],
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          margin: EdgeInsets.all(8),
+        ),
+      );
       return;
     }
 
@@ -148,9 +170,20 @@ class _SettingPageState extends State<SettingPage> {
       height = (data['height'] as num).toInt();
       weight = (data['weight'] as num).toInt();
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('讀取 Profile 失敗：$e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '讀取 Profile 失敗：$e',
+            style: TextStyle(fontSize: 12, color: Colors.black),
+          ),
+          backgroundColor: Colors.orange[100],
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          margin: EdgeInsets.all(8),
+        ),
+      );
       return;
     }
 
@@ -168,9 +201,20 @@ class _SettingPageState extends State<SettingPage> {
       );
       // you may want to store dailyNeeds in prefs or Firestore here
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('取得每日需求失敗：$e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '取得每日需求失敗：$e',
+            style: TextStyle(fontSize: 12, color: Colors.black),
+          ),
+          backgroundColor: Colors.orange[100],
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          margin: EdgeInsets.all(8),
+        ),
+      );
       return;
     }
 
