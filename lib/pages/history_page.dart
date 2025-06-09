@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'dart:convert';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'record_page/text_record_page.dart';
 
 class HistoryPage extends StatefulWidget {
   const HistoryPage({super.key});
@@ -75,6 +76,7 @@ class _HistoryPageState extends State<HistoryPage> {
     final Map<String, List<Map<String, dynamic>>> groupedRecords = {};
     for (var doc in querySnapshot.docs) {
       final data = doc.data();
+      data['documentId'] = doc.id; // 添加文件 ID
       final timestamp = data['timestamp'] as Timestamp;
       final date = DateFormat('yyyy-MM-dd').format(timestamp.toDate());
 
@@ -144,7 +146,12 @@ class _HistoryPageState extends State<HistoryPage> {
             )
             .get();
 
-    _dailyRecords = querySnapshot.docs.map((doc) => doc.data()).toList();
+    _dailyRecords =
+        querySnapshot.docs.map((doc) {
+          final data = doc.data();
+          data['documentId'] = doc.id; // 添加文件 ID
+          return data;
+        }).toList();
     _dailyRecords.sort(
       (a, b) =>
           (b['timestamp'] as Timestamp).compareTo(a['timestamp'] as Timestamp),
@@ -386,6 +393,7 @@ class _HistoryPageState extends State<HistoryPage> {
                   .get();
 
           if (querySnapshot.docs.isNotEmpty) {
+            final docId = querySnapshot.docs.first.id;
             await querySnapshot.docs.first.reference.delete();
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
@@ -546,6 +554,36 @@ class _HistoryPageState extends State<HistoryPage> {
                                       DateFormat('yyyy/MM/dd HH:mm').format(
                                         (record['timestamp'] as Timestamp)
                                             .toDate(),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 24),
+                                    SizedBox(
+                                      width: double.infinity,
+                                      child: ElevatedButton.icon(
+                                        onPressed: () async {
+                                          Navigator.pop(context); // 關閉詳情頁面
+                                          final result = await Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder:
+                                                  (context) => TextRecordPage(
+                                                    initialRecord: record,
+                                                  ),
+                                            ),
+                                          );
+                                          if (result == true) {
+                                            _fetchRecords(); // 重新載入資料
+                                          }
+                                        },
+                                        icon: const Icon(Icons.edit),
+                                        label: const Text('Edit Record'),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.blue,
+                                          foregroundColor: Colors.white,
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 12,
+                                          ),
+                                        ),
                                       ),
                                     ),
                                   ],
