@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'dart:ui'; // Import for the blur effect
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -305,8 +306,22 @@ class _MainPageState extends State<MainPage> {
       editNoteKey: _editNoteKey,
       cameraAltKey: _cameraAltKey,
       petKey: _petKey,
-      onTutorialStart: () => setState(() => _showSubButtons = true),
-      onTutorialFinish: () => setState(() => _showSubButtons = false),
+      onTutorialStart:
+          () {}, // This can be used to set a global "isTutorialActive" flag if needed
+      onTutorialFinish: () {
+        // Hide the buttons when the tutorial is finished or skipped
+        if (mounted) setState(() => _showSubButtons = false);
+      },
+      expandSubButtonsCallback: () {
+        // This is called by the manager when the user taps the 'Add' target
+        if (mounted) setState(() => _showSubButtons = true);
+      },
+      hideSubButtonsCallback: () {
+        // This is called by the manager when the user taps the 'Camera' target
+        Future.delayed(const Duration(milliseconds: 400), () {
+          if (mounted) setState(() => _showSubButtons = false);
+        });
+      },
     );
   }
 
@@ -328,6 +343,7 @@ class _MainPageState extends State<MainPage> {
       backgroundColor: Colors.white,
       body: Stack(
         children: [
+          // Main content area
           SafeArea(
             child: Column(
               children: [
@@ -510,7 +526,23 @@ class _MainPageState extends State<MainPage> {
             ),
           ),
 
-          // 子按鈕
+          // Blur overlay that appears when sub-buttons are shown
+          IgnorePointer(
+            ignoring: !_showSubButtons,
+            child: AnimatedOpacity(
+              opacity: _showSubButtons ? 1.0 : 0.0,
+              duration: const Duration(milliseconds: 200),
+              child: GestureDetector(
+                onTap: () => setState(() => _showSubButtons = false),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
+                  child: Container(color: Colors.black.withOpacity(0.1)),
+                ),
+              ),
+            ),
+          ),
+
+          // Sub-buttons (they appear on top of the blur)
           AnimatedPositioned(
             duration: const Duration(milliseconds: 400),
             curve: Curves.easeOutBack,

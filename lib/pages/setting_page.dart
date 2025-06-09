@@ -24,6 +24,8 @@ class _SettingPageState extends State<SettingPage> {
   String _goal = 'maintain weight';
   String _ebType = 'Vicious';
 
+  bool _isSaving = false;
+
   // options
   final List<String> _genders = ['Men', 'Women', 'Other'];
   final List<String> _activities = [
@@ -107,6 +109,7 @@ class _SettingPageState extends State<SettingPage> {
   }
 
   Future<void> _saveUserData() async {
+    setState(() => _isSaving = true);
     final prefs = await SharedPreferences.getInstance();
     final account = prefs.getString('account');
     if (account == null) return;
@@ -176,6 +179,7 @@ class _SettingPageState extends State<SettingPage> {
       context,
       MaterialPageRoute(builder: (_) => const MainPage()),
     );
+    setState(() => _isSaving = false);
   }
 
   @override
@@ -261,14 +265,23 @@ class _SettingPageState extends State<SettingPage> {
             ),
             const SizedBox(height: 24),
             ElevatedButton(
-              onPressed: _saveUserData,
+              onPressed: _isSaving ? null : _saveUserData,
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
-              child: const Text('Save Changes', style: TextStyle(fontSize: 18)),
+              child:
+                  _isSaving
+                      ? const CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      )
+                      : const Text(
+                        'Save Changes',
+                        style: TextStyle(fontSize: 18),
+                      ),
             ),
           ],
         ),
