@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'dart:ui'; // Import for the blur effect
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -305,8 +306,22 @@ class _MainPageState extends State<MainPage> {
       editNoteKey: _editNoteKey,
       cameraAltKey: _cameraAltKey,
       petKey: _petKey,
-      onTutorialStart: () => setState(() => _showSubButtons = true),
-      onTutorialFinish: () => setState(() => _showSubButtons = false),
+      onTutorialStart:
+          () {}, // This can be used to set a global "isTutorialActive" flag if needed
+      onTutorialFinish: () {
+        // Hide the buttons when the tutorial is finished or skipped
+        if (mounted) setState(() => _showSubButtons = false);
+      },
+      expandSubButtonsCallback: () {
+        // This is called by the manager when the user taps the 'Add' target
+        if (mounted) setState(() => _showSubButtons = true);
+      },
+      hideSubButtonsCallback: () {
+        // This is called by the manager when the user taps the 'Camera' target
+        Future.delayed(const Duration(milliseconds: 400), () {
+          if (mounted) setState(() => _showSubButtons = false);
+        });
+      },
     );
   }
 
@@ -328,202 +343,206 @@ class _MainPageState extends State<MainPage> {
       backgroundColor: Colors.white,
       body: Stack(
         children: [
-          GestureDetector(
-            onTap: () {
-              // If the sub-buttons are shown, hide them.
-              if (_showSubButtons) {
-                setState(() {
-                  _showSubButtons = false;
-                });
-              }
-            },
-            behavior: HitTestBehavior.opaque,
-            child: SafeArea(
-              child: Column(
-                children: [
-                  Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: horizontalPadding,
-                      vertical: screenHeight * 0.015,
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.info, size: 40),
-                          onPressed: _showTutorial,
-                        ),
-                        Text(
-                          'CalH2O',
-                          style: TextStyle(
-                            fontSize: titleSize,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 1,
-                          ),
-                        ),
-                        IconButton(
-                          icon: Icon(Icons.settings, size: 40),
-                          onPressed: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => const SettingPage(),
-                              ),
-                            );
-                          },
-                        ),
-                      ],
-                    ),
+          // Main content area
+          SafeArea(
+            child: Column(
+              children: [
+                Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: horizontalPadding,
+                    vertical: screenHeight * 0.015,
                   ),
-
-                  MainProgressBar(
-                    color: Colors.orange,
-                    label:
-                        'Calories $_calories kcal (${_getLabel(_calories, _caloriesTarget, ' kcal')})',
-                    value: _caloriesProgress,
-                    onIncrement: _incrementCalories,
-                  ),
-                  WaveProgressBar(
-                    label:
-                        'Water $_water ml (${_getLabel(_water, _waterTarget, ' ml')})',
-                    value: _waterProgress,
-                    onIncrement: _incrementWater,
-                    onDecrement: _decrementWater,
-                  ),
-                  SizedBox(height: cardSpacing),
-                  Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: horizontalPadding,
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        Expanded(
-                          child: NutritionCard(
-                            label: 'Protein',
-                            value: _protein / _proteinTarget,
-                            left: _getLabel(_protein, _proteinTarget, 'g'),
-                            icon: Icons.fitness_center,
-                          ),
-                        ),
-                        SizedBox(width: screenWidth * 0.02),
-                        Expanded(
-                          child: NutritionCard(
-                            label: 'Carbs',
-                            value: _carbs / _carbsTarget,
-                            left: _getLabel(_carbs, _carbsTarget, 'g'),
-                            icon: Icons.rice_bowl,
-                          ),
-                        ),
-                        SizedBox(width: screenWidth * 0.02),
-                        Expanded(
-                          child: NutritionCard(
-                            label: 'Fats',
-                            value: _fats / _fatsTarget,
-                            left: _getLabel(_fats, _fatsTarget, 'g'),
-                            icon: Icons.emoji_food_beverage,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      if (_isProcessing)
-                        Padding(
-                          padding: EdgeInsets.only(right: screenWidth * 0.02),
-                          child: const LoadingOverlay(),
+                      IconButton(
+                        icon: const Icon(Icons.info, size: 40),
+                        onPressed: _showTutorial,
+                      ),
+                      Text(
+                        'CalH2O',
+                        style: TextStyle(
+                          fontSize: titleSize,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1,
                         ),
-                      Container(
-                        key: _comboKey,
-                        margin: EdgeInsets.only(
-                          top: screenHeight * 0.02,
-                          right: screenWidth * 0.06,
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.settings, size: 40),
+                        onPressed: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => const SettingPage(),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+
+                MainProgressBar(
+                  color: Colors.orange,
+                  label:
+                      'Calories $_calories kcal (${_getLabel(_calories, _caloriesTarget, ' kcal')})',
+                  value: _caloriesProgress,
+                  onIncrement: _incrementCalories,
+                ),
+                WaveProgressBar(
+                  label:
+                      'Water $_water ml (${_getLabel(_water, _waterTarget, ' ml')})',
+                  value: _waterProgress,
+                  onIncrement: _incrementWater,
+                  onDecrement: _decrementWater,
+                ),
+                SizedBox(height: cardSpacing),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      Expanded(
+                        child: NutritionCard(
+                          label: 'Protein',
+                          value: _protein / _proteinTarget,
+                          left: _getLabel(_protein, _proteinTarget, 'g'),
+                          icon: Icons.fitness_center,
                         ),
-                        padding: EdgeInsets.symmetric(
-                          horizontal: screenWidth * 0.05,
-                          vertical: screenHeight * 0.01,
+                      ),
+                      SizedBox(width: screenWidth * 0.02),
+                      Expanded(
+                        child: NutritionCard(
+                          label: 'Carbs',
+                          value: _carbs / _carbsTarget,
+                          left: _getLabel(_carbs, _carbsTarget, 'g'),
+                          icon: Icons.rice_bowl,
                         ),
-                        decoration: BoxDecoration(
-                          color: Colors.grey[300],
-                          borderRadius: BorderRadius.circular(24),
-                        ),
-                        child: Text(
-                          'combo',
-                          style: TextStyle(
-                            fontSize: screenWidth * 0.05,
-                            color: Colors.black54,
-                          ),
+                      ),
+                      SizedBox(width: screenWidth * 0.02),
+                      Expanded(
+                        child: NutritionCard(
+                          label: 'Fats',
+                          value: _fats / _fatsTarget,
+                          left: _getLabel(_fats, _fatsTarget, 'g'),
+                          icon: Icons.emoji_food_beverage,
                         ),
                       ),
                     ],
                   ),
-
-                  SizedBox(height: 8),
-                  Flexible(
-                    fit: FlexFit.loose,
-                    child: Stack(
-                      children: [
-                        // 先放彈幕
-                        const SpeechBubble(),
-
-                        // 再放動畫
-                        Center(
-                          child: FittedBox(
-                            fit: BoxFit.contain,
-                            key: _petKey,
-                            child: const FrameAnimationWidget(size: 200),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: screenWidth * 0.08,
-                      vertical: screenHeight * 0.01,
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        IconButton(
-                          key: _addKey,
-                          icon: Icon(
-                            Icons.lunch_dining,
-                            size: iconSize,
-                            color: _showSubButtons ? Colors.grey : Colors.black,
-                          ),
-                          onPressed: _toggleSubButtons,
-                        ),
-                        IconButton(
-                          key: _historyKey,
-                          icon: Icon(Icons.access_time, size: iconSize),
-                          onPressed: () {
-                            _navigateNamed('/history');
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                  SizedBox(height: screenHeight * 0.01),
-                  Padding(
-                    padding: EdgeInsets.only(bottom: screenHeight * 0.02),
-                    child: Text(
-                      'Sip smart, live strong.',
-                      style: TextStyle(
-                        fontSize: screenWidth * 0.05,
-                        fontWeight: FontWeight.w600,
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    if (_isProcessing)
+                      Padding(
+                        padding: EdgeInsets.only(right: screenWidth * 0.02),
+                        child: const LoadingOverlay(),
                       ),
-                      textAlign: TextAlign.center,
+                    Container(
+                      key: _comboKey,
+                      margin: EdgeInsets.only(
+                        top: screenHeight * 0.02,
+                        right: screenWidth * 0.06,
+                      ),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: screenWidth * 0.05,
+                        vertical: screenHeight * 0.01,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(24),
+                      ),
+                      child: Text(
+                        'combo',
+                        style: TextStyle(
+                          fontSize: screenWidth * 0.05,
+                          color: Colors.black54,
+                        ),
+                      ),
                     ),
+                  ],
+                ),
+
+                SizedBox(height: 8),
+                Flexible(
+                  fit: FlexFit.loose,
+                  child: Stack(
+                    children: [
+                      // 先放彈幕
+                      const SpeechBubble(),
+
+                      // 再放動畫
+                      Center(
+                        child: FittedBox(
+                          fit: BoxFit.contain,
+                          key: _petKey,
+                          child: const FrameAnimationWidget(size: 200),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
+
+                Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: screenWidth * 0.08,
+                    vertical: screenHeight * 0.01,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      IconButton(
+                        key: _addKey,
+                        icon: Icon(
+                          Icons.lunch_dining,
+                          size: iconSize,
+                          color: _showSubButtons ? Colors.grey : Colors.black,
+                        ),
+                        onPressed: _toggleSubButtons,
+                      ),
+                      IconButton(
+                        key: _historyKey,
+                        icon: Icon(Icons.access_time, size: iconSize),
+                        onPressed: () {
+                          _navigateNamed('/history');
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: screenHeight * 0.01),
+                Padding(
+                  padding: EdgeInsets.only(bottom: screenHeight * 0.02),
+                  child: Text(
+                    'Sip smart, live strong.',
+                    style: TextStyle(
+                      fontSize: screenWidth * 0.05,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Blur overlay that appears when sub-buttons are shown
+          IgnorePointer(
+            ignoring: !_showSubButtons,
+            child: AnimatedOpacity(
+              opacity: _showSubButtons ? 1.0 : 0.0,
+              duration: const Duration(milliseconds: 200),
+              child: GestureDetector(
+                onTap: () => setState(() => _showSubButtons = false),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
+                  child: Container(color: Colors.black.withOpacity(0.1)),
+                ),
               ),
             ),
           ),
 
-          // 子按鈕
+          // Sub-buttons (they appear on top of the blur)
           AnimatedPositioned(
             duration: const Duration(milliseconds: 400),
             curve: Curves.easeOutBack,
