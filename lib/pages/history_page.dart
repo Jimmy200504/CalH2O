@@ -269,6 +269,11 @@ class _HistoryPageState extends State<HistoryPage> {
         title: Text(_isMonthView ? 'Monthly History' : 'Daily History'),
         actions: [
           IconButton(
+            icon: const Icon(Icons.bar_chart, color: Colors.black),
+            tooltip: '分析',
+            onPressed: () => Navigator.pushNamed(context, '/analyze'),
+          ),
+          IconButton(
             icon: Icon(
               _isMonthView ? Icons.calendar_today : Icons.calendar_month,
             ),
