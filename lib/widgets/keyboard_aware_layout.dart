@@ -17,7 +17,6 @@ class KeyboardAwareLayout extends StatefulWidget {
 class _KeyboardAwareLayoutState extends State<KeyboardAwareLayout>
     with WidgetsBindingObserver {
   double _keyboardHeight = 0;
-  bool _isKeyboardVisible = false;
 
   @override
   void initState() {
@@ -34,15 +33,9 @@ class _KeyboardAwareLayoutState extends State<KeyboardAwareLayout>
   @override
   void didChangeMetrics() {
     final bottomInset = WidgetsBinding.instance.window.viewInsets.bottom;
-    if (bottomInset > 0 && !_isKeyboardVisible) {
+    if (bottomInset != _keyboardHeight) {
       setState(() {
         _keyboardHeight = bottomInset;
-        _isKeyboardVisible = true;
-      });
-    } else if (bottomInset == 0 && _isKeyboardVisible) {
-      setState(() {
-        _keyboardHeight = 0;
-        _isKeyboardVisible = false;
       });
     }
   }
@@ -52,16 +45,12 @@ class _KeyboardAwareLayoutState extends State<KeyboardAwareLayout>
     return GestureDetector(
       onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
       behavior: HitTestBehavior.translucent,
-      child: SingleChildScrollView(
+      child: CustomScrollView(
         physics: const BouncingScrollPhysics(),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.easeOutCubic,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [widget.child, SizedBox(height: _keyboardHeight)],
-          ),
-        ),
+        slivers: <Widget>[
+          SliverFillRemaining(hasScrollBody: false, child: widget.child),
+          SliverToBoxAdapter(child: SizedBox(height: _keyboardHeight)),
+        ],
       ),
     );
   }
