@@ -70,7 +70,7 @@ void main() async {
   runApp(
     ChangeNotifierProvider(
       create: (_) => NutritionDraft(),
-      child: MyApp(startFromMainPage: false),
+      child: MyApp(startFromMainPage: isLoggedIn),
     ),
   );
 }
