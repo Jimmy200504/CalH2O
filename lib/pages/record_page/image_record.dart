@@ -1,5 +1,8 @@
 import 'dart:convert';
+import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:image/image.dart' as img;
 import '../../services/image_picker.dart';
 import '../../services/camera_service.dart';
 import '../../widgets/camera/camera_preview_widget.dart';
@@ -76,6 +79,32 @@ class _ImageRecordPageState extends State<ImageRecordPage>
     }
   }
 
+  Future<String?> _compressAndEncodeImage(List<int> bytes) async {
+    try {
+      // Decode the image
+      final image = img.decodeImage(Uint8List.fromList(bytes));
+      if (image == null) return null;
+
+      // Resize the image to 400x400
+      final resizedImage = img.copyResize(
+        image,
+        width: 400,
+        height: 400,
+        interpolation: img.Interpolation.linear,
+      );
+
+      // Encode the resized image to JPEG
+      final compressedBytes = img.encodeJpg(resizedImage, quality: 85);
+
+      // Convert to base64
+      debugPrint("Compressed and encoded image to base64 for upload finished");
+      return 'data:image/jpeg;base64,${base64Encode(compressedBytes)}';
+    } catch (e) {
+      debugPrint("Error compressing image: $e");
+      return null;
+    }
+  }
+
   Future<void> _takePicture() async {
     if (_isProcessing || _isDisposed) {
       debugPrint("Cannot take picture: processing or disposed");
@@ -85,18 +114,28 @@ class _ImageRecordPageState extends State<ImageRecordPage>
     debugPrint("Taking picture");
     setState(() => _isProcessing = true);
     try {
+      // Pause camera before processing image
+      await _cameraService.pause();
+
       final photo = await _cameraService.takePicture();
       if (photo != null && mounted && !_isDisposed) {
-        debugPrint("Picture taken, converting to base64");
+        debugPrint("Picture taken, compressing and converting to base64");
         final bytes = await photo.readAsBytes();
-        final base64Image = 'data:image/jpeg;base64,${base64Encode(bytes)}';
+        final base64Image = await _compressAndEncodeImage(bytes);
         await _handleNavigation(base64Image);
       } else {
-        // 如果拍照失敗，也要返回主畫面
+        // 如果拍照失敗，恢復相機預覽並返回主畫面
+        if (mounted && !_isDisposed) {
+          await _cameraService.resume();
+        }
         await _handleNavigation(null);
       }
     } catch (e) {
       debugPrint("Error taking picture: $e");
+      // 發生錯誤時恢復相機預覽
+      if (mounted && !_isDisposed) {
+        await _cameraService.resume();
+      }
       await _handleNavigation(null);
     } finally {
       if (mounted && !_isDisposed) {
@@ -116,23 +155,47 @@ class _ImageRecordPageState extends State<ImageRecordPage>
     try {
       final file = await ImagePickerService.pickAndSaveImage();
       if (file != null && mounted && !_isDisposed) {
-        debugPrint("Image picked, converting to base64");
+        debugPrint("Image picked, compressing and converting to base64");
+        // Pause camera before processing image
+        await _cameraService.pause();
         final bytes = await file.readAsBytes();
-        final base64Image = 'data:image/jpeg;base64,${base64Encode(bytes)}';
+        final base64Image = await _compressAndEncodeImage(bytes);
         await _handleNavigation(base64Image);
       } else {
-        // 如果選擇圖片失敗或取消，不需要返回主畫面，因為我們還在相機畫面
+        // 如果選擇圖片失敗或取消，確保相機是運作狀態
         debugPrint("Image picking cancelled or failed, staying on camera page");
         if (mounted && !_isDisposed) {
+          await _ensureCameraRunning();
           setState(() => _isProcessing = false);
         }
       }
     } catch (e) {
       debugPrint("Error picking image: $e");
-      // 發生錯誤時也不需要返回主畫面
       if (mounted && !_isDisposed) {
+        await _ensureCameraRunning();
         setState(() => _isProcessing = false);
       }
+    }
+  }
+
+  Future<void> _ensureCameraRunning() async {
+    debugPrint("Ensuring camera is running...");
+    try {
+      if (_cameraService.controller == null) {
+        debugPrint("Camera controller is null, initializing...");
+        await _initializeCamera();
+      } else if (!_cameraService.controller!.value.isInitialized) {
+        debugPrint("Camera not initialized, initializing...");
+        await _initializeCamera();
+      } else {
+        debugPrint("Camera is initialized, forcing preview refresh...");
+        await _cameraService.forceRefresh();
+      }
+      debugPrint("Camera state check completed");
+    } catch (e) {
+      debugPrint("Error ensuring camera is running: $e");
+      // 如果出現錯誤，嘗試重新初始化相機
+      await _initializeCamera();
     }
   }
 

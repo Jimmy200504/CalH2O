@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'dart:convert';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'record_page/text_record_page.dart';
 
 class HistoryPage extends StatefulWidget {
   const HistoryPage({super.key});
@@ -75,6 +76,7 @@ class _HistoryPageState extends State<HistoryPage> {
     final Map<String, List<Map<String, dynamic>>> groupedRecords = {};
     for (var doc in querySnapshot.docs) {
       final data = doc.data();
+      data['documentId'] = doc.id; // 添加文件 ID
       final timestamp = data['timestamp'] as Timestamp;
       final date = DateFormat('yyyy-MM-dd').format(timestamp.toDate());
 
@@ -144,7 +146,12 @@ class _HistoryPageState extends State<HistoryPage> {
             )
             .get();
 
-    _dailyRecords = querySnapshot.docs.map((doc) => doc.data()).toList();
+    _dailyRecords =
+        querySnapshot.docs.map((doc) {
+          final data = doc.data();
+          data['documentId'] = doc.id; // 添加文件 ID
+          return data;
+        }).toList();
     _dailyRecords.sort(
       (a, b) =>
           (b['timestamp'] as Timestamp).compareTo(a['timestamp'] as Timestamp),
@@ -175,6 +182,33 @@ class _HistoryPageState extends State<HistoryPage> {
         firstDate: DateTime(2020),
         lastDate: DateTime.now(),
         initialDatePickerMode: DatePickerMode.year,
+        builder:
+            (context, child) => Theme(
+              data: ThemeData().copyWith(
+                colorScheme: ColorScheme.light(
+                  primary: Color(0xFFFFB74D), // 主色
+                  onPrimary: Colors.black, // icon color
+                  surface: Colors.white,
+                  onSurface: Colors.black,
+                ),
+                dialogBackgroundColor: Colors.white,
+                textButtonTheme: TextButtonThemeData(
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.black, // Cancel / OK 按鈕文字顏色
+                  ),
+                ),
+                inputDecorationTheme: const InputDecorationTheme(
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.black),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.black),
+                  ),
+                  labelStyle: TextStyle(color: Colors.black),
+                ),
+              ),
+              child: child!,
+            ),
       );
       if (picked != null) {
         setState(() {
@@ -189,6 +223,33 @@ class _HistoryPageState extends State<HistoryPage> {
         initialDate: _selectedDate,
         firstDate: DateTime(2020),
         lastDate: DateTime.now(),
+        builder:
+            (context, child) => Theme(
+              data: ThemeData().copyWith(
+                colorScheme: ColorScheme.light(
+                  primary: Color(0xFFFFB74D), // 主色
+                  onPrimary: Colors.black, // icon color
+                  surface: Colors.white,
+                  onSurface: Colors.black,
+                ),
+                dialogBackgroundColor: Colors.white,
+                textButtonTheme: TextButtonThemeData(
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.black, // Cancel / OK 按鈕文字顏色
+                  ),
+                ),
+                inputDecorationTheme: const InputDecorationTheme(
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.black),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.black),
+                  ),
+                  labelStyle: TextStyle(color: Colors.black),
+                ),
+              ),
+              child: child!,
+            ),
       );
       if (picked != null) {
         setState(() {
@@ -239,6 +300,10 @@ class _HistoryPageState extends State<HistoryPage> {
                     _isMonthView
                         ? DateFormat('yyyy/MM').format(_selectedDate)
                         : DateFormat('yyyy/MM/dd').format(_selectedDate),
+                    style: const TextStyle(color: Colors.black), // 文字顏色
+                  ),
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.black, // ripple 特效顏色
                   ),
                 ),
               ],
@@ -248,7 +313,7 @@ class _HistoryPageState extends State<HistoryPage> {
             padding: const EdgeInsets.all(16),
             margin: const EdgeInsets.symmetric(horizontal: 16),
             decoration: BoxDecoration(
-              color: Colors.blue.shade50,
+              color: Colors.orange.withOpacity(0.25),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Column(
@@ -294,6 +359,12 @@ class _HistoryPageState extends State<HistoryPage> {
                             horizontal: 16,
                             vertical: 8,
                           ),
+                          elevation: 0,
+                          color: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            side: BorderSide(color: Colors.grey.shade300),
+                          ),
                           child: ExpansionTile(
                             title: Text(
                               DateFormat(
@@ -306,6 +377,14 @@ class _HistoryPageState extends State<HistoryPage> {
                             subtitle: Text(
                               'Total Calories: ${dayData['totalCalories'].toStringAsFixed(1)} kcal',
                             ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            collapsedShape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            backgroundColor: Colors.white,
+                            collapsedBackgroundColor: Colors.white,
                             children:
                                 (dayData['foods'] as List<Map<String, dynamic>>)
                                     .map((record) => _buildRecordItem(record))
@@ -314,11 +393,39 @@ class _HistoryPageState extends State<HistoryPage> {
                         );
                       },
                     )
-                    : ListView.builder(
-                      itemCount: _dailyRecords.length,
-                      itemBuilder: (context, index) {
-                        return _buildRecordItem(_dailyRecords[index]);
-                      },
+                    : Column(
+                      children: [
+                        Expanded(
+                          child: ListView.builder(
+                            itemCount: _dailyRecords.length,
+                            itemBuilder: (context, index) {
+                              return _buildRecordItem(_dailyRecords[index]);
+                            },
+                          ),
+                        ),
+                        if (_dailyRecords.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.info_outline,
+                                  size: 16,
+                                  color: Colors.grey[600],
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Click on any item to see more information',
+                                  style: TextStyle(
+                                    color: Colors.grey[600],
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                      ],
                     ),
           ),
         ],
@@ -364,10 +471,12 @@ class _HistoryPageState extends State<HistoryPage> {
               actions: <Widget>[
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(false),
+                  style: TextButton.styleFrom(foregroundColor: Colors.black),
                   child: const Text('Cancel'),
                 ),
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(true),
+                  style: TextButton.styleFrom(foregroundColor: Colors.black),
                   child: const Text('Delete'),
                 ),
               ],
@@ -393,11 +502,20 @@ class _HistoryPageState extends State<HistoryPage> {
                   .get();
 
           if (querySnapshot.docs.isNotEmpty) {
+            final docId = querySnapshot.docs.first.id;
             await querySnapshot.docs.first.reference.delete();
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Record deleted successfully'),
-                duration: Duration(seconds: 2),
+              SnackBar(
+                content: Text(
+                  'Record deleted successfully',
+                  style: TextStyle(fontSize: 12, color: Colors.black),
+                ),
+                backgroundColor: Colors.orange[100],
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                margin: EdgeInsets.all(8),
               ),
             );
             // Refresh the records
@@ -405,9 +523,17 @@ class _HistoryPageState extends State<HistoryPage> {
           }
         } catch (e) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Error deleting record'),
-              duration: Duration(seconds: 2),
+            SnackBar(
+              content: Text(
+                'Error deleting record',
+                style: TextStyle(fontSize: 12, color: Colors.black),
+              ),
+              backgroundColor: Colors.orange[100],
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              margin: EdgeInsets.all(8),
             ),
           );
         }
@@ -553,6 +679,36 @@ class _HistoryPageState extends State<HistoryPage> {
                                       DateFormat('yyyy/MM/dd HH:mm').format(
                                         (record['timestamp'] as Timestamp)
                                             .toDate(),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 24),
+                                    SizedBox(
+                                      width: double.infinity,
+                                      child: ElevatedButton.icon(
+                                        onPressed: () async {
+                                          Navigator.pop(context); // 關閉詳情頁面
+                                          final result = await Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder:
+                                                  (context) => TextRecordPage(
+                                                    initialRecord: record,
+                                                  ),
+                                            ),
+                                          );
+                                          if (result == true) {
+                                            _fetchRecords(); // 重新載入資料
+                                          }
+                                        },
+                                        icon: const Icon(Icons.edit),
+                                        label: const Text('Edit Record'),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Color(0xFFFFB74D),
+                                          foregroundColor: Colors.white,
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 12,
+                                          ),
+                                        ),
                                       ),
                                     ),
                                   ],

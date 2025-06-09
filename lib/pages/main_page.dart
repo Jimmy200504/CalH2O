@@ -1,5 +1,5 @@
 import 'dart:math';
-
+import 'dart:ui'; // Import for the blur effect
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -9,15 +9,17 @@ import '../widgets/main_page/nutrition_card.dart';
 import '../widgets/main_page/loading_overlay.dart';
 import '../widgets/animation.dart';
 import '../services/cloud_function_fetch/get_nutrition_from_photo.dart';
-import '../services/image_upload_service.dart';
 import '../model/nutrition_draft.dart';
 import '../main.dart';
 import '../services/water_upload_service.dart';
-
 import '../pages/setting_page.dart';
-import '../pages/history_page.dart';
-
+import '../widgets/main_page/speech_bubble.dart';
+import 'dart:async';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
+import 'package:flutter_barrage/flutter_barrage.dart';
+import '../widgets/combo_badge.dart';
+import '../widgets/main_page/tutorial_manager.dart';
+
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -26,8 +28,10 @@ class MainPage extends StatefulWidget {
   State<MainPage> createState() => _MainPageState();
 }
 
-
 class _MainPageState extends State<MainPage> {
+  double _waterProgress = 0.0;
+  bool _isProcessing = false;
+
   int _calories = 0;
   int _protein = 0;
   int _carbs = 0;
@@ -45,16 +49,16 @@ class _MainPageState extends State<MainPage> {
   double _proteinProgress = 0.0;
   double _carbsProgress = 0.0;
   double _fatsProgress = 0.0;
-  double _waterProgress = 0.0;
 
   bool _showSubButtons = false;
-  bool _isProcessing = false;
+  int _comboCount = 0;
 
   final GlobalKey _addKey = GlobalKey();
   final GlobalKey _historyKey = GlobalKey();
   final GlobalKey _comboKey = GlobalKey();
   final GlobalKey _editNoteKey = GlobalKey();
   final GlobalKey _cameraAltKey = GlobalKey();
+  final GlobalKey _petKey = GlobalKey();
 
   @override
   void initState() {
@@ -69,35 +73,72 @@ class _MainPageState extends State<MainPage> {
     });
     _loadTargets();
     _setupNutritionListener();
+    _updateCombo();
   }
 
   Future<void> _loadTargets() async {
-    // 1. 拿到使用者 ID
-    final prefs = await SharedPreferences.getInstance();
-    final account = prefs.getString('account');
-    if (account == null) return;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final account = prefs.getString('account');
+      if (account == null) return;
 
-    // 2. 直接從 Firestore 抓 doc 一次
-    final doc =
-        await FirebaseFirestore.instance.collection('users').doc(account).get();
-    final data = doc.data();
-    if (data == null) return;
+      final doc =
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(account)
+              .get();
+      final data = doc.data();
+      if (data == null) return;
 
-    // 3. 讀欄位並存進變數
-    final int caloriesTarget = (data['calories'] as num).toInt();
-    final int waterTarget = (data['water'] as num).toInt();
-    final int proteinTarget = (data['proteinTarget'] as num).toInt();
-    final int carbsTarget = (data['carbsTarget'] as num).toInt();
-    final int fatsTarget = (data['fatsTarget'] as num).toInt();
+      // 把目標撈回來
+      final newCalTarget = _safeGetInt(data, 'calories', 2000);
+      final newWaterTarget = _safeGetInt(data, 'water', 2000);
+      final newProTarget = _safeGetInt(data, 'proteinTarget', 50);
+      final newCarbTarget = _safeGetInt(data, 'carbsTarget', 250);
+      final newFatTarget = _safeGetInt(data, 'fatsTarget', 65);
 
-    // 4. 把它們存到 State 裡
-    setState(() {
-      _caloriesTarget = caloriesTarget;
-      _waterTarget = waterTarget;
-      _proteinTarget = proteinTarget;
-      _carbsTarget = carbsTarget;
-      _fatsTarget = fatsTarget;
-    });
+      setState(() {
+        _caloriesTarget = newCalTarget;
+        _waterTarget = newWaterTarget;
+        _proteinTarget = newProTarget;
+        _carbsTarget = newCarbTarget;
+        _fatsTarget = newFatTarget;
+
+        // **重算進度**：載入完新目標後，馬上把目前數值除以目標，算出 ProgressBar
+        _caloriesProgress = (_calories / _caloriesTarget).clamp(0.0, 1.0);
+        _waterProgress = (_water / _waterTarget).clamp(0.0, 1.0);
+        _proteinProgress = (_protein / _proteinTarget).clamp(0.0, 1.0);
+        _carbsProgress = (_carbs / _carbsTarget).clamp(0.0, 1.0);
+        _fatsProgress = (_fats / _fatsTarget).clamp(0.0, 1.0);
+      });
+    } catch (e) {
+      print('Error loading targets: $e');
+      // 可保留原本的預設值，也要重算一次進度
+      setState(() {
+        _caloriesTarget = 2000;
+        _waterTarget = 2000;
+        _proteinTarget = 50;
+        _carbsTarget = 250;
+        _fatsTarget = 65;
+        _caloriesProgress = (_calories / _caloriesTarget).clamp(0.0, 1.0);
+        _waterProgress = (_water / _waterTarget).clamp(0.0, 1.0);
+        _proteinProgress = (_protein / _proteinTarget).clamp(0.0, 1.0);
+        _carbsProgress = (_carbs / _carbsTarget).clamp(0.0, 1.0);
+        _fatsProgress = (_fats / _fatsTarget).clamp(0.0, 1.0);
+      });
+    }
+  }
+
+  int _safeGetInt(Map<String, dynamic> data, String key, int defaultValue) {
+    try {
+      final value = data[key];
+      if (value == null) return defaultValue;
+      if (value is num) return value.toInt();
+      if (value is String) return int.tryParse(value) ?? defaultValue;
+      return defaultValue;
+    } catch (e) {
+      return defaultValue;
+    }
   }
 
   void _setupNutritionListener() async {
@@ -105,6 +146,26 @@ class _MainPageState extends State<MainPage> {
     final prefs = await SharedPreferences.getInstance();
     final account = prefs.getString('account');
     if (account == null) return;
+
+    //     final doc =
+    //         await FirebaseFirestore.instance.collection('users').doc(account).get();
+    //     final data = doc.data();
+    //     if (data == null) return;
+
+    //     final int caloriesTarget = (data['calories'] as num).toInt();
+    //     final int waterTarget = (data['water'] as num).toInt();
+    //     final int proteinTarget = (data['proteinTarget'] as num).toInt();
+    //     final int carbsTarget = (data['carbsTarget'] as num).toInt();
+    //     final int fatsTarget = (data['fatsTarget'] as num).toInt();
+
+    //     setState(() {
+    //       _caloriesTarget = caloriesTarget;
+    //       _waterTarget = waterTarget;
+    //       _proteinTarget = proteinTarget;
+    //       _carbsTarget = carbsTarget;
+    //       _fatsTarget = fatsTarget;
+    //     });
+    //   }
 
     // Get today's start and end timestamps
     final now = DateTime.now();
@@ -152,12 +213,36 @@ class _MainPageState extends State<MainPage> {
         });
   }
 
+  Future<void> _updateCombo() async {
+    final prefs = await SharedPreferences.getInstance();
+    final account = prefs.getString('account');
+    if (account == null) return;
+
+    final today = DateTime.now();
+    final todayStr =
+        '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
+
+    final userDoc =
+        await FirebaseFirestore.instance.collection('users').doc(account).get();
+    final data = userDoc.data();
+
+    int lastCombo = data?['comboCount'] ?? 0;
+
+    _comboCount = lastCombo + 1;
+    await FirebaseFirestore.instance.collection('users').doc(account).update({
+      'comboCount': _comboCount,
+      'lastOpened': todayStr,
+    });
+
+    setState(() {});
+  }
+
   /// 計算並上傳這段期間的水量差
   void _uploadDelta() {
     final delta = _water - _initialWater;
     if (delta != 0) {
       WaterUploadService.saveTodayWaterIntake(delta);
-      _initialWater = _water;        // 重置基準
+      _initialWater = _water; // 重置基準
     }
   }
 
@@ -188,18 +273,6 @@ class _MainPageState extends State<MainPage> {
       _fats += 7; // 7g fats per increment
     });
   }
-
-  // void _updateNutrition(NutritionResult nutrition) {
-  //   setState(() {
-  //     _calories += nutrition.calories.round();
-  //     _protein += nutrition.protein.round();
-  //     _carbs += nutrition.carbohydrate.round();
-  //     _fats += nutrition.fat.round();
-
-  //     // Update progress values
-  //     _caloriesProgress = (_calories / _caloriesTarget).clamp(0.0, 1.0);
-  //   });
-  // }
 
   Future<void> _incrementWater() async {
     const intake = 250;
@@ -238,9 +311,28 @@ class _MainPageState extends State<MainPage> {
       // 3. 全域通知 (SnackBar + 前往文字頁按鈕)
       rootScaffoldMessengerKey.currentState!.showSnackBar(
         SnackBar(
-          content: const Text('營養分析完成，請到文字頁確認並儲存'),
+          content: Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.black, size: 20),
+              SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Photo Analyzation Done. Save in',
+                  style: TextStyle(fontSize: 12, color: Colors.black),
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: Colors.orange[100],
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          margin: EdgeInsets.all(8),
+          duration: Duration(seconds: 3),
           action: SnackBarAction(
-            label: '前往文字頁',
+            label: 'Text page',
+            textColor: Colors.orange[400],
             onPressed: () {
               _navigateNamed('/text');
             },
@@ -255,151 +347,76 @@ class _MainPageState extends State<MainPage> {
     }
   }
 
-  List<TargetFocus> targets = [];
-
-  void _initTargets() {
-    targets = [
-      TargetFocus(
-        identify: "Combo",
-        keyTarget: _comboKey,
-        contents: [
-          TargetContent(
-            align: ContentAlign.bottom,
-            builder: (context, controllerTarget) {
-              Future.delayed(const Duration(seconds: 1), () {
-                controllerTarget.next();
-              });
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                children: const [
-                  SizedBox(height: 50),
-                  Text(
-                    "This shows your combo streak of daily records!",
-                    style: TextStyle(color: Colors.white, fontSize: 20),
-                  ),
-                ],
-              );
-            },
-          ),
-        ],
-      ),
-      TargetFocus(
-        identify: "Add",
-        keyTarget: _addKey,
-        contents: [
-          TargetContent(
-            align: ContentAlign.top,
-            builder: (context, controllerTarget) {
-              Future.delayed(const Duration(seconds: 1), () {
-                controllerTarget.next();
-              });
-              return const Text(
-                "Add a new record",
-                style: TextStyle(color: Colors.white, fontSize: 20),
-              );
-            },
-          ),
-        ],
-      ),
-      TargetFocus(
-        identify: "EditNote",
-        keyTarget: _editNoteKey,
-        contents: [
-          TargetContent(
-            align: ContentAlign.top,
-            builder: (context, controllerTarget) {
-              Future.delayed(const Duration(seconds: 1), () {
-                controllerTarget.next();
-              });
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                children: const [
-                  SizedBox(height: 8),
-                  Text(
-                    "Add notes to your entry",
-                    style: TextStyle(color: Colors.white, fontSize: 20),
-                  ),
-                ],
-              );
-            },
-          ),
-        ],
-      ),
-      TargetFocus(
-        identify: "Camera",
-        keyTarget: _cameraAltKey,
-        contents: [
-          TargetContent(
-            align: ContentAlign.top,
-            builder: (context, controllerTarget) {
-              Future.delayed(const Duration(seconds: 1), () {
-                controllerTarget.next();
-              });
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                children: const [
-                  SizedBox(height: 8),
-                  Text(
-                    "Use the camera to scan food",
-                    style: TextStyle(color: Colors.white, fontSize: 20),
-                  ),
-                ],
-              );
-            },
-          ),
-        ],
-      ),
-      TargetFocus(
-        identify: "History",
-        keyTarget: _historyKey,
-        contents: [
-          TargetContent(
-            align: ContentAlign.top,
-            builder: (context, controllerTarget) {
-              Future.delayed(const Duration(seconds: 1), () {
-                controllerTarget.skip();
-              });
-              return const Text(
-                "Check the history",
-                style: TextStyle(color: Colors.white, fontSize: 20),
-              );
-            },
-          ),
-        ],
-      ),
-    ];
-  }
-
   void _showTutorial() {
-    setState(() {
-      _showSubButtons = true;
-    });
-    _initTargets();
-    TutorialCoachMark(
-      targets: targets,
-      colorShadow: Colors.black,
-      textSkip: "SKIP",
-      onFinish: () => print("Tutorial finished"),
-    ).show(context: context);
+    TutorialManager.showTutorial(
+      context: context,
+      addKey: _addKey,
+      historyKey: _historyKey,
+      comboKey: _comboKey,
+      editNoteKey: _editNoteKey,
+      cameraAltKey: _cameraAltKey,
+      petKey: _petKey,
+      onTutorialStart:
+          () {}, // This can be used to set a global "isTutorialActive" flag if needed
+      onTutorialFinish: () {
+        // Hide the buttons when the tutorial is finished or skipped
+        if (mounted) setState(() => _showSubButtons = false);
+      },
+      expandSubButtonsCallback: () {
+        // This is called by the manager when the user taps the 'Add' target
+        if (mounted) setState(() => _showSubButtons = true);
+      },
+      hideSubButtonsCallback: () {
+        // This is called by the manager when the user taps the 'Camera' target
+        Future.delayed(const Duration(milliseconds: 400), () {
+          if (mounted) setState(() => _showSubButtons = false);
+        });
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    // 獲取螢幕尺寸
+    final size = MediaQuery.of(context).size;
+    final padding = MediaQuery.of(context).padding;
+    final screenHeight = size.height - padding.top - padding.bottom;
+    final screenWidth = size.width;
+
+    // 計算相對尺寸
+    final iconSize = screenWidth * 0.1; // 圖標大小
+    final titleSize = screenWidth * 0.08; // 標題大小
+    final cardSpacing = screenHeight * 0.02; // 卡片間距
+    final horizontalPadding = screenWidth * 0.05; // 水平內邊距
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: Stack(
         children: [
+          // Main content area
           SafeArea(
             child: Column(
               children: [
                 Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 12,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: horizontalPadding,
+                    vertical: screenHeight * 0.015,
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
+                      IconButton(
+                        icon: const Icon(Icons.info, size: 40),
+                        onPressed: _showTutorial,
+                      ),
+                      Text(
+                        'CalH2O',
+                        style: TextStyle(
+                          fontSize: titleSize,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1,
+                        ),
+                      ),
                       IconButton(
                         icon: Icon(Icons.settings, size: 40),
                         onPressed: () {
@@ -410,62 +427,55 @@ class _MainPageState extends State<MainPage> {
                           );
                         },
                       ),
-                      Text(
-                        'CalH2O',
-                        style: TextStyle(
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 1,
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.info, size: 40),
-                        onPressed: _showTutorial,
-                      ),
                     ],
                   ),
                 ),
+
                 MainProgressBar(
                   color: Colors.orange,
-                  label: _getLabel(
-                    _calories,
-                    _caloriesTarget,
-                    ' kcal Calories',
-                  ),
+                  label:
+                      'Calories $_calories kcal (${_getLabel(_calories, _caloriesTarget, ' kcal')})',
                   value: _caloriesProgress,
                   onIncrement: _incrementCalories,
-                  additionalInfo: 'Total Calories: $_calories kcal',
                 ),
                 WaveProgressBar(
-                  label: _getLabel(_water, _waterTarget, ' ml Water'),
+                  label:
+                      'Water $_water ml (${_getLabel(_water, _waterTarget, ' ml')})',
                   value: _waterProgress,
                   onIncrement: _incrementWater,
                   onDecrement: _decrementWater,
-                  additionalInfo: 'Total Water: $_water ml',
                 ),
-                // SizedBox(height: 24),
+                SizedBox(height: cardSpacing),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                  padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      NutritionCard(
-                        label: 'Protein',
-                        value: _protein / _proteinTarget,
-                        left: _getLabel(_protein, _proteinTarget, 'g'),
-                        icon: Icons.fitness_center,
+                      Expanded(
+                        child: NutritionCard(
+                          label: 'Protein',
+                          value: _protein / _proteinTarget,
+                          left: _getLabel(_protein, _proteinTarget, 'g'),
+                          icon: Icons.fitness_center,
+                        ),
                       ),
-                      NutritionCard(
-                        label: 'Carbs',
-                        value: _carbs / _carbsTarget,
-                        left: _getLabel(_carbs, _carbsTarget, 'g'),
-                        icon: Icons.rice_bowl,
+                      SizedBox(width: screenWidth * 0.02),
+                      Expanded(
+                        child: NutritionCard(
+                          label: 'Carbs',
+                          value: _carbs / _carbsTarget,
+                          left: _getLabel(_carbs, _carbsTarget, 'g'),
+                          icon: Icons.rice_bowl,
+                        ),
                       ),
-                      NutritionCard(
-                        label: 'Fats',
-                        value: _fats / _fatsTarget,
-                        left: _getLabel(_fats, _fatsTarget, 'g'),
-                        icon: Icons.emoji_food_beverage,
+                      SizedBox(width: screenWidth * 0.02),
+                      Expanded(
+                        child: NutritionCard(
+                          label: 'Fats',
+                          value: _fats / _fatsTarget,
+                          left: _getLabel(_fats, _fatsTarget, 'g'),
+                          icon: Icons.emoji_food_beverage,
+                        ),
                       ),
                     ],
                   ),
@@ -474,42 +484,50 @@ class _MainPageState extends State<MainPage> {
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     if (_isProcessing)
-                      const Padding(
-                        padding: EdgeInsets.only(right: 8),
-                        child: LoadingOverlay(),
+                      LoadingOverlay(
+                        width:
+                            MediaQuery.of(context).size.width *
+                            0.58, // 設置為螢幕寬度的 30%，與 nutrition_card 的寬度相近
                       ),
                     Container(
                       key: _comboKey,
-                      margin: const EdgeInsets.only(top: 16, right: 24),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 8,
+                      margin: EdgeInsets.only(
+                        top: screenHeight * 0.02,
+                        right: screenWidth * 0.06,
                       ),
-                      decoration: BoxDecoration(
-                        color: Colors.grey[300],
-                        borderRadius: BorderRadius.circular(24),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: screenWidth * 0.05,
+                        vertical: screenHeight * 0.01,
                       ),
-                      child: Text(
-                        //
-                        'combo',
-                        style: TextStyle(fontSize: 20, color: Colors.black54),
-                      ),
+                      child: ComboBadge(comboCount: _comboCount),
                     ),
                   ],
                 ),
+
                 SizedBox(height: 8),
-                Expanded(
-                  child: Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [const FrameAnimationWidget(size: 200)],
-                    ),
+                Flexible(
+                  fit: FlexFit.loose,
+                  child: Stack(
+                    children: [
+                      // 先放彈幕
+                      const SpeechBubble(),
+
+                      // 再放動畫
+                      Center(
+                        child: FittedBox(
+                          fit: BoxFit.contain,
+                          key: _petKey,
+                          child: const FrameAnimationWidget(size: 200),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
+
                 Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 32.0,
-                    vertical: 8,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: screenWidth * 0.08,
+                    vertical: screenHeight * 0.01,
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -518,14 +536,14 @@ class _MainPageState extends State<MainPage> {
                         key: _addKey,
                         icon: Icon(
                           Icons.lunch_dining,
-                          size: 40,
+                          size: iconSize,
                           color: _showSubButtons ? Colors.grey : Colors.black,
                         ),
                         onPressed: _toggleSubButtons,
                       ),
                       IconButton(
                         key: _historyKey,
-                        icon: const Icon(Icons.access_time, size: 40),
+                        icon: Icon(Icons.access_time, size: iconSize),
                         onPressed: () {
                           _navigateNamed('/history');
                         },
@@ -533,12 +551,15 @@ class _MainPageState extends State<MainPage> {
                     ],
                   ),
                 ),
-                SizedBox(height: 8),
+                SizedBox(height: screenHeight * 0.01),
                 Padding(
-                  padding: const EdgeInsets.only(bottom: 16.0),
+                  padding: EdgeInsets.only(bottom: screenHeight * 0.02),
                   child: Text(
                     'Sip smart, live strong.',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+                    style: TextStyle(
+                      fontSize: screenWidth * 0.05,
+                      fontWeight: FontWeight.w600,
+                    ),
                     textAlign: TextAlign.center,
                   ),
                 ),
@@ -546,13 +567,29 @@ class _MainPageState extends State<MainPage> {
             ),
           ),
 
-          // 子按鈕
+          // Blur overlay that appears when sub-buttons are shown
+          IgnorePointer(
+            ignoring: !_showSubButtons,
+            child: AnimatedOpacity(
+              opacity: _showSubButtons ? 1.0 : 0.0,
+              duration: const Duration(milliseconds: 200),
+              child: GestureDetector(
+                onTap: () => setState(() => _showSubButtons = false),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
+                  child: Container(color: Colors.black.withOpacity(0.1)),
+                ),
+              ),
+            ),
+          ),
+
+          // Sub-buttons (they appear on top of the blur)
           AnimatedPositioned(
-            duration: const Duration(milliseconds: 300),
+            duration: const Duration(milliseconds: 400),
             curve: Curves.easeOutBack,
-            bottom: _showSubButtons ? 150 : 100,
+            bottom: _showSubButtons ? screenHeight * 0.2 : 100,
             left: _showSubButtons ? 0 : -100,
-            right: _showSubButtons ? 100 : 0,
+            right: _showSubButtons ? screenWidth * 0.25 : 0,
             child: AnimatedOpacity(
               duration: const Duration(milliseconds: 200),
               opacity: _showSubButtons ? 1.0 : 0.0,
@@ -561,16 +598,15 @@ class _MainPageState extends State<MainPage> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    // 文字輸入按鈕（上方）
                     IconButton(
                       key: _editNoteKey,
-                      icon: const Icon(Icons.edit_note, size: 40),
+                      icon: Icon(Icons.edit_note, size: iconSize),
                       onPressed: () {
-                        _navigateNamed('/text');
-                        _toggleSubButtons();
+                        setState(() => _showSubButtons = false);
+                        Navigator.pushNamed(context, '/text');
                       },
                     ),
-                    const SizedBox(width: 40), // 佔位，保持對齊
+                    SizedBox(width: screenWidth * 0.1),
                   ],
                 ),
               ),
@@ -578,11 +614,11 @@ class _MainPageState extends State<MainPage> {
           ),
 
           AnimatedPositioned(
-            duration: const Duration(milliseconds: 300),
+            duration: const Duration(milliseconds: 400),
             curve: Curves.easeOutBack,
-            bottom: _showSubButtons ? 90 : 80,
-            left: _showSubButtons ? -400 : -400,
-            right: _showSubButtons ? 0 : 100,
+            bottom: _showSubButtons ? screenHeight * 0.12 : screenHeight * 0.1,
+            left: _showSubButtons ? -screenWidth : -screenWidth,
+            right: _showSubButtons ? 0 : screenWidth * 0.25,
             child: AnimatedOpacity(
               duration: const Duration(milliseconds: 200),
               opacity: _showSubButtons ? 1.0 : 0.0,
@@ -591,12 +627,12 @@ class _MainPageState extends State<MainPage> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    const SizedBox(width: 40), // 佔位，保持對齊
-                    // 圖片輸入按鈕（右方）
+                    SizedBox(width: screenWidth * 0.1),
                     IconButton(
                       key: _cameraAltKey,
-                      icon: const Icon(Icons.camera_alt, size: 40),
+                      icon: Icon(Icons.camera_alt, size: iconSize),
                       onPressed: () async {
+                        setState(() => _showSubButtons = false);
                         final result = await Navigator.pushNamed(
                           context,
                           '/image',
@@ -604,7 +640,6 @@ class _MainPageState extends State<MainPage> {
                         if (result != null) {
                           await _handleImageResult(result as String);
                         }
-                        _toggleSubButtons();
                       },
                     ),
                   ],

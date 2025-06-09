@@ -76,7 +76,7 @@ class _WaveProgressBarState extends State<WaveProgressBar>
             children: [
               // 背景邊框
               Container(
-                height: 64,
+                height: 48,
                 decoration: BoxDecoration(
                   color: Colors.grey[200],
                   borderRadius: BorderRadius.circular(40),
@@ -104,7 +104,7 @@ class _WaveProgressBarState extends State<WaveProgressBar>
                 ),
               // 減號按鈕
               Positioned(
-                left: 16,
+                left: 5,
                 top: 10,
                 bottom: 10,
                 child: GestureDetector(
@@ -117,13 +117,13 @@ class _WaveProgressBarState extends State<WaveProgressBar>
                       border: Border.all(color: Colors.black, width: 2),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.remove, size: 28),
+                    child: const Icon(Icons.remove, size: 24),
                   ),
                 ),
               ),
               // 加號按鈕
               Positioned(
-                right: 16,
+                right: 5,
                 top: 10,
                 bottom: 10,
                 child: GestureDetector(
@@ -136,7 +136,7 @@ class _WaveProgressBarState extends State<WaveProgressBar>
                       border: Border.all(color: Colors.black, width: 2),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.add, size: 28),
+                    child: const Icon(Icons.add, size: 24),
                   ),
                 ),
               ),
@@ -201,9 +201,6 @@ class _WaveClipperLeftGravity extends CustomClipper<Path> {
 }
 
 
-
-
-
 class MainProgressBar extends StatelessWidget {
   final Color color;
   final String label;
@@ -232,7 +229,7 @@ class MainProgressBar extends StatelessWidget {
             alignment: Alignment.centerRight,
             children: [
               Container(
-                height: 64,
+                height: 48,
                 decoration: BoxDecoration(
                   color: Colors.grey[200],
                   borderRadius: BorderRadius.circular(40),

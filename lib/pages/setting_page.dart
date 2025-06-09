@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/services.dart';
+import 'package:calh2o/widgets/button_or_other_modifications/save_button.dart';
 
 class SettingPage extends StatefulWidget {
   const SettingPage({super.key});
@@ -13,6 +14,7 @@ class SettingPage extends StatefulWidget {
 }
 
 class _SettingPageState extends State<SettingPage> {
+  
   // controllers
   final TextEditingController _birthdayController = TextEditingController();
   final TextEditingController _heightController = TextEditingController();
@@ -22,6 +24,9 @@ class _SettingPageState extends State<SettingPage> {
   String _gender = 'Men';
   String _activityLevel = 'sedentary';
   String _goal = 'maintain weight';
+  String _ebType = 'Vicious';
+
+  bool _isSaving = false;
 
   // options
   final List<String> _genders = ['Men', 'Women', 'Other'];
@@ -38,6 +43,7 @@ class _SettingPageState extends State<SettingPage> {
     'lose weight',
     'gain weight',
   ];
+  final List<String> _ebTypes = ['Vicious', 'Polite'];
 
   @override
   void initState() {
@@ -65,11 +71,23 @@ class _SettingPageState extends State<SettingPage> {
         _weightController.text = (data['weight'] ?? 0).toString();
         _activityLevel = data['activityLevel'] as String? ?? _activityLevel;
         _goal = (data['goal'] as String? ?? _goal).toLowerCase();
+        _ebType = data['EB_Type'] as String? ?? _ebType;
       });
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('讀取資料失敗：$e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '讀取資料失敗：$e',
+            style: TextStyle(fontSize: 12, color: Colors.black),
+          ),
+          backgroundColor: Colors.orange[100],
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          margin: EdgeInsets.all(8),
+        ),
+      );
     }
   }
 
@@ -94,6 +112,21 @@ class _SettingPageState extends State<SettingPage> {
       initialDate: initial,
       firstDate: DateTime(1900),
       lastDate: now,
+      builder: (context, child) => Theme(
+        data: ThemeData().copyWith(
+          colorScheme: ColorScheme.light(
+            primary: Color(0xFFFFB74D),
+            onPrimary: Colors.black,
+            surface: Colors.white,
+            onSurface: Colors.black,
+          ),
+          dialogBackgroundColor: Colors.white,
+          textButtonTheme: TextButtonThemeData(
+            style: TextButton.styleFrom(foregroundColor: Colors.black),
+          ),
+        ),
+        child: child!,
+      ),
     );
     if (dt != null) {
       _birthdayController.text =
@@ -104,6 +137,7 @@ class _SettingPageState extends State<SettingPage> {
   }
 
   Future<void> _saveUserData() async {
+    setState(() => _isSaving = true);
     final prefs = await SharedPreferences.getInstance();
     final account = prefs.getString('account');
     if (account == null) return;
@@ -117,11 +151,23 @@ class _SettingPageState extends State<SettingPage> {
         'weight': int.tryParse(_weightController.text) ?? 0,
         'activityLevel': _activityLevel,
         'goal': _goal,
+        'EB_Type': _ebType,
       });
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('更新資料失敗：$e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '更新資料失敗：$e',
+            style: TextStyle(fontSize: 12, color: Colors.black),
+          ),
+          backgroundColor: Colors.orange[100],
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          margin: EdgeInsets.all(8),
+        ),
+      );
       return;
     }
 
@@ -141,9 +187,20 @@ class _SettingPageState extends State<SettingPage> {
       height = (data['height'] as num).toInt();
       weight = (data['weight'] as num).toInt();
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('讀取 Profile 失敗：$e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '讀取 Profile 失敗：$e',
+            style: TextStyle(fontSize: 12, color: Colors.black),
+          ),
+          backgroundColor: Colors.orange[100],
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          margin: EdgeInsets.all(8),
+        ),
+      );
       return;
     }
 
@@ -161,9 +218,20 @@ class _SettingPageState extends State<SettingPage> {
       );
       // you may want to store dailyNeeds in prefs or Firestore here
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('取得每日需求失敗：$e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '取得每日需求失敗：$e',
+            style: TextStyle(fontSize: 12, color: Colors.black),
+          ),
+          backgroundColor: Colors.orange[100],
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          margin: EdgeInsets.all(8),
+        ),
+      );
       return;
     }
 
@@ -172,11 +240,13 @@ class _SettingPageState extends State<SettingPage> {
       context,
       MaterialPageRoute(builder: (_) => const MainPage()),
     );
+    setState(() => _isSaving = false);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(16),
@@ -247,16 +317,18 @@ class _SettingPageState extends State<SettingPage> {
               items: _goals,
               onChanged: (v) => setState(() => _goal = v!),
             ),
+            const SizedBox(height: 12),
+            _buildDropdown(
+              label: 'Emotional Blackmail Style',
+              value: _ebType,
+              items: _ebTypes,
+              onChanged: (v) => setState(() => _ebType = v!),
+            ),
             const SizedBox(height: 24),
-            ElevatedButton(
+            SaveButton(
+              text: 'Save Changes',
+              isSaving: _isSaving,
               onPressed: _saveUserData,
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              child: const Text('Save Changes', style: TextStyle(fontSize: 18)),
             ),
           ],
         ),
@@ -277,20 +349,28 @@ class _SettingPageState extends State<SettingPage> {
         const SizedBox(height: 4),
         DropdownButtonFormField<String>(
           value: value,
-          items:
-              items
-                  .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                  .toList(),
+          items: items.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
           onChanged: onChanged,
-          decoration: const InputDecoration(
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: Colors.white,  // 👈 背景白
+            enabledBorder: OutlineInputBorder(
+              borderSide: const BorderSide(color: Colors.black), // 👈 黑色邊框
+              borderRadius: BorderRadius.circular(10),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderSide: const BorderSide(color: Colors.black, width: 2), // 👈 黑色邊框
+              borderRadius: BorderRadius.circular(10),
+            ),
             isDense: true,
           ),
+          dropdownColor: Colors.white,  // 👈 下拉選單背景白
         ),
       ],
     );
   }
 
+  // Date Field
   Widget _buildDateField({
     required String label,
     required TextEditingController controller,
@@ -305,8 +385,17 @@ class _SettingPageState extends State<SettingPage> {
           controller: controller,
           readOnly: true,
           decoration: InputDecoration(
+            filled: true,
+            fillColor: Colors.white,  // 👈 背景白
             hintText: 'YYYYMMDD',
-            border: const OutlineInputBorder(),
+            enabledBorder: OutlineInputBorder(
+              borderSide: const BorderSide(color: Colors.black), // 👈 黑色邊框
+              borderRadius: BorderRadius.circular(10),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderSide: const BorderSide(color: Colors.black, width: 2), // 👈 黑色邊框
+              borderRadius: BorderRadius.circular(10),
+            ),
             suffixIcon: IconButton(
               icon: const Icon(Icons.calendar_today),
               onPressed: onIconPressed,
@@ -324,11 +413,22 @@ class _SettingPageState extends State<SettingPage> {
     return TextField(
       controller: controller,
       decoration: InputDecoration(
+        filled: true,
+        fillColor: Colors.white,  // 👈 白色背景
         labelText: label,
-        border: const OutlineInputBorder(),
+        labelStyle: const TextStyle(color: Colors.black),  // 👈 Label 文字顏色黑色
+        enabledBorder: OutlineInputBorder(
+          borderSide: const BorderSide(color: Colors.black), // 👈 黑色邊框
+          borderRadius: BorderRadius.circular(10),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderSide: const BorderSide(color: Colors.black, width: 2), // 👈 黑色邊框
+          borderRadius: BorderRadius.circular(10),
+        ),
       ),
       keyboardType: TextInputType.number,
       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
     );
   }
+
 }
