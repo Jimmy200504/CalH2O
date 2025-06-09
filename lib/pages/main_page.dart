@@ -19,7 +19,7 @@ import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:flutter_barrage/flutter_barrage.dart';
 import '../widgets/combo_badge.dart';
 import '../widgets/main_page/tutorial_manager.dart';
-
+import '../services/cloud_function_fetch/generateEBMessage.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -60,6 +60,33 @@ class _MainPageState extends State<MainPage> {
   int _latestMealCalories = 0;
   bool _initialSnapshotHandled = false;
 
+  Map<String, dynamic> alldata = {
+    "calories": 0,
+    "protein": 0,
+    "carbohydrate": 0,
+    "fat": 0,
+
+    "caloriesIntake": 0, //自算
+    "waterIntake": 0,
+    "caloriesNeed": 0,
+    "waterNeed": 0,
+    "carbsTarget": 0,
+    "proteinTarget": 0,
+    "fatsTarget": 0,
+    "EB_type": "Vicious",
+  };
+
+  List<String> _ebMessages = [];
+  final List<String> _defaultEBMessages = [
+    "Hello",
+    "How are we?",
+    "Eat anything yet?",
+    "You look dehydrated.",
+    "What did you do today?",
+    "Let's not eat junk food today?",
+    "What's your goal of the day?",
+  ];
+
   final GlobalKey _addKey = GlobalKey();
   final GlobalKey _historyKey = GlobalKey();
   final GlobalKey _comboKey = GlobalKey();
@@ -81,7 +108,43 @@ class _MainPageState extends State<MainPage> {
     _loadTargets();
     _fetchLatestMealCalories();
     _setupNutritionListener();
+    _setnewListener();
     _updateCombo();
+    _updateEBMessages();
+  }
+
+  Future<void> _updateEBMessages() async {
+    List<String> newMsgs;
+    try {
+      final ebResult = await getEmotionalBlackmail(
+        waterIntake: alldata['waterIntake'],
+        waterNeed: alldata['waterNeed'],
+        caloriesIntake: alldata['caloriesIntake'],
+        caloriesNeed: alldata['caloriesNeed'],
+        calories: alldata['calories'],
+        carbohydrate: alldata['carbohydrate'],
+        carbTarget: alldata['carbsTarget'],
+        protein: alldata['protein'],
+        proteinTarget: alldata['proteinTarget'],
+        fat: alldata['fat'],
+        fatTarget: alldata['fatsTarget'],
+        EB_Type: alldata['EB_type'],
+      );
+      final resultMessages = ebResult.messages as List;
+      newMsgs =
+          resultMessages.isNotEmpty
+              ? resultMessages.cast<String>()
+              : _defaultEBMessages;
+    } catch (e) {
+      debugPrint("Error when updating message in main_page: $e");
+      newMsgs = _defaultEBMessages;
+    }
+
+    if (mounted) {
+      setState(() {
+        _ebMessages = newMsgs;
+      });
+    }
   }
 
   Future<void> _loadTargets() async {
@@ -105,6 +168,13 @@ class _MainPageState extends State<MainPage> {
       final newCarbTarget = _safeGetInt(data, 'carbsTarget', 250);
       final newFatTarget = _safeGetInt(data, 'fatsTarget', 65);
 
+      alldata["caloriesNeed"] = _safeGetInt(data, 'calories', 0);
+      alldata["waterNeed"] = _safeGetInt(data, 'water', 0);
+      alldata["carbsTarget"] = _safeGetInt(data, 'carbsTarget', 0);
+      alldata["proteinTarget"] = _safeGetInt(data, 'proteinTarget', 0);
+      alldata["fatsTarget"] = _safeGetInt(data, 'fatsTarget', 0);
+      alldata["EB_type"] = data['EB_Type'] ?? 'Vicious';
+
       setState(() {
         _caloriesTarget = newCalTarget;
         _waterTarget = newWaterTarget;
@@ -112,8 +182,8 @@ class _MainPageState extends State<MainPage> {
         _carbsTarget = newCarbTarget;
         _fatsTarget = newFatTarget;
 
-        _mealCaloriesTarget = (_caloriesTarget / 3).round();  // ⭐️ 每餐卡路里目標
-        print('🔥 每餐建議攝取量: $_mealCaloriesTarget kcal');  // 印出來確認
+        _mealCaloriesTarget = (_caloriesTarget / 3).round();
+        print('🔥 每餐建議攝取量: $_mealCaloriesTarget kcal');
 
         // **重算進度**：載入完新目標後，馬上把目前數值除以目標，算出 ProgressBar
         _caloriesProgress = (_calories / _caloriesTarget).clamp(0.0, 1.0);
@@ -122,6 +192,7 @@ class _MainPageState extends State<MainPage> {
         _carbsProgress = (_carbs / _carbsTarget).clamp(0.0, 1.0);
         _fatsProgress = (_fats / _fatsTarget).clamp(0.0, 1.0);
       });
+      _updateEBMessages();
     } catch (e) {
       print('Error loading targets: $e');
       // 可保留原本的預設值，也要重算一次進度
@@ -139,48 +210,49 @@ class _MainPageState extends State<MainPage> {
       });
     }
   }
+
   void _fetchLatestMealCalories() {
     SharedPreferences.getInstance().then((prefs) {
       final account = prefs.getString('account');
       if (account == null) return;
 
       FirebaseFirestore.instance
-        .collection('users')
-        .doc(account)
-        .collection('nutrition_records')
-        .orderBy('timestamp', descending: true)
-        .limit(1)
-        .snapshots()
-        .listen((querySnapshot) {
-          if (!_initialSnapshotHandled) {
-            _initialSnapshotHandled = true;
-            debugPrint("🍀 第一次 snapshot，略過初始化");
-            return;
-          }
-
-          if (querySnapshot.docs.isNotEmpty) {
-            final latestDoc = querySnapshot.docs.first;
-            final latestCalories = (latestDoc['calories'] as num).toInt();
-            final latestDocId = latestDoc.id;
-
-            // ✅ 比較 id 避免重複
-            if (_lastProcessedDocId != latestDocId) {
-              _lastProcessedDocId = latestDocId;
-              setState(() {
-                _latestMealCalories += latestCalories;
-              });
-              debugPrint("🔥 每餐建議攝取量: $_mealCaloriesTarget kcal");
-              debugPrint("🔥 最新一餐 calories: $_latestMealCalories kcal");
-            } else {
-              debugPrint("🌀 已處理過這筆資料，跳過");
+          .collection('users')
+          .doc(account)
+          .collection('nutrition_records')
+          .orderBy('timestamp', descending: true)
+          .limit(1)
+          .snapshots()
+          .listen((querySnapshot) {
+            if (!_initialSnapshotHandled) {
+              _initialSnapshotHandled = true;
+              debugPrint("🍀 第一次 snapshot，略過初始化");
+              return;
             }
-          } else {
-            setState(() {
-              _latestMealCalories = 0;
-            });
-            debugPrint("🔥 最新一餐 calories: $_latestMealCalories kcal (無資料)");
-          }
-        });
+
+            if (querySnapshot.docs.isNotEmpty) {
+              final latestDoc = querySnapshot.docs.first;
+              final latestCalories = (latestDoc['calories'] as num).toInt();
+              final latestDocId = latestDoc.id;
+
+              // ✅ 比較 id 避免重複
+              if (_lastProcessedDocId != latestDocId) {
+                _lastProcessedDocId = latestDocId;
+                setState(() {
+                  _latestMealCalories += latestCalories;
+                });
+                debugPrint("🔥 每餐建議攝取量: $_mealCaloriesTarget kcal");
+                debugPrint("🔥 最新一餐 calories: $_latestMealCalories kcal");
+              } else {
+                debugPrint("🌀 已處理過這筆資料，跳過");
+              }
+            } else {
+              setState(() {
+                _latestMealCalories = 0;
+              });
+              debugPrint("🔥 最新一餐 calories: $_latestMealCalories kcal (無資料)");
+            }
+          });
     });
   }
 
@@ -204,6 +276,86 @@ class _MainPageState extends State<MainPage> {
     } catch (e) {
       return defaultValue;
     }
+  }
+
+  void _setnewListener() async {
+    // Get user account
+    final prefs = await SharedPreferences.getInstance();
+    final account = prefs.getString('account');
+    if (account == null) return;
+
+    // Listen to Firestore for real-time updates
+    FirebaseFirestore.instance
+        .collection('users')
+        .doc(account)
+        .collection('water_records')
+        .orderBy('timestamp', descending: true) // 按時間戳排序，從最新到最舊
+        .limit(1)
+        .snapshots()
+        .listen((snapshot) {
+          if (snapshot.docs.isNotEmpty) {
+            // 取出最新的一筆資料
+            final data = snapshot.docs.first.data(); // 取得第一筆文檔的資料
+            setState(() {
+              alldata['waterIntake'] = (data['ml'] as num).toInt();
+            });
+            _updateEBMessages();
+          }
+        });
+    FirebaseFirestore.instance
+        .collection('users')
+        .doc(account)
+        .collection('nutrition_records')
+        .orderBy('timestamp', descending: true) // 按時間戳排序，從最新到最舊
+        .limit(1)
+        .snapshots()
+        .listen((snapshot) {
+          if (snapshot.docs.isNotEmpty) {
+            // 取出最新的一筆資料
+            final data = snapshot.docs.first.data(); // 取得第一筆文檔的資料
+            // 將資料賦值給 alldata['calories']
+            setState(() {
+              alldata['calories'] = (data['calories'] as num).toInt();
+              alldata['protein'] = (data['protein'] as num).toInt();
+              alldata['carbohydrate'] = (data['carbohydrate'] as num).toInt();
+              alldata['fat'] = (data['fat'] as num).toInt();
+            });
+            _updateEBMessages();
+          }
+        });
+
+    final now = DateTime.now();
+    final startOfDay = DateTime(now.year, now.month, now.day);
+    final endOfDay = startOfDay.add(const Duration(days: 1));
+    FirebaseFirestore.instance
+        .collection('users')
+        .doc(account)
+        .collection('nutrition_records')
+        .where(
+          'timestamp',
+          isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay),
+        )
+        .where('timestamp', isLessThan: Timestamp.fromDate(endOfDay))
+        .snapshots()
+        .listen((snapshot) {
+          int currentCaloriesIntake = 0;
+          // Sum up all nutrition values
+          for (var doc in snapshot.docs) {
+            final data = doc.data();
+            currentCaloriesIntake += (data['calories'] as num).toInt();
+          }
+
+          // Update state only once with the final sum
+          if (alldata['caloriesIntake'] != currentCaloriesIntake) {
+            setState(() {
+              alldata['caloriesIntake'] = currentCaloriesIntake;
+            });
+            _updateEBMessages();
+          }
+          debugPrint(
+            "Listen!!!!! Total calories for today: $currentCaloriesIntake",
+          );
+        });
   }
 
   void _setupNutritionListener() async {
@@ -250,26 +402,27 @@ class _MainPageState extends State<MainPage> {
         .snapshots()
         .listen((snapshot) {
           // Reset values
-          setState(() {
-            _calories = 0;
-            _protein = 0;
-            _carbs = 0;
-            _fats = 0;
-          });
+          int newCalories = 0;
+          int newProtein = 0;
+          int newCarbs = 0;
+          int newFats = 0;
 
           // Sum up all nutrition values
           for (var doc in snapshot.docs) {
             final data = doc.data();
-            setState(() {
-              _calories += (data['calories'] as num).toInt();
-              _protein += (data['protein'] as num).toInt();
-              _carbs += (data['carbohydrate'] as num).toInt();
-              _fats += (data['fat'] as num).toInt();
-            });
+            newCalories += (data['calories'] as num).toInt();
+            newProtein += (data['protein'] as num).toInt();
+            newCarbs += (data['carbohydrate'] as num).toInt();
+            newFats += (data['fat'] as num).toInt();
           }
 
-          // Update progress values
+          // Update state only once with the final values
           setState(() {
+            _calories = newCalories;
+            _protein = newProtein;
+            _carbs = newCarbs;
+            _fats = newFats;
+
             _caloriesProgress = (_calories / _caloriesTarget).clamp(0.0, 1.0);
             _proteinProgress = (_protein / _proteinTarget).clamp(0.0, 1.0);
             _carbsProgress = (_carbs / _carbsTarget).clamp(0.0, 1.0);
@@ -575,7 +728,7 @@ class _MainPageState extends State<MainPage> {
                   child: Stack(
                     children: [
                       // 先放彈幕
-                      const SpeechBubble(),
+                      SpeechBubble(messages: _ebMessages),
 
                       // 再放動畫
                       Center(

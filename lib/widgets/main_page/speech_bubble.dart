@@ -1,33 +1,46 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_barrage/flutter_barrage.dart';
+import 'package:flutter/foundation.dart';
 
 class SpeechBubble extends StatefulWidget {
-  const SpeechBubble({super.key});
+  final List<String> messages;
+  const SpeechBubble({super.key, required this.messages});
 
   @override
   State<SpeechBubble> createState() => _SpeechBubbleState();
 }
 
 class _SpeechBubbleState extends State<SpeechBubble> {
-  final List<String> _messages = [
-    "so hungry",
-    "please eat",
-    "too full",
-    "so unhealthy",
-    "please don't eat junk food",
-  ];
-
   late final BarrageWallController _barrageController;
   Timer? _addBulletTimer;
 
+  List<String> _messages = [];
+  final Random _random = Random();
+
   @override
   void initState() {
+    debugPrint("InitState.");
     super.initState();
     _barrageController = BarrageWallController();
+    _messages = widget.messages..shuffle();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _handleRouteChange();
     });
+  }
+
+  @override
+  void didUpdateWidget(SpeechBubble oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (!listEquals(oldWidget.messages, widget.messages)) {
+      if (mounted) {
+        setState(() {
+          _messages = widget.messages..shuffle();
+        });
+      }
+    }
   }
 
   @override
@@ -48,13 +61,15 @@ class _SpeechBubbleState extends State<SpeechBubble> {
   }
 
   void _startBarrage() {
-    _stopBarrage(); // 保險：先停掉
+    _stopBarrage(); // Ensure barrage stops before restarting
     _addBulletTimer = Timer.periodic(const Duration(seconds: 2), (_) {
-      _messages.shuffle();
+      if (!mounted || _messages.isEmpty) return;
+
+      final message = _messages[_random.nextInt(_messages.length)];
       _barrageController.send([
         Bullet(
           child: Text(
-            _messages.first,
+            message,
             style: const TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
@@ -75,11 +90,13 @@ class _SpeechBubbleState extends State<SpeechBubble> {
   @override
   void dispose() {
     _stopBarrage();
+    _barrageController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    debugPrint("Build Message Bubble.");
     return BarrageWall(
       controller: _barrageController,
       speed: 6,
