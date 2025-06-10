@@ -27,6 +27,7 @@ class _NutritionChatPageState extends State<NutritionChatPage> {
   final TextEditingController _textController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   bool _sending = false;
+  bool _isNavigatingBack = false;
 
   @override
   void initState() {
@@ -49,6 +50,22 @@ class _NutritionChatPageState extends State<NutritionChatPage> {
     _textController.dispose();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  Future<void> _navigateBack() async {
+    if (_isNavigatingBack) return;
+    setState(() => _isNavigatingBack = true);
+
+    // Unfocus to hide keyboard and wait for it to animate off-screen
+    FocusManager.instance.primaryFocus?.unfocus();
+    await Future.delayed(const Duration(milliseconds: 300));
+
+    if (mounted) {
+      Navigator.pop(context, {
+        'nutrition': _nutritionResult,
+        'messages': _messages,
+      });
+    }
   }
 
   Future<void> _sendMessage() async {
@@ -99,14 +116,23 @@ class _NutritionChatPageState extends State<NutritionChatPage> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         title: const Text('AI Chat'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed:
-              () => Navigator.pop(context, {
-                'nutrition': _nutritionResult,
-                'messages': _messages,
-              }),
-        ),
+        leading:
+            _isNavigatingBack
+                ? const Padding(
+                  padding: EdgeInsets.all(12.0),
+                  child: SizedBox(
+                    height: 24,
+                    width: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      color: Colors.black87,
+                    ),
+                  ),
+                )
+                : IconButton(
+                  icon: const Icon(Icons.arrow_back),
+                  onPressed: _navigateBack,
+                ),
       ),
       body: Column(
         children: [

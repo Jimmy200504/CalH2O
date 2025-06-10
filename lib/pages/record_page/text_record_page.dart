@@ -418,10 +418,14 @@ class _TextRecordPageState extends State<TextRecordPage> {
                       ),
                     );
                     if (result != null) {
+                      debugPrint('result: $result');
                       setState(() {
                         _nutritionResult = result['nutrition'];
                         _messages = result['messages'];
                       });
+
+                      context.read<NutritionDraft>().nutritionResult =
+                          result['nutrition'];
                     }
                   },
                   child: const Icon(
