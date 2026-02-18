@@ -1,16 +1,30 @@
-# calh2o
+# CalH2O
 
-A new Flutter project.
+A Flutter health app that tracks daily calorie intake, water consumption, and nutritional balance with AI-powered food recognition.
+
+## Screenshots
+
+### Login / Info Page
+![Login](assets/screen_shots/login.jpg)
+
+### Main
+![Main](assets/screen_shots/main.jpg)
+
+### Record
+![Record 1](assets/screen_shots/record_1.jpg)
+![Record 2](assets/screen_shots/record_2.jpg)
+
+### History
+![History](assets/screen_shots/history.jpg)
+![History Graph](assets/screen_shots/history_graph.jpg)
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+This project is built with Flutter. To run:
 
-A few resources to get you started if this is your first Flutter project:
+```bash
+flutter pub get
+flutter run
+```
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+You will need to configure your own Firebase project and run `flutterfire configure` to generate `firebase_options.dart`.

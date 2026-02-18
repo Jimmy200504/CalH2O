@@ -44,7 +44,23 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
-# Genkit
+# Firebase
+firebase-debug.log
+firebase-debug.*.log
+.firebaserc
 /functions/.genkit/
+/functions/node_modules/
+/functions/lib/
+lib/firebase_options.dart
+**/google-services.json
+**/GoogleService-Info.plist
+
+# Platform specific
+*.local
+*.env
 
 devtools_options.yaml
+
+# macOS
+*.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
