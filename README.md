@@ -2,7 +2,7 @@
 
 A Flutter health app that tracks daily calorie intake, water consumption, and nutritional balance with AI-powered food recognition.
 
-## Screenshots
+## Preview
 
 ### Login / Info Page
 ![Login](assets/screen_shots/login.jpg)
