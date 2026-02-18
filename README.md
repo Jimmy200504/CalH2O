@@ -4,10 +4,10 @@ A Flutter-based nutrition and hydration tracking app powered by Firebase and AI.
 
 ## Preview
 
-### Login / Info Page
+### Onboarding 
 ![Login](assets/screen_shots/login.jpg)
 
-### Main
+### Home
 ![Main](assets/screen_shots/main.jpg)
 
 ### Record
